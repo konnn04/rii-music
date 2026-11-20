@@ -22,6 +22,7 @@ import { t, tn, syncLang } from "@/i18n";
 import { useBranding } from "@/lib/branding";
 import { Onboarding } from "@/pages/Onboarding";
 import { RemoteBanner } from "@/components/RemoteBanner";
+import { clearStored, initOffline, useOffline } from "@/lib/offline";
 
 // `header`: shown as an icon in the top bar (desktop) and the mobile header
 // instead of the sidebar / tab bar; tablets (no top bar) keep it in the sidebar.
@@ -47,6 +48,7 @@ export function AppShell() {
   useEffect(() => {
     engine.init();
     startSync(); // one player at a time across tabs and devices
+    void initOffline();
     connectEvents();
   }, []);
   useEffect(() => {
@@ -91,6 +93,7 @@ export function AppShell() {
       </div>
       {!desktop && <MobileNowPlaying />}
       <LyricsFullscreen />
+      <OfflineBanner />
       <GlobalDialogs />
       {settings.data && !settings.data.onboarded && <Onboarding />}
     </>
@@ -344,6 +347,19 @@ function TopBar() {
   );
 }
 
+/** No connection: say so, and that only songs stored on this device play. */
+function OfflineBanner() {
+  const online = useOffline((s) => s.online);
+  const enabled = useOffline((s) => s.enabled);
+  if (online) return null;
+  return (
+    <div role="status" className="fixed left-1/2 top-[calc(8px+env(safe-area-inset-top))] z-[70] flex -translate-x-1/2 items-center gap-2 rounded-full bg-surface-3 px-4 py-2 text-body-sm shadow-float">
+      <Icon name="globe" size={16} className="text-warning" />
+      {enabled ? t("ui.offline.onlyStored") : t("ui.offline.noConnection")}
+    </div>
+  );
+}
+
 /** Tải về (with the number of active downloads) and Quản trị as header icons. */
 function HeaderLinks() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
@@ -411,6 +427,9 @@ export async function logout() {
   localStorage.removeItem("rii-player");
   localStorage.removeItem("rii-pos");
   localStorage.removeItem("rii-uid");
+  // This browser may be shared: forget the offline copies too.
+  await clearStored().catch(() => {});
+  navigator.serviceWorker?.controller?.postMessage({ type: "clear-api-cache" });
   location.href = "/";
 }
 

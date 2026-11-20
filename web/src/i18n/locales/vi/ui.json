@@ -56,5 +56,9 @@
   "drag": {
     "count": "{n} bài",
     "added": "Đã thêm {n} bài vào {name}"
+  },
+  "offline": {
+    "onlyStored": "Đang offline · chỉ phát được bài đã lưu trên máy",
+    "noConnection": "Mất kết nối tới máy chủ"
   }
 }

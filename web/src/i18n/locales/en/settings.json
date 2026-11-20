@@ -119,5 +119,26 @@
     "confirmHistoryDesc": "Your stats, Continue listening, and recommendation data will be reset.",
     "typeToConfirmBefore": "Type ",
     "typeToConfirmAfter": " to confirm"
+  },
+  "offline": {
+    "title": "Offline listening",
+    "enable": "Turn on offline listening",
+    "enableHint": "Keep the app, your library and songs you play on this device to listen without a connection. A song's ⋯ menu gets “Save to device”.",
+    "autoCache": "Keep songs I play",
+    "autoCacheHint": "Songs played for more than 20 seconds are kept on the device.",
+    "retention": "Keep played songs for",
+    "retentionHint": "Since they were last played. “Save to device” songs stay until you remove them.",
+    "days": {
+      "one": "{n} day",
+      "other": "{n} days"
+    },
+    "stored": "{n} songs on this device · {size}",
+    "pinned": {
+      "one": "{n} song saved to device",
+      "other": "{n} songs saved to device"
+    },
+    "pinHint": "Use “Save to device” in a song's ⋯ menu to keep it for good.",
+    "clear": "Clear offline storage",
+    "cleared": "Offline songs removed"
   }
 }

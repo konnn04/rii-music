@@ -42,12 +42,16 @@
     "editInfo": "Edit info",
     "removeFromLiked": "Remove from Liked songs",
     "removeFromPlaylist": "Remove from playlist",
-    "deleteFromLibrary": "Delete from library"
+    "deleteFromLibrary": "Delete from library",
+    "offlineSave": "Save to device",
+    "offlineRemove": "Remove from device"
   },
   "toast": {
     "playNext": "Playing next",
     "addedToQueue": "Added to queue",
-    "noSimilar": "No similar songs found yet — your library needs more songs or audio analysis is still running"
+    "noSimilar": "No similar songs found yet — your library needs more songs or audio analysis is still running",
+    "offlineSaved": "“{title}” saved on this device",
+    "offlineRemoved": "Removed from this device"
   },
   "addToPlaylist": {
     "selectedCount": "{count} songs selected",

@@ -34,18 +34,11 @@ export default defineConfig({
           { src: "/icon.png", sizes: "any", type: "image/png" },
         ],
       },
-      workbox: {
-        navigateFallback: "/index.html",
-        navigateFallbackDenylist: [/^\/api\//],
-        globPatterns: ["**/*.{js,css,html,svg,png,woff2}"],
-        runtimeCaching: [
-          {
-            urlPattern: ({ url }) => /^\/api\/tracks\/[^/]+\/cover/.test(url.pathname),
-            handler: "CacheFirst",
-            options: { cacheName: "covers", expiration: { maxEntries: 2000, maxAgeSeconds: 60 * 60 * 24 * 30 } },
-          },
-        ],
-      },
+      // Our own service worker (src/sw.ts): app shell, covers, and offline mode.
+      strategies: "injectManifest",
+      srcDir: "src",
+      filename: "sw.ts",
+      injectManifest: { globPatterns: ["**/*.{js,css,html,svg,png,woff2}"] },
     }),
   ],
   server: {

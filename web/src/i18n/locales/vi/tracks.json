@@ -42,12 +42,16 @@
     "editInfo": "Sửa thông tin",
     "removeFromLiked": "Xoá khỏi Yêu thích",
     "removeFromPlaylist": "Xoá khỏi playlist",
-    "deleteFromLibrary": "Xoá khỏi thư viện"
+    "deleteFromLibrary": "Xoá khỏi thư viện",
+    "offlineSave": "Tải về máy",
+    "offlineRemove": "Xoá khỏi máy"
   },
   "toast": {
     "playNext": "Sẽ phát tiếp theo",
     "addedToQueue": "Đã thêm vào hàng đợi",
-    "noSimilar": "Chưa tìm được bài giống — thư viện cần thêm bài hoặc đang phân tích âm thanh"
+    "noSimilar": "Chưa tìm được bài giống — thư viện cần thêm bài hoặc đang phân tích âm thanh",
+    "offlineSaved": "Đã lưu “{title}” trên máy",
+    "offlineRemoved": "Đã xoá khỏi máy"
   },
   "addToPlaylist": {
     "selectedCount": "{count} bài đã chọn",

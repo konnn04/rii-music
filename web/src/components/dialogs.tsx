@@ -10,6 +10,7 @@ import { Icon, type IconName } from "./ui/Icon";
 import { Collage, Cover } from "./ui/Cover";
 import { toast } from "./ui/Toast";
 import { t, tn, tsv } from "@/i18n";
+import { removeStored, storeTrack, useOffline } from "@/lib/offline";
 
 export type TrackContext = { playlistId?: string; playlistKind?: string };
 
@@ -31,6 +32,7 @@ export type Action = { key: string; label: string; icon: IconName; run: () => vo
 export function useTrackActions(track: Track, ctx?: TrackContext): { primary: Action[]; danger: Action[] } {
   const navigate = useNavigate();
   const like = useToggleLike();
+  const offline = useOffline();
   const player = usePlayer.getState;
   const primary: Action[] = [
     { key: "next", label: t("tracks.action.playNext"), icon: "queue", run: () => (player().playNext([track]), toast(t("tracks.toast.playNext"))) },
@@ -74,6 +76,22 @@ export function useTrackActions(track: Track, ctx?: TrackContext): { primary: Ac
       icon: "album",
       run: () => navigate({ to: "/album/$artist/$name", params: { artist: track.artist, name: track.album } }),
     });
+  // Offline mode only (Cài đặt → Nghe offline): keep / drop this song on the device.
+  if (offline.enabled) {
+    const pinned = offline.stored.get(track.id) === true;
+    primary.push({
+      key: "offline",
+      label: pinned ? t("tracks.action.offlineRemove") : t("tracks.action.offlineSave"),
+      icon: pinned ? "download-done" : "download",
+      run: () =>
+        pinned
+          ? void removeStored(track.id).then(() => toast(t("tracks.toast.offlineRemoved")))
+          : void storeTrack(track, true).then(
+              () => toast(t("tracks.toast.offlineSaved", { title: track.title }), "success"),
+              (e: Error) => toast(e.message, "error"),
+            ),
+    });
+  }
   primary.push({ key: "edit", label: t("tracks.action.editInfo"), icon: "settings", run: () => openDialog({ kind: "editTrack", track }) });
   const danger: Action[] = [];
   if (ctx?.playlistId && (ctx.playlistKind === "manual" || ctx.playlistId === "liked")) {

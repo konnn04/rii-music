@@ -17,6 +17,7 @@ import { Avatar, PageHeader, LogoutButton } from "@/components/layout/AppShell";
 import { ACCENTS, swatch } from "@/lib/theme";
 import { AboutCard } from "@/components/AboutCard";
 import { SoundButton } from "@/components/SoundButton";
+import { clearStored, setOffline, useOffline } from "@/lib/offline";
 
 export function SettingsPage() {
   const { data } = useSettings();
@@ -81,6 +82,7 @@ export function SettingsPage() {
         </Group>
 
         <AutoDownloadSettings data={data} set={set} />
+        <OfflineSettings />
 
         <Group title={t("settings.appearance.title")} icon="sun">
           <Row label={t("settings.appearance.theme")}>
@@ -328,6 +330,52 @@ function Toggle({ label, hint, on, set }: { label: string; hint?: string; on: bo
         <span className={`absolute top-1 size-5 rounded-full bg-fg transition-[left] duration-fast ${on ? "left-6 !bg-fg-on-accent" : "left-1"}`} />
       </button>
     </div>
+  );
+}
+
+/** Nghe offline: off by default; this device only. */
+function OfflineSettings() {
+  const o = useOffline();
+  const [busy, setBusy] = useState(false);
+  const pinned = [...o.stored.values()].filter(Boolean).length;
+  return (
+    <Group title={t("settings.offline.title")} icon="download">
+      <Toggle label={t("settings.offline.enable")} hint={t("settings.offline.enableHint")} on={o.enabled} set={(v) => void setOffline({ enabled: v })} />
+      {o.enabled && (
+        <>
+          <Toggle label={t("settings.offline.autoCache")} hint={t("settings.offline.autoCacheHint")} on={o.autoCache} set={(v) => void setOffline({ autoCache: v })} />
+          <Row label={t("settings.offline.retention")} hint={t("settings.offline.retentionHint")}>
+            <Segmented
+              value={String(o.retentionDays)}
+              options={[
+                ["30", tn("settings.offline.days", 30)],
+                ["60", tn("settings.offline.days", 60)],
+                ["90", tn("settings.offline.days", 90)],
+              ]}
+              onChange={(v) => void setOffline({ retentionDays: Number(v) as 30 | 60 | 90 })}
+            />
+          </Row>
+        </>
+      )}
+      <Row
+        label={t("settings.offline.stored", { n: o.stored.size, size: fmtBytes(o.bytes) })}
+        hint={pinned ? tn("settings.offline.pinned", pinned) : t("settings.offline.pinHint")}
+      >
+        <Button
+          variant="ghost"
+          icon="trash"
+          disabled={!o.stored.size || busy}
+          onClick={async () => {
+            setBusy(true);
+            await clearStored();
+            setBusy(false);
+            toast(t("settings.offline.cleared"));
+          }}
+        >
+          {t("settings.offline.clear")}
+        </Button>
+      </Row>
+    </Group>
   );
 }
 

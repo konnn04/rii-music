@@ -56,5 +56,9 @@
   "drag": {
     "count": "{n} songs",
     "added": "Added {n} to {name}"
+  },
+  "offline": {
+    "onlyStored": "Offline · only songs stored on this device play",
+    "noConnection": "Can't reach the server"
   }
 }

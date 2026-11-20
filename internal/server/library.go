@@ -291,7 +291,11 @@ func (s *Server) canAccess(u *User, trackID string) bool {
 		q, args = `SELECT 1 FROM tracks WHERE id = ?`, []any{trackID}
 	}
 	var one int
-	return s.db.QueryRow(q, args...).Scan(&one) == nil
+	if s.db.QueryRow(q, args...).Scan(&one) == nil {
+		return true
+	}
+	// Nghe chung: the songs of the room the user is in.
+	return s.roomCanAccess(u.ID, trackID)
 }
 
 func (s *Server) handleStream(w http.ResponseWriter, r *http.Request) {

@@ -10,7 +10,9 @@ import (
 // Playback sync across a user's devices: each device reports what it plays;
 // the others hear it over SSE ("playback"), pause if they were playing, and
 // can take the session over ("Phát ở đây") with the same song, position and
-// queue. Kept in memory: a restart only forgets the last session.
+// queue. They can also control it from afar (POST /api/playback/command →
+// SSE "remote-cmd" to the playing device), like Spotify Connect. Kept in
+// memory: a restart only forgets the last session.
 
 type Playback struct {
 	DeviceID   string   `json:"deviceId"`
@@ -20,7 +22,25 @@ type Playback struct {
 	Playing    bool     `json:"playing"`
 	Upcoming   []string `json:"upcoming"` // next track ids, in order
 	SourceName string   `json:"sourceName"`
+	DurationMs int64    `json:"durationMs"`
+	Volume     float64  `json:"volume"` // 0–1
+	Shuffle    bool     `json:"shuffle"`
+	Repeat     string   `json:"repeat"` // off | all | one
 	UpdatedAt  int64    `json:"updatedAt"`
+}
+
+// sameShape: nothing a remote would show changed but the position drifting.
+func (a Playback) sameShape(b Playback) bool {
+	if a.DeviceID != b.DeviceID || a.TrackID != b.TrackID || a.Playing != b.Playing || a.Volume != b.Volume ||
+		a.Shuffle != b.Shuffle || a.Repeat != b.Repeat || a.SourceName != b.SourceName || len(a.Upcoming) != len(b.Upcoming) {
+		return false
+	}
+	for i := range a.Upcoming {
+		if a.Upcoming[i] != b.Upcoming[i] {
+			return false
+		}
+	}
+	return abs64(a.PositionMs-b.PositionMs) <= 5000
 }
 
 type playbackState struct {
@@ -78,12 +98,16 @@ func (s *Server) handlePostPlayback(w http.ResponseWriter, r *http.Request) {
 		b.Upcoming = b.Upcoming[:100]
 	}
 	b.PositionMs = max(0, b.PositionMs)
+	b.Volume = min(1, max(0, b.Volume))
+	if b.Repeat != "all" && b.Repeat != "one" {
+		b.Repeat = "off"
+	}
 	b.UpdatedAt = nowMs()
 	prev, had := s.playback.get(u.ID)
 	s.playback.set(u.ID, b)
 	// Tell the user's other devices when something they'd notice changed
 	// (heartbeats of the same song on the same device stay quiet).
-	if !had || prev.DeviceID != b.DeviceID || prev.TrackID != b.TrackID || prev.Playing != b.Playing || abs64(prev.PositionMs-b.PositionMs) > 5000 {
+	if !had || !prev.sameShape(b) {
 		s.hub.Publish(u.ID, "playback", b)
 	}
 
@@ -121,6 +145,47 @@ func (s *Server) handleGetPlayback(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	writeJSON(w, http.StatusOK, map[string]any{"session": b, "tracks": tracks})
+}
+
+// RemoteCommand: what another of the user's devices asks the playing one to do.
+type RemoteCommand struct {
+	Target     string   `json:"target"` // device id of the playing device
+	From       string   `json:"from"`
+	Cmd        string   `json:"cmd"`
+	PositionMs int64    `json:"positionMs,omitempty"` // seek
+	Volume     float64  `json:"volume,omitempty"`     // volume
+	Index      int      `json:"index,omitempty"`      // jump / remove / move: position in "upcoming"
+	To         int      `json:"to,omitempty"`         // move
+	TrackID    string   `json:"trackId,omitempty"`    // jump / remove: the track expected at Index
+	TrackIDs   []string `json:"trackIds,omitempty"`   // playNow / queue
+}
+
+var remoteCmds = map[string]bool{
+	"play": true, "pause": true, "toggle": true, "next": true, "prev": true, "seek": true, "volume": true,
+	"jump": true, "remove": true, "move": true, "playNow": true, "queue": true, "shuffle": true, "repeat": true,
+}
+
+// handlePlaybackCommand relays a remote control command to the playing device.
+func (s *Server) handlePlaybackCommand(w http.ResponseWriter, r *http.Request) {
+	u := userOf(r)
+	var c RemoteCommand
+	if !readJSON(w, r, &c) {
+		return
+	}
+	if !remoteCmds[c.Cmd] || c.Target == "" || len(c.Target) > 64 || len(c.From) > 64 || len(c.TrackIDs) > 200 {
+		httpError(w, http.StatusBadRequest, "Lệnh không hợp lệ")
+		return
+	}
+	for _, id := range append(c.TrackIDs, c.TrackID) {
+		if id != "" && !s.canAccess(u, id) {
+			httpError(w, http.StatusNotFound, "Không có bài này")
+			return
+		}
+	}
+	c.Volume = min(1, max(0, c.Volume))
+	c.PositionMs = max(0, c.PositionMs)
+	s.hub.Publish(u.ID, "remote-cmd", c)
+	w.WriteHeader(http.StatusNoContent)
 }
 
 func abs64(x int64) int64 {

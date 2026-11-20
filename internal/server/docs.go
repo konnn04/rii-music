@@ -102,6 +102,16 @@ var apiDocs = []apiDoc{
 	{"POST", "/api/nowplaying", "Discord", "Báo bài đang phát (khi bật Trạng thái Discord)", "", nil, `{"trackId":"…","positionMs":42000,"playing":true}`, ``},
 	{"POST", "/api/playback", "Phát nhạc", "Báo trạng thái phát của thiết bị này (đồng bộ giữa thiết bị, Discord)", "", nil, `{"deviceId":"…","deviceName":"Chrome · Windows","trackId":"…","positionMs":42000,"playing":true,"upcoming":["…"]}`, ``},
 	{"GET", "/api/playback", "Phát nhạc", "Phiên phát gần nhất (thiết bị, bài, vị trí, hàng chờ) để tiếp tục ở đây", "", nil, ``, `{"session":{},"tracks":[]}`},
+	{"POST", "/api/rooms", "Nghe chung", "Tạo phòng (mã 6 ký tự) với hàng chờ của bạn; bạn là chủ phòng", "", nil, `{"queue":["…"],"index":0,"positionMs":0,"playing":true}`, `{"room":{"code":"K7M2QX"},"tracks":[]}`},
+	{"GET", "/api/rooms/mine", "Nghe chung", "Phòng bạn đang ở (để vào lại sau khi tải lại trang)", "", nil, ``, `{"room":null}`},
+	{"GET", "/api/rooms/{code}", "Nghe chung", "Phòng: thành viên, trạng thái phát, bài", "", nil, ``, ``},
+	{"POST", "/api/rooms/{code}/join", "Nghe chung", "Vào phòng bằng mã (mỗi tài khoản một chỗ; vào lại giữ vai trò)", "", nil, ``, ``},
+	{"POST", "/api/rooms/{code}/leave", "Nghe chung", "Rời phòng (chủ phòng rời thì phòng đóng)", "", nil, ``, ``},
+	{"POST", "/api/rooms/{code}/heartbeat", "Nghe chung", "Vẫn đang nghe (mỗi 20 giây)", "", nil, ``, `{"rev":3}`},
+	{"POST", "/api/rooms/{code}/state", "Nghe chung", "Chủ phòng / người điều hành đổi bài, vị trí, phát / dừng", "", nil, `{"queue":["…"],"index":0,"positionMs":30000,"playing":true}`, `{"rev":4}`},
+	{"POST", "/api/rooms/{code}/role", "Nghe chung", "Chủ phòng đặt vai trò: controller (điều hành) hoặc listener (chỉ nghe)", "", nil, `{"userId":"…","role":"controller"}`, ``},
+	{"DELETE", "/api/rooms/{code}", "Nghe chung", "Chủ phòng đóng phòng", "", nil, ``, ``},
+	{"POST", "/api/playback/command", "Phát nhạc", "Điều khiển từ xa thiết bị đang phát: play, pause, toggle, next, prev, seek, volume, jump, remove, move, playNow, queue, shuffle, repeat", "", nil, `{"target":"<deviceId>","cmd":"seek","positionMs":60000}`, ``},
 	{"GET", "/api/agent/nowplaying", "Discord", "Agent đọc bài đang phát (token loại agent)", "agent", nil, ``, `{"nowPlaying":{"title":"…"},"discordClientId":"…"}`},
 
 	// admin

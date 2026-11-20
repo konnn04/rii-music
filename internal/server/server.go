@@ -37,6 +37,7 @@ type Server struct {
 	co       coIndex
 	np       nowPlayingState
 	playback playbackState
+	rooms    roomHub
 	autodl   *autoDL
 	logs     *LogBuffer
 }
@@ -155,6 +156,16 @@ func (s *Server) Handler() http.Handler {
 	api("POST /api/nowplaying", s.handlePostNowPlaying)
 	api("POST /api/playback", s.handlePostPlayback)
 	api("GET /api/playback", s.handleGetPlayback)
+	api("POST /api/playback/command", s.handlePlaybackCommand)
+	api("POST /api/rooms", s.handleCreateRoom)
+	api("GET /api/rooms/mine", s.handleMyRoom)
+	api("GET /api/rooms/{code}", s.handleGetRoom)
+	api("POST /api/rooms/{code}/join", s.handleJoinRoom)
+	api("POST /api/rooms/{code}/leave", s.handleLeaveRoom)
+	api("POST /api/rooms/{code}/heartbeat", s.handleRoomHeartbeat)
+	api("POST /api/rooms/{code}/state", s.handleRoomState)
+	api("POST /api/rooms/{code}/role", s.handleRoomRole)
+	api("DELETE /api/rooms/{code}", s.handleCloseRoom)
 	api("GET /api/discord", s.handleDiscordInfo)
 	mux.HandleFunc("GET /api/agent/nowplaying", s.handleAgentNowPlaying) // agent token
 

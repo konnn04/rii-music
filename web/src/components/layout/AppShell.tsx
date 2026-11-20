@@ -25,6 +25,7 @@ import { RemoteBanner } from "@/components/RemoteBanner";
 import { clearStored, initOffline, useOffline } from "@/lib/offline";
 import { useFollows } from "@/lib/follows";
 import { useNet } from "@/player/net";
+import { initRoom } from "@/player/room";
 import { FollowedRow } from "@/components/Follow";
 
 // `header`: shown as an icon in the top bar (desktop) and the mobile header
@@ -54,6 +55,7 @@ export function AppShell() {
     engine.init();
     startSync(); // one player at a time across tabs and devices
     void initOffline();
+    void initRoom(); // back into a Nghe chung room after a reload
     connectEvents();
   }, []);
   useEffect(() => {

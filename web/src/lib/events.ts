@@ -7,7 +7,8 @@ import { engine } from "@/player/engine";
 import { isAutoplayJob, onJobEvent } from "@/player/autofill";
 import { onJobForPlay } from "./playweb";
 import { onJobForList } from "@/player/playlistFill";
-import { onRemotePlayback, type RemoteSession } from "@/player/sync";
+import { onRemoteCommand, onRemotePlayback, type RemoteSession } from "@/player/sync";
+import { onRoomEvent, type RoomEvent } from "@/player/room";
 import { t, tsv } from "@/i18n";
 
 let es: EventSource | null = null;
@@ -39,6 +40,10 @@ export function connectEvents() {
   });
   // Another device of this user started / paused / changed song.
   es.addEventListener("playback", (e) => onRemotePlayback(JSON.parse((e as MessageEvent).data) as RemoteSession));
+  // Another device of this user controls this one (remote control).
+  es.addEventListener("remote-cmd", (e) => void onRemoteCommand(JSON.parse((e as MessageEvent).data)));
+  // Nghe chung: the room's state, members or closing.
+  es.addEventListener("room", (e) => onRoomEvent(JSON.parse((e as MessageEvent).data) as RoomEvent));
   es.addEventListener("jobRemoved", () => queryClient.invalidateQueries({ queryKey: ["jobs"] }));
   es.addEventListener("jobsCleared", () => queryClient.invalidateQueries({ queryKey: ["jobs"] }));
   const lib = () => {

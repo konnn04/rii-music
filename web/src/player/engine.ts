@@ -13,6 +13,8 @@ import { notifyPlaylistQueueEnded } from "./playlistFill";
 import { consumeEndOfTrack, onSleepFade, useSleep } from "./sleep";
 import { FxChain } from "./fx";
 import { t } from "@/i18n";
+import { useOffline } from "@/lib/offline";
+import { isOffline, noteNetworkFailure, useNet } from "./net";
 
 const PRELOAD_BEFORE = 15; // seconds before the end to load the next track
 const FADE = 0.2; // pause/play/seek fade, seconds
@@ -55,6 +57,9 @@ class Engine {
   private transition: "auto" | "crossfade" | null = null;
   private listen: Listen | null = null;
   private errorStreak = 0;
+  /** Offline: unstored songs skipped in a row (to stop when none is left). */
+  private offlineSkips = 0;
+  private offlineNoticed = false;
   private rampTimer: number | null = null;
   private lastPosSave = 0;
   private started = false;
@@ -88,6 +93,11 @@ class Engine {
       }
       this.applyMaster();
     });
+    // Back online: the next offline spell gets its notice again.
+    useNet.subscribe((n) => {
+      if (!n.serverDown) this.offlineNoticed = false;
+    });
+    window.addEventListener("online", () => (this.offlineNoticed = false));
     this.restore();
     this.setupMediaSession();
     // Hẹn giờ ngủ: fade the music out over the last seconds, then pause.
@@ -369,6 +379,41 @@ class Engine {
 
   private onError() {
     const p = usePlayer.getState();
+    const id = p.current?.track.id;
+    // Not stored on this device: if we are offline, quietly move on to a song
+    // that is, instead of reporting an error.
+    if (id && !useOffline.getState().stored.has(id)) {
+      void noteNetworkFailure().then((down) => {
+        if (usePlayer.getState().current?.track.id !== id) return;
+        if (down || !navigator.onLine) {
+          usePlayback.setState({ error: null });
+          this.skipUnstored();
+        } else this.reportError();
+      });
+      return;
+    }
+    this.reportError();
+  }
+
+  /** Offline: jump to the next song stored on this device. */
+  private skipUnstored() {
+    if (!this.offlineNoticed) {
+      this.offlineNoticed = true;
+      toast(t("ui.offline.skipping"));
+    }
+    this.transition = "auto";
+    if (++this.offlineSkips > 500 || !usePlayer.getState().advance()) {
+      this.offlineSkips = 0;
+      this.transition = null;
+      const el = this.slots[this.active].el;
+      el.pause();
+      usePlayback.setState({ isPlaying: false, buffering: false });
+      toast(t("ui.offline.noneLeft"));
+    }
+  }
+
+  private reportError() {
+    const p = usePlayer.getState();
     this.errorStreak++;
     const name = p.current?.track.title ?? "";
     usePlayback.setState({ isPlaying: false, buffering: false, error: t("ui.player.playError") });
@@ -406,6 +451,13 @@ class Engine {
       this.updateMediaSession(null);
       return;
     }
+
+    if (isOffline() && !useOffline.getState().stored.has(entry.track.id)) {
+      cur.el.pause();
+      this.skipUnstored();
+      return;
+    }
+    this.offlineSkips = 0;
 
     this.updateMediaSession(entry);
     this.updateAccent(entry);

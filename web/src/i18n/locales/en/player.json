@@ -70,7 +70,8 @@
     "use": "Use these",
     "picked": "Lyrics picked. When several listeners pick the same, others get them suggested too.",
     "pasteHint": "Paste plain lyrics, or LRC ([mm:ss.xx] line) for synced lyrics. Only you see them.",
-    "find": "Find lyrics"
+    "find": "Find lyrics",
+    "offline": "Offline · these lyrics aren't stored on this device"
   },
   "np": {
     "title": "Now playing",

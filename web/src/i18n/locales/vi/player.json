@@ -70,7 +70,8 @@
     "use": "Dùng lời này",
     "picked": "Đã chọn lời. Lần sau ai nghe bài này cũng được gợi ý lời đó khi nhiều người chọn giống bạn.",
     "pasteHint": "Dán lời thường, hoặc định dạng LRC ([mm:ss.xx] dòng lời) để có lời đồng bộ. Chỉ bạn thấy lời này.",
-    "find": "Tìm lời"
+    "find": "Tìm lời",
+    "offline": "Đang offline · lời bài này chưa có trên máy"
   },
   "np": {
     "title": "Đang phát",

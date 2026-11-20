@@ -19,6 +19,8 @@ import { openDialog, type TrackContext } from "./dialogs";
 import { toast } from "./ui/Toast";
 import { t, tn } from "@/i18n";
 import { ArtistLinks } from "@/components/ArtistLinks";
+import { useOffline } from "@/lib/offline";
+import { useNet } from "@/player/net";
 
 /** The scrolling <main> element, so lists can virtualise against it. */
 export const useScrollEl = create<{ el: HTMLElement | null }>(() => ({ el: null }));
@@ -215,6 +217,11 @@ const Row = memo(function Row({
 }: RowShared & { track: Track; index: number; dragHandle?: Record<string, unknown> }) {
   const isCurrent = usePlayer((s) => s.current?.track.id === track.id);
   const isPlaying = usePlayback((s) => s.isPlaying);
+  // Offline: songs not stored on this device are dimmed (they get skipped).
+  const stored = useOffline((s) => s.stored.has(track.id));
+  const browserOffline = useOffline((s) => !s.online);
+  const serverDown = useNet((n) => n.serverDown);
+  const unavailable = (browserOffline || serverDown) && !stored;
   const canHover = useCanHover();
   const like = useToggleLike();
   const pressTimer = useRef<number | null>(null);
@@ -310,7 +317,7 @@ const Row = memo(function Row({
       }}
       {...touchHandlers}
       className={`group focus-ring grid h-full cursor-default select-none items-center gap-3 rounded-control px-2 transition-colors duration-fast
-        ${isSel ? "bg-accent-soft" : "hover:bg-surface-2"}`}
+        ${isSel ? "bg-accent-soft" : "hover:bg-surface-2"} ${unavailable ? "opacity-40" : ""}`}
       style={desktop ? { gridTemplateColumns: cols } : { gridTemplateColumns: `${selecting ? "32px " : ""}auto minmax(0,1fr) auto` }}
     >
       {selecting && !desktop && <SelBox on={isSel} />}

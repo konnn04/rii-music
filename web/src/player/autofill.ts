@@ -8,6 +8,7 @@
 
 import { api, type Job, type Track } from "@/lib/api";
 import { usePlayback, usePlayer } from "./store";
+import { isOffline } from "./net";
 
 const LOW_WATER = 5; // refill when fewer upcoming tracks than this
 const TARGET = 10; // each refill tops the queue up to at least this many
@@ -43,6 +44,7 @@ async function refill() {
   const cur = s.current;
   if (s.autoplayMode === "off" || !cur || s.repeat !== "off" || inflight || lastSeed === cur.uid) return;
   if (upcomingCount() >= LOW_WATER) return;
+  if (isOffline()) return; // no radio or downloads without the server
 
   inflight = true;
   lastSeed = cur.uid;

@@ -10,6 +10,7 @@ import { Button } from "../ui/Button";
 import { Dialog } from "../ui/Dialog";
 import { Icon } from "../ui/Icon";
 import { toast } from "../ui/Toast";
+import { useNet } from "@/player/net";
 
 type Line = { t: number; text: string };
 
@@ -56,6 +57,8 @@ type Tab = "offset" | "search" | "paste";
 export function LyricsView({ size = "md", className = "" }: { size?: "md" | "lg"; className?: string }) {
   const track = usePlayer((s) => s.current?.track);
   const { data, isLoading, isError, refetch } = useLyrics(track?.id);
+  const serverDown = useNet((n) => n.serverDown);
+  const offline = serverDown || !navigator.onLine;
   const [tools, setTools] = useState<Tab | null>(null);
 
   if (!track) return <Center>{t("player.lyrics.nothingPlaying")}</Center>;
@@ -64,6 +67,13 @@ export function LyricsView({ size = "md", className = "" }: { size?: "md" | "lg"
       <Center>
         <Icon name="loader" size={28} />
         <span>{t("player.lyrics.looking")}</span>
+      </Center>
+    );
+  if (isError && offline)
+    return (
+      <Center>
+        <Icon name="lyrics" size={28} />
+        <span>{t("player.lyrics.offline")}</span>
       </Center>
     );
   if (isError)

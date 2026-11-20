@@ -129,7 +129,7 @@ export function SettingsPage() {
             ))}
           </dl>
         </Group>
-
+        <AboutCard />
       </div>
     </div>
   );
@@ -404,7 +404,6 @@ function AccentPicker({ value, onChange }: { value: string; onChange: (v: string
         >
           <Icon name="music-note" size={18} className="text-[#0E0F12]" />
         </Swatch>
-        <AboutCard />
       </div>
     </div>
   );

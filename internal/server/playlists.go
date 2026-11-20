@@ -15,7 +15,7 @@ import (
 const likedID = "liked"
 
 type Rule struct {
-	Type  string `json:"type"` // top30 | recent | unplayed | artist
+	Type  string `json:"type"` // top30 | recent | unplayed | artist | genre
 	Value string `json:"value,omitempty"`
 	Limit int    `json:"limit,omitempty"`
 }
@@ -37,6 +37,11 @@ func (r *Rule) validate() error {
 	case "artist":
 		if strings.TrimSpace(r.Value) == "" {
 			return errors.New("Chọn nghệ sĩ cho playlist thông minh")
+		}
+	case "genre":
+		r.Value = strings.ToLower(strings.TrimSpace(r.Value))
+		if r.Value == "" {
+			return errors.New("Chọn thể loại cho playlist thông minh")
 		}
 	default:
 		return errors.New("Luật playlist không hợp lệ")
@@ -71,6 +76,9 @@ func (s *Server) resolveRule(uid string, r Rule) ([]Track, error) {
 		return s.libTracks(uid, `AND ut.play_count = 0 ORDER BY ut.added_at DESC LIMIT ?`, lim)
 	case "artist":
 		return s.libTracks(uid, `AND t.artist = ? ORDER BY ut.play_count DESC LIMIT ?`, r.Value, lim)
+	case "genre":
+		// genres is "pop,ballad,vpop": match one whole item
+		return s.libTracks(uid, `AND (',' || t.genres || ',') LIKE ? ORDER BY ut.play_count DESC, ut.added_at DESC LIMIT ?`, "%,"+r.Value+",%", lim)
 	}
 	return []Track{}, nil
 }

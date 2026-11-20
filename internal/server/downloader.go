@@ -687,6 +687,10 @@ func (d *Downloader) ingest(ctx context.Context, j *Job, tmp, src string, info *
 	if err != nil {
 		s.log.Debug("YouTube Music metadata", "video", info.ID, "err", err)
 	}
+	metaSource := "heuristic" // guessed from the video title: MusicBrainz may confirm it later
+	if ytm != nil && len(ytm.Artists) > 0 && (ytm.Type == "MUSIC_VIDEO_TYPE_ATV" || ytm.Type == "MUSIC_VIDEO_TYPE_OMV") {
+		metaSource = "ytm"
+	}
 	artist, title, album := trackMeta(ytm, textutil.Meta{
 		Title: info.Title, Track: info.Track, Artist: info.Artist, Artists: info.Artists,
 		Creator: info.Creator, Uploader: info.Uploader, Channel: info.Channel, Album: info.Album,
@@ -764,10 +768,10 @@ func (d *Downloader) ingest(ctx context.Context, j *Job, tmp, src string, info *
 
 	now := nowMs()
 	err = s.tx(func(exec func(string, ...any) error) error {
-		if err := exec(`INSERT INTO tracks(id, source, source_id, source_url, title, artist, album, duration_ms, file_path, mime, size_bytes, has_cover, loudness_done, search, lang, added_at)
-			VALUES (?, 'youtube', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?, ?, ?)`,
+		if err := exec(`INSERT INTO tracks(id, source, source_id, source_url, title, artist, album, duration_ms, file_path, mime, size_bytes, has_cover, loudness_done, search, lang, meta_source, mb_done, added_at)
+			VALUES (?, 'youtube', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?, ?, ?, ?, ?)`,
 			id, info.ID, info.WebpageURL, title, artist, album, int64(info.Duration*1000), rel, mime, size, hasCover,
-			searchText(title, artist, album), textutil.DetectLang(title, artist), now); err != nil {
+			searchText(title, artist, album), textutil.DetectLang(title, artist), metaSource, metaSource == "ytm", now); err != nil {
 			return err
 		}
 		return exec(`INSERT INTO user_tracks(user_id, track_id, origin, added_at) VALUES (?,?,?,?)`, j.UserID, id, j.Origin, now)

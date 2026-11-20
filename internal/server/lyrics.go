@@ -165,6 +165,10 @@ func (s *Server) saveShared(id string, l Lyrics) error {
 	_, err := s.db.Exec(`INSERT INTO lyrics(track_id, plain, synced, source, offset_ms, lrclib_id, updated_at) VALUES (?,?,?,?,?,?,?)
 		ON CONFLICT(track_id) DO UPDATE SET plain=excluded.plain, synced=excluded.synced, source=excluded.source, offset_ms=excluded.offset_ms, lrclib_id=excluded.lrclib_id, updated_at=excluded.updated_at`,
 		id, l.Plain, l.Synced, l.Source, l.OffsetMs, l.LrclibID, nowMs())
+	if err == nil {
+		s.db.Exec(`UPDATE tracks SET lyrics_embedded = 0 WHERE id = ?`, id) // write the new lyrics into the file
+		s.enrichKick()
+	}
 	return err
 }
 

@@ -67,6 +67,7 @@ func (s *Server) Start(ctx context.Context) {
 	go s.backfillLangs()
 	go s.runFeatureWorker(ctx)
 	go s.runAutoDownloader(ctx)
+	go s.runEnrichWorker(ctx)
 }
 
 func (s *Server) Handler() http.Handler {
@@ -137,6 +138,7 @@ func (s *Server) Handler() http.Handler {
 	api("GET /api/recs/discover", s.handleDiscover)
 	api("GET /api/artist/similar", s.handleArtistSimilar)
 	api("GET /api/artist/web", s.handleArtistWeb)
+	api("GET /api/genres", s.handleGenres)
 	api("GET /api/tracks/{id}/similar", s.handleTrackSimilar)
 	api("POST /api/feedback", s.handleFeedback)
 	api("GET /api/onboarding/artists", s.handleOnboardingArtists)

@@ -47,6 +47,7 @@ var apiDocs = []apiDoc{
 	{"PUT", "/api/tracks/{id}/lyrics", "Lời bài hát", "Chọn lời (lrclibId), dán lời (text), chỉnh lệch (offsetMs) hoặc reset", "", nil, `{"lrclibId":123}`, ``},
 	{"GET", "/api/artists", "Thư viện", "Nghệ sĩ trong thư viện", "", nil, ``, ``},
 	{"GET", "/api/artist", "Thư viện", "Một nghệ sĩ: bài (kể cả góp giọng), album", "", []string{"name"}, ``, ``},
+	{"GET", "/api/genres", "Thư viện", "Thể loại / tag trong thư viện và số bài mỗi loại (tự gắn ngầm từ Deezer, Last.fm)", "", nil, ``, `[{"name":"pop","count":12}]`},
 	{"GET", "/api/artist/web", "Tìm kiếm", "Bài hát và album của nghệ sĩ trên YouTube Music", "", []string{"name"}, ``, `{"songs":[],"albums":[]}`},
 	{"GET", "/api/albums", "Thư viện", "Album trong thư viện", "", nil, ``, ``},
 	{"GET", "/api/album", "Thư viện", "Một album", "", []string{"name", "artist"}, ``, ``},

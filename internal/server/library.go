@@ -29,10 +29,12 @@ type Track struct {
 	Liked        bool    `json:"liked"`
 	SourceURL    string  `json:"sourceUrl"`
 	Lang         string  `json:"lang"` // vi | en | ja | ko | zh | th | ""
+	// Genres / tags from Deezer and Last.fm, lowercase ("pop", "ballad"); filled in the background.
+	Genres []string `json:"genres"`
 }
 
 const trackCols = `SELECT t.id, t.title, t.artist, t.album, t.duration_ms, t.has_cover, t.gain_db,
-  ut.play_count, COALESCE(ut.last_played_at, 0), ut.added_at, t.mime, (l.track_id IS NOT NULL), t.source_url, t.lang `
+  ut.play_count, COALESCE(ut.last_played_at, 0), ut.added_at, t.mime, (l.track_id IS NOT NULL), t.source_url, t.lang, t.genres `
 
 // libJoin + "WHERE ut.user_id = ?" selects one user's library.
 const libJoin = `FROM user_tracks ut JOIN tracks t ON t.id = ut.track_id
@@ -48,10 +50,12 @@ func (s *Server) queryTracks(q string, args ...any) ([]Track, error) {
 	out := []Track{}
 	for rows.Next() {
 		var t Track
+		var genres string
 		if err := rows.Scan(&t.ID, &t.Title, &t.Artist, &t.Album, &t.DurationMs, &t.HasCover, &t.GainDb,
-			&t.PlayCount, &t.LastPlayedAt, &t.AddedAt, &t.Mime, &t.Liked, &t.SourceURL, &t.Lang); err != nil {
+			&t.PlayCount, &t.LastPlayedAt, &t.AddedAt, &t.Mime, &t.Liked, &t.SourceURL, &t.Lang, &genres); err != nil {
 			return nil, err
 		}
+		t.Genres = splitGenres(genres)
 		out = append(out, t)
 	}
 	return out, rows.Err()
@@ -77,7 +81,7 @@ func (s *Server) getTrack(uid, id string) (*Track, error) {
 // sharedTrack reads a track from the shared store, without per-user fields.
 func (s *Server) sharedTrack(id string) (*Track, error) {
 	ts, err := s.queryTracks(`SELECT t.id, t.title, t.artist, t.album, t.duration_ms, t.has_cover, t.gain_db,
-		0, 0, t.added_at, t.mime, 0, t.source_url, t.lang FROM tracks t WHERE t.id = ?`, id)
+		0, 0, t.added_at, t.mime, 0, t.source_url, t.lang, t.genres FROM tracks t WHERE t.id = ?`, id)
 	if err != nil {
 		return nil, err
 	}
@@ -187,7 +191,8 @@ func (s *Server) handlePatchTrack(w http.ResponseWriter, r *http.Request) {
 		httpError(w, http.StatusBadRequest, "Tên bài không được trống và tối đa 300 ký tự")
 		return
 	}
-	_, err = s.db.Exec(`UPDATE tracks SET title=?, artist=?, album=?, search=?, lang=? WHERE id=?`,
+	// Edited by hand: MusicBrainz must not "correct" it afterwards.
+	_, err = s.db.Exec(`UPDATE tracks SET title=?, artist=?, album=?, search=?, lang=?, meta_source='manual', mb_done=1 WHERE id=?`,
 		t.Title, t.Artist, t.Album, searchText(t.Title, t.Artist, t.Album), textutil.DetectLang(t.Title, t.Artist), id)
 	if err != nil {
 		s.internalError(w, r, err)

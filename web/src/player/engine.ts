@@ -9,6 +9,8 @@ import { toast } from "@/components/ui/Toast";
 import { extractAccent } from "@/lib/accent";
 import { usePlayback, usePlayer, type QueueEntry } from "./store";
 import { notifyQueueEnded } from "./autofill";
+import { notifyPlaylistQueueEnded } from "./playlistFill";
+import { consumeEndOfTrack, onSleepFade, useSleep } from "./sleep";
 import { t } from "@/i18n";
 
 const PRELOAD_BEFORE = 15; // seconds before the end to load the next track
@@ -88,6 +90,14 @@ class Engine {
     });
     this.restore();
     this.setupMediaSession();
+    // Hẹn giờ ngủ: fade the music out over the last seconds, then pause.
+    onSleepFade(async (sec) => {
+      const slot = this.slots[this.active];
+      if (slot.el.paused) return;
+      this.rampFade(slot, 0, sec);
+      await this.wait(sec);
+      if (!slot.el.paused) await this.pause();
+    });
     usePlayback.subscribe((s, prev) => {
       if (s.isPlaying !== prev.isPlaying) this.reportNowPlaying();
     });
@@ -289,6 +299,7 @@ class Engine {
     const remaining = dur - t;
     const p = usePlayer.getState();
     if (p.repeat === "one") return;
+    if (useSleep.getState().endOfTrack) return; // sleep timer: stop at the end, no crossfade
     const next = p.peekNext();
     if (!next) return;
     const other = this.slots[1 - this.active];
@@ -326,6 +337,13 @@ class Engine {
 
   private onEnded() {
     const p = usePlayer.getState();
+    if (consumeEndOfTrack()) {
+      // Sleep timer "at the end of this song".
+      this.logListen("finish");
+      usePlayback.setState({ isPlaying: false });
+      this.savePosition(true);
+      return;
+    }
     if (p.repeat === "one" && p.current) {
       this.logListen("repeat");
       this.beginListen(p.current);
@@ -337,6 +355,7 @@ class Engine {
     this.transition = "auto";
     if (!p.advance()) {
       notifyQueueEnded(); // autoplay may still be downloading the next one
+      notifyPlaylistQueueEnded(); // so may the rest of a playlist being played
       this.logListen("finish");
       usePlayback.setState({ isPlaying: false, position: 0 });
       this.slots[this.active].el.currentTime = 0;

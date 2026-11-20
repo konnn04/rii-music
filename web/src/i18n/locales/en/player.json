@@ -18,7 +18,7 @@
   "queue": {
     "empty": "The queue is empty. Pick a song to start.",
     "nowPlaying": "Now playing",
-    "manual": "Next in queue",
+    "manual": "Playing next",
     "nextFrom": "Next from {source}",
     "list": "the list",
     "clear": "Clear",
@@ -29,7 +29,9 @@
     "savedName": "Queue {date}",
     "savedAs": "Saved as “{name}”",
     "drag": "Drag to move {title}",
-    "remove": "Remove {title} from the queue"
+    "remove": "Remove {title} from the queue",
+    "added": "Added by you",
+    "boundary": "End of your queue"
   },
   "lyrics": {
     "nothingPlaying": "Nothing playing",
@@ -83,5 +85,24 @@
     "album": "Album: {album}",
     "expand": "Expand",
     "closeLyrics": "Close full-screen lyrics"
+  },
+  "sleep": {
+    "title": "Sleep timer",
+    "minutes": {
+      "one": "{n} minute",
+      "other": "{n} minutes"
+    },
+    "endOfTrack": "End of this song",
+    "endOfTrackOn": "Stops at the end of this song",
+    "left": {
+      "one": "Stops in {n} minute",
+      "other": "Stops in {n} minutes"
+    },
+    "set": {
+      "one": "Music stops in {n} minute",
+      "other": "Music stops in {n} minutes"
+    },
+    "off": "Sleep timer off",
+    "cancel": "Turn off timer"
   }
 }

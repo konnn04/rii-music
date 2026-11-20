@@ -2,8 +2,11 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import type { Track } from "@/lib/api";
 
-/** `auto`: added by autoplay (Tự động gợi ý phát), not by the user. */
-export type QueueEntry = { uid: string; track: Track; auto?: boolean };
+/**
+ * `auto`: added by autoplay (Tự động gợi ý phát), not by the user.
+ * `added`: put in with "Thêm vào hàng chờ" (after the list being played, before autoplay).
+ */
+export type QueueEntry = { uid: string; track: Track; auto?: boolean; added?: boolean };
 export type Source = { type: "library" | "playlist" | "album" | "artist" | "mix" | "radio" | "search" | "queue" | "history"; id?: string; name: string };
 export type Repeat = "off" | "all" | "one";
 export type AutoplayMode = "off" | "lib" | "free";
@@ -14,6 +17,13 @@ export const newUid = () => `${Date.now().toString(36)}-${(uidSeq++).toString(36
 /** A track without an id can't be played: never let one into the queue. */
 const playable = (ts: Track[]) => ts.filter((t) => t?.id);
 const entries = (ts: Track[]): QueueEntry[] => playable(ts).map((track) => ({ uid: newUid(), track }));
+
+/** Index just after the user's part of the upcoming context (autoplay suggestions sit at the end). */
+function activeEnd(context: QueueEntry[], pos: number) {
+  let i = context.length;
+  while (i > pos + 1 && context[i - 1].auto) i--;
+  return i;
+}
 
 function shuffled<T>(a: T[]): T[] {
   const b = a.slice();
@@ -152,9 +162,16 @@ export const usePlayer = create<State & Actions>()(
         if (!get().current) return get().playList(tracks, 0, { type: "queue", name: "Hàng đợi" });
         set((s) => ({ manual: [...entries(tracks), ...s.manual] }));
       },
+      // "Thêm vào hàng chờ": after what the user chose to play (the rest of the
+      // list and earlier additions), before autoplay suggestions. "Phát tiếp
+      // theo" (playNext) is the one that jumps ahead.
       addToQueue: (tracks) => {
         if (!get().current) return get().playList(tracks, 0, { type: "queue", name: "Hàng đợi" });
-        set((s) => ({ manual: [...s.manual, ...entries(tracks)] }));
+        set((s) => {
+          const add = playable(tracks).map((track) => ({ uid: newUid(), track, added: true }));
+          const i = activeEnd(s.context, s.pos);
+          return { context: [...s.context.slice(0, i), ...add, ...s.context.slice(i)], original: s.original ? [...s.original, ...add] : null };
+        });
       },
 
       peekNext: () => {
@@ -264,7 +281,8 @@ export const usePlayer = create<State & Actions>()(
         set((s) => {
           if (!track?.id) return {};
           const e = { uid: newUid(), track, auto: true };
-          const i = Math.max(s.pos + 1, Math.min(index, s.context.length));
+          // Suggestions never jump in front of what the user chose.
+          const i = Math.max(activeEnd(s.context, s.pos), Math.min(index, s.context.length));
           const context = [...s.context.slice(0, i), e, ...s.context.slice(i)];
           return { context, original: s.original ? [...s.original, e] : null };
         }),

@@ -11,6 +11,7 @@ import { TrackMenuButton } from "../TrackMenu";
 import { useSettings } from "@/lib/queries";
 import { usePulse } from "./Pulse";
 import { ArtistLinks } from "@/components/ArtistLinks";
+import { SleepButton } from "@/components/SleepButton";
 
 /** Dark scope with the cover blurred behind a scrim and the accent taken from the cover. */
 export function NowPlayingSurface({ children, className = "", style }: { children: ReactNode; className?: string; style?: CSSProperties }) {
@@ -159,6 +160,7 @@ export function MobileNowPlaying() {
             <div className="text-overline uppercase text-np-fg-muted">{t("player.np.playingFrom")}</div>
             <div className="truncate text-label">{source?.name ? tsv(source.name) : t("common.nav.library")}</div>
           </div>
+          <SleepButton size={22} className="!text-fg" />
           <TrackMenuButton track={current.track} className="!text-fg" />
         </header>
 

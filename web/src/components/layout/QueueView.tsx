@@ -28,7 +28,8 @@ export function QueueView({ compact }: { compact?: boolean }) {
   const [showAll, setShowAll] = useState(false);
   const create = useCreatePlaylist();
   const rest = context.slice(pos + 1);
-  const restSource = rest.filter((e) => !e.auto);
+  const restSource = rest.filter((e) => !e.auto && !e.added);
+  const restAdded = rest.filter((e) => e.added && !e.auto);
   const restAuto = rest.filter((e) => e.auto);
   const shown = showAll ? restSource : restSource.slice(0, LIMIT);
 
@@ -90,8 +91,22 @@ export function QueueView({ compact }: { compact?: boolean }) {
             )}
           </Group>
         )}
+        {restAdded.length > 0 && (
+          <Group title={t("player.queue.added")}>
+            <SortableContext items={restAdded.map((e) => e.uid)} strategy={verticalListSortingStrategy}>
+              {restAdded.map((e) => (
+                <QueueRow key={e.uid} e={e} />
+              ))}
+            </SortableContext>
+          </Group>
+        )}
         {restAuto.length > 0 && (
-          <Group title={t("player.autoplay.label")} action={compact ? <AutoplayButton np /> : undefined}>
+          // Boundary: everything above is what you chose; below is suggested.
+          <Group
+            title={t("player.autoplay.label")}
+            boundary={manual.length + restSource.length + restAdded.length > 0 ? t("player.queue.boundary") : undefined}
+            action={compact ? <AutoplayButton np /> : undefined}
+          >
             <SortableContext items={restAuto.map((e) => e.uid)} strategy={verticalListSortingStrategy}>
               {restAuto.map((e) => (
                 <QueueRow key={e.uid} e={e} />
@@ -127,9 +142,16 @@ function ClearBtn({ onClick }: { onClick: () => void }) {
   );
 }
 
-function Group({ title, action, children }: { title: string; action?: React.ReactNode; children: React.ReactNode }) {
+function Group({ title, action, boundary, children }: { title: string; action?: React.ReactNode; boundary?: string; children: React.ReactNode }) {
   return (
     <section className="mt-3">
+      {boundary && (
+        <div className="mb-2 flex items-center gap-2 px-2 text-caption text-np-fg-muted" role="separator">
+          <span className="h-px flex-1 border-t border-dashed border-white/25" />
+          {boundary}
+          <span className="h-px flex-1 border-t border-dashed border-white/25" />
+        </div>
+      )}
       <div className="flex min-h-10 items-center justify-between gap-2 px-2">
         <h3 className="truncate text-overline uppercase text-np-fg-muted">{title}</h3>
         {action}

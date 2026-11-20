@@ -6,6 +6,7 @@ import { usePlayer } from "@/player/store";
 import { engine } from "@/player/engine";
 import { isAutoplayJob, onJobEvent } from "@/player/autofill";
 import { onJobForPlay } from "./playweb";
+import { onPlaylistChanged } from "@/player/playlistFill";
 import { t, tsv } from "@/i18n";
 
 let es: EventSource | null = null;
@@ -41,7 +42,9 @@ export function connectEvents() {
     libTimer = window.setTimeout(invalidateLibrary, 400); // coalesce bursts (playlist downloads)
   };
   es.addEventListener("library", lib);
-  es.addEventListener("playlists", () => {
+  es.addEventListener("playlists", (e) => {
+    const { id } = JSON.parse((e as MessageEvent).data || "{}") as { id?: string };
+    if (id) onPlaylistChanged(id); // a song of a playlist being played finished downloading
     queryClient.invalidateQueries({ queryKey: ["playlists"] });
     queryClient.invalidateQueries({ queryKey: ["playlist"] });
   });

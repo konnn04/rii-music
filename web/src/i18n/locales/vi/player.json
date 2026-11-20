@@ -18,7 +18,7 @@
   "queue": {
     "empty": "Hàng đợi trống. Chọn một bài để bắt đầu.",
     "nowPlaying": "Đang phát",
-    "manual": "Tiếp theo trong hàng đợi",
+    "manual": "Phát tiếp theo",
     "nextFrom": "Tiếp theo từ {source}",
     "list": "danh sách",
     "clear": "Xoá hết",
@@ -29,7 +29,9 @@
     "savedName": "Hàng đợi {date}",
     "savedAs": "Đã lưu thành “{name}”",
     "drag": "Kéo để đổi vị trí {title}",
-    "remove": "Xoá {title} khỏi hàng đợi"
+    "remove": "Xoá {title} khỏi hàng đợi",
+    "added": "Bạn đã thêm",
+    "boundary": "Hết phần bạn chọn"
   },
   "lyrics": {
     "nothingPlaying": "Chưa phát bài nào",
@@ -83,5 +85,24 @@
     "album": "Album: {album}",
     "expand": "Mở rộng",
     "closeLyrics": "Đóng lời toàn màn hình"
+  },
+  "sleep": {
+    "title": "Hẹn giờ ngủ",
+    "minutes": {
+      "one": "{n} phút",
+      "other": "{n} phút"
+    },
+    "endOfTrack": "Hết bài này",
+    "endOfTrackOn": "Dừng khi hết bài này",
+    "left": {
+      "one": "Dừng sau {n} phút",
+      "other": "Dừng sau {n} phút"
+    },
+    "set": {
+      "one": "Nhạc sẽ dừng sau {n} phút",
+      "other": "Nhạc sẽ dừng sau {n} phút"
+    },
+    "off": "Đã tắt hẹn giờ ngủ",
+    "cancel": "Tắt hẹn giờ"
   }
 }

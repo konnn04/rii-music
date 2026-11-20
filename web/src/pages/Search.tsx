@@ -6,14 +6,14 @@ import { playWeb, usePendingPlay } from "@/lib/playweb";
 import { Dialog } from "@/components/ui/Dialog";
 import { notify, toast } from "@/components/ui/Toast";
 import { fmtTime } from "@/lib/format";
-import { api, type Track, type WebKind, type WebList, type WebResult } from "@/lib/api";
-import { usePlayer } from "@/player/store";
+import { api, type WebKind, type WebList, type WebResult } from "@/lib/api";
 import { Icon } from "@/components/ui/Icon";
 import { Button } from "@/components/ui/Button";
 import { Empty, ErrorState } from "@/components/ui/misc";
 import { PageHeader } from "@/components/layout/AppShell";
 import { t } from "@/i18n";
 import { ArtistLinks } from "@/components/ArtistLinks";
+import { playFollowing } from "@/player/playlistFill";
 
 export function SearchPage() {
   const { q = "" } = useSearch({ from: "/search" });
@@ -206,10 +206,7 @@ function CollectionDialog({ r, onClose }: { r: WebResult; onClose: () => void })
         text: res.queued ? t("search.collection.savedQueued", { n: res.queued }) : t("search.collection.savedAll"),
         action: { label: t("search.collection.open"), onClick: () => navigate({ to: "/playlist/$id", params: { id: res.playlist.id } }) },
       });
-      if (andPlay) {
-        const pl = await api<{ tracks: Track[] }>(`/api/playlists/${res.playlist.id}`);
-        if (pl.tracks.length) usePlayer.getState().playList(pl.tracks, 0, { type: "playlist", id: res.playlist.id, name: res.playlist.name }, { shuffle: false });
-      }
+      if (andPlay) await playFollowing(res.playlist.id, res.playlist.name);
       onClose();
     } catch (e) {
       toast((e as Error).message, "error");

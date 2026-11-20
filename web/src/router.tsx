@@ -1,4 +1,4 @@
-import { createRootRoute, createRoute, createRouter } from "@tanstack/react-router";
+import { createRootRoute, createRoute, createRouter, lazyRouteComponent } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { Tooltip } from "radix-ui";
 import { useEffect } from "react";
@@ -11,14 +11,7 @@ import { Button } from "./components/ui/Button";
 import { Icon } from "./components/ui/Icon";
 import { Login } from "./pages/Login";
 import { HomePage } from "./pages/Home";
-import { SearchPage } from "./pages/Search";
 import { LibraryPage, type LibTab } from "./pages/Library";
-import { AlbumPage, ArtistPage, PlaylistPage } from "./pages/Detail";
-import { DownloadsPage } from "./pages/Downloads";
-import { HistoryPage } from "./pages/History";
-import { SettingsPage } from "./pages/Settings";
-import { DiscoverPage } from "./pages/Discover";
-import { AdminPage } from "./pages/Admin";
 import { SharePage } from "./pages/Share";
 import { DocsPage } from "./pages/Docs";
 import { t } from "./i18n";
@@ -107,6 +100,18 @@ function OfflineScreen({ onRetry, retrying }: { onRetry: () => void; retrying: b
     </div>
   );
 }
+
+// Pages other than Home and Library load when first opened (smaller first
+// download; the service worker still precaches every chunk for offline use).
+const SearchPage = lazyRouteComponent(() => import("./pages/Search"), "SearchPage");
+const PlaylistPage = lazyRouteComponent(() => import("./pages/Detail"), "PlaylistPage");
+const AlbumPage = lazyRouteComponent(() => import("./pages/Detail"), "AlbumPage");
+const ArtistPage = lazyRouteComponent(() => import("./pages/Detail"), "ArtistPage");
+const DownloadsPage = lazyRouteComponent(() => import("./pages/Downloads"), "DownloadsPage");
+const HistoryPage = lazyRouteComponent(() => import("./pages/History"), "HistoryPage");
+const SettingsPage = lazyRouteComponent(() => import("./pages/Settings"), "SettingsPage");
+const DiscoverPage = lazyRouteComponent(() => import("./pages/Discover"), "DiscoverPage");
+const AdminPage = lazyRouteComponent(() => import("./pages/Admin"), "AdminPage");
 
 const rootRoute = createRootRoute({
   component: Root,

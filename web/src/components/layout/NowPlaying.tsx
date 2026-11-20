@@ -77,7 +77,7 @@ function TrackTitle({ big }: { big?: boolean }) {
       <h2 className={`truncate ${big ? "text-title-2" : "text-title-3"}`} title={track.title}>
         {track.title}
       </h2>
-      <ArtistLinks artist={track.artist} className="block max-w-full truncate text-body text-np-fg-muted" linkClassName="hover:text-fg hover:underline" />
+      <ArtistLinks artist={track.artist} className="block max-w-full truncate text-body text-np-fg-muted" linkClassName="hover:text-fg hover:underline" touch />
     </div>
   );
 }

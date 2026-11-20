@@ -13,13 +13,29 @@ export function splitArtists(s: string): string[] {
     .filter(Boolean);
 }
 
+/** A mouse (or trackpad) is there: small inline links can be hit precisely. */
+const finePointer = typeof matchMedia === "function" && matchMedia("(hover: hover) and (pointer: fine)").matches;
+
 /**
  * "Rhymastic, SOOBIN, Binz" as three links to each artist's page. Clicks don't
  * reach the row underneath (play / jump), and close the full-screen player.
+ * On touch screens the names are plain text (a tap on a row would too often
+ * land on a name), unless `touch` is set for a large standalone line.
  */
-export function ArtistLinks({ artist, className = "", linkClassName = "hover:text-fg hover:underline" }: { artist: string; className?: string; linkClassName?: string }) {
+export function ArtistLinks({
+  artist,
+  className = "",
+  linkClassName = "hover:text-fg hover:underline",
+  touch = false,
+}: {
+  artist: string;
+  className?: string;
+  linkClassName?: string;
+  touch?: boolean;
+}) {
   const names = splitArtists(artist || "");
   if (!names.length) return <span className={className}>{t("common.unknownArtist")}</span>;
+  if (!finePointer && !touch) return <span className={className}>{names.join(", ")}</span>;
   return (
     <span className={className}>
       {names.map((name, i) => (

@@ -172,7 +172,7 @@ func (s *Server) brandIndex(page []byte, path string) []byte {
 		head += `<meta name="robots" content="noindex" />`
 	}
 	brandJSON, _ := json.Marshal(map[string]string{"name": b.Name, "description": b.Description, "logoUrl": b.LogoURL()})
-	head += `<script>window.__VANG_BRAND__=` + strings.ReplaceAll(string(brandJSON), "<", `<`) + `</script>`
+	head += `<script>window.__RII_BRAND__=` + strings.ReplaceAll(string(brandJSON), "<", `<`) + `</script>`
 	page = bytes.Replace(page, []byte("<title>RiiMusic</title>"), []byte("<title>"+name+"</title>"+head), 1)
 	if b.LogoExt != "" {
 		page = bytes.Replace(page, []byte(`<link rel="icon" href="/icon.png" type="image/svg+xml" />`), []byte(`<link rel="icon" href="`+logo+`" />`), 1)

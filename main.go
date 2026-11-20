@@ -5,6 +5,7 @@ import (
 	"context"
 	"errors"
 	"flag"
+	"fmt"
 	"log/slog"
 	"net/http"
 	"os"
@@ -65,7 +66,19 @@ func run(log *slog.Logger, logBuf *server.LogBuffer) error {
 		}
 	}
 
-	database, err := db.Open(filepath.Join(cfg.DataDir, "vang.db"))
+	dbPath := filepath.Join(cfg.DataDir, "rii_music.db")
+	// The database was called vang.db before the rename: take it over once.
+	if old := filepath.Join(cfg.DataDir, "vang.db"); fileExists(old) && !fileExists(dbPath) {
+		for _, ext := range []string{"", "-wal", "-shm"} {
+			if fileExists(old + ext) {
+				if err := os.Rename(old+ext, dbPath+ext); err != nil {
+					return fmt.Errorf("đổi tên vang.db: %w", err)
+				}
+			}
+		}
+		log.Info("database renamed", "from", "vang.db", "to", "rii_music.db")
+	}
+	database, err := db.Open(dbPath)
 	if err != nil {
 		return err
 	}
@@ -155,8 +168,8 @@ func envOr(k, def string) string {
 // Application ID from the server (set by its admin).
 func runDiscordAgent(args []string, log *slog.Logger) error {
 	fs := flag.NewFlagSet("discord-agent", flag.ExitOnError)
-	server := fs.String("server", envOr("VANG_SERVER", "http://localhost:8080"), "địa chỉ server RiiMusic")
-	token := fs.String("token", os.Getenv("VANG_AGENT_TOKEN"), "token agent (Cài đặt → Trạng thái Discord)")
+	server := fs.String("server", envOr("RIIMUSIC_SERVER", "http://localhost:8080"), "địa chỉ server RiiMusic")
+	token := fs.String("token", os.Getenv("RIIMUSIC_AGENT_TOKEN"), "token agent (Cài đặt → Trạng thái Discord)")
 	clientID := fs.String("client-id", os.Getenv("DISCORD_CLIENT_ID"), "Discord Application ID (mặc định lấy từ server)")
 	fs.Parse(args)
 	if *token == "" {
@@ -167,4 +180,9 @@ func runDiscordAgent(args []string, log *slog.Logger) error {
 	log.Info("discord agent đang chạy", "server", *server)
 	a := &discordrpc.Agent{Server: *server, Token: *token, ClientID: *clientID, Log: log}
 	return a.Run(ctx)
+}
+
+func fileExists(p string) bool {
+	_, err := os.Stat(p)
+	return err == nil
 }

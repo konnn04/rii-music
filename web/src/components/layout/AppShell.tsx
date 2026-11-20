@@ -284,9 +284,9 @@ export function Avatar({ name, size = 32 }: { name: string; size?: number }) {
 export async function logout() {
   await api("/api/auth/logout", { method: "POST" }).catch(() => {});
   engine.pause();
-  localStorage.removeItem("vang-player");
-  localStorage.removeItem("vang-pos");
-  localStorage.removeItem("vang-uid");
+  localStorage.removeItem("rii-player");
+  localStorage.removeItem("rii-pos");
+  localStorage.removeItem("rii-uid");
   location.href = "/";
 }
 

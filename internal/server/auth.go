@@ -26,9 +26,9 @@ import (
 )
 
 const (
-	sessionCookie = "vang_session"
+	sessionCookie = "rii_session"
 	sessionTTL    = 30 * 24 * time.Hour
-	csrfHeader    = "X-Vang"
+	csrfHeader    = "X-RiiMusic"
 
 	otpTTL      = 10 * time.Minute
 	otpCooldown = 60 * time.Second
@@ -127,7 +127,7 @@ func checkPassword(stored, pw string) bool {
 }
 
 // dummyHash keeps "no such user" as slow as "wrong password".
-var dummyHash, _ = hashPassword("vang-dummy-password")
+var dummyHash, _ = hashPassword("riimusic-dummy-password")
 
 func validPassword(pw string) error {
 	if len([]rune(pw)) < minPassLen {
@@ -238,7 +238,7 @@ func (s *Server) sessionUser(r *http.Request) *User {
 }
 
 // requireAuth rejects requests without a valid session. State-changing requests
-// must also carry the X-Vang header, which a cross-site form cannot set.
+// must also carry the X-RiiMusic header, which a cross-site form cannot set.
 func (s *Server) requireAuth(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// A personal API token (scripts) needs no CSRF header: browsers never
@@ -253,7 +253,7 @@ func (s *Server) requireAuth(next http.Handler) http.Handler {
 			return
 		}
 		if r.Method != http.MethodGet && r.Method != http.MethodHead && r.Header.Get(csrfHeader) == "" {
-			httpError(w, http.StatusForbidden, "Thiếu header X-Vang")
+			httpError(w, http.StatusForbidden, "Thiếu header X-RiiMusic")
 			return
 		}
 		next.ServeHTTP(w, r.WithContext(context.WithValue(r.Context(), ctxKey{}, u)))
@@ -273,7 +273,7 @@ func (s *Server) requireAdmin(next http.Handler) http.Handler {
 // publicPost guards the unauthenticated auth endpoints: CSRF header + rate limit.
 func (s *Server) publicPost(w http.ResponseWriter, r *http.Request, rl *RateLimiter) bool {
 	if r.Header.Get(csrfHeader) == "" {
-		httpError(w, http.StatusForbidden, "Thiếu header X-Vang")
+		httpError(w, http.StatusForbidden, "Thiếu header X-RiiMusic")
 		return false
 	}
 	if !rl.Allow(s.clientIP(r)) {
@@ -588,7 +588,7 @@ func (s *Server) EnsureAdmin() error {
 	}
 	email, ok := normEmail(s.cfg.AdminEmail)
 	if !ok {
-		email = "admin@vang.local"
+		email = "admin@riimusic.local"
 		slog.Warn("ADMIN_EMAIL chưa đặt hoặc không hợp lệ, dùng email mặc định", "email", email)
 	}
 	pw := s.cfg.AdminPassword

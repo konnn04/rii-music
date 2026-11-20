@@ -21,7 +21,7 @@ Một binary Go phục vụ cả API lẫn giao diện (Vite + React nhúng bằ
 | Trang chủ | Tiếp tục nghe, Mix hằng ngày, Nghệ sĩ bạn hay nghe, Hay nghe buổi sáng/chiều/tối, Mới thêm, Radio từ một bài. |
 | Lịch sử | Ghi finish / skip / repeat, trang Nghe gần đây, thống kê tuần/tháng/năm (phút nghe mỗi ngày, top bài, top nghệ sĩ). |
 | Giao diện | Bộ token “RiiMusic” (tối + sáng), Be Vietnam Pro, màu nhấn khung Đang phát lấy từ ảnh bìa, nền bìa mờ. Mobile: thanh tab, mini-player, Đang phát toàn màn hình (vuốt xuống để thu). PC: sidebar + playlist, panel phải Đang phát / Hàng đợi / Lời, chuột phải, Ctrl+click chọn nhiều, phím tắt. |
-| Bảo mật | Tài khoản email + mật khẩu (PBKDF2-SHA256) hoặc mã OTP qua email, cookie phiên ký HMAC (đổi mật khẩu là mọi phiên khác mất hiệu lực), giới hạn đăng nhập theo IP, OTP 6 số hết hạn 10 phút / tối đa 5 lần thử, mọi API cần đăng nhập, request thay đổi dữ liệu cần header `X-Vang`, chỉ nhận URL YouTube, tham số yt-dlp truyền bằng mảng (không qua shell). |
+| Bảo mật | Tài khoản email + mật khẩu (PBKDF2-SHA256) hoặc mã OTP qua email, cookie phiên ký HMAC (đổi mật khẩu là mọi phiên khác mất hiệu lực), giới hạn đăng nhập theo IP, OTP 6 số hết hạn 10 phút / tối đa 5 lần thử, mọi API cần đăng nhập, request thay đổi dữ liệu cần header `X-RiiMusic`, chỉ nhận URL YouTube, tham số yt-dlp truyền bằng mảng (không qua shell). |
 
 ### Tài khoản
 
@@ -94,7 +94,7 @@ docker compose up -d --build
 docker compose logs -f      # lần đầu: yt-dlp tự tải về /data/bin
 ```
 
-- Dữ liệu (DB, nhạc, ảnh bìa, yt-dlp, `cookies.txt`) nằm trong volume `vang-data` → `/data`. Sao lưu volume này là đủ.
+- Dữ liệu (DB, nhạc, ảnh bìa, yt-dlp, `cookies.txt`) nằm trong volume `rii_music-data` → `/data`. Sao lưu volume này là đủ.
 - Đặt sau reverse proxy có HTTPS (Caddy, Nginx, Traefik). Ví dụ Caddy: `nhac.example.com { reverse_proxy localhost:8080 }`. Đặt `PUBLIC_URL=https://nhac.example.com` (link trong email, link chia sẻ, ảnh bìa cho Discord).
 - SSE (cập nhật trực tiếp) cần proxy không đệm: Nginx thêm `proxy_buffering off;` cho `/api/events`.
 - Image đã có ffmpeg và deno. Agent Discord chạy bằng script (`/agent.ps1`, `/agent.sh`); muốn kèm thêm bản exe cho người dùng tải thì build với `--build-arg AGENT_BINARIES=true` (~60 MB).
@@ -105,7 +105,7 @@ docker compose logs -f      # lần đầu: yt-dlp tự tải về /data/bin
 
 | Biến | Mặc định | Ý nghĩa |
 | --- | --- | --- |
-| `ADMIN_EMAIL` / `ADMIN_PASSWORD` | `admin@vang.local` / tạo ngẫu nhiên in ra log | Admin đầu tiên (chỉ khi DB chưa có tài khoản) |
+| `ADMIN_EMAIL` / `ADMIN_PASSWORD` | `admin@riimusic.local` / tạo ngẫu nhiên in ra log | Admin đầu tiên (chỉ khi DB chưa có tài khoản) |
 | `DEFAULT_STORAGE_LIMIT_MB` | `2048` | Giới hạn dung lượng nhạc cho tài khoản mới |
 | `SMTP_HOST` / `SMTP_PORT` | `smtp.gmail.com` / `587` | Gửi mã OTP, thư mời (465 = TLS ngay) |
 | `SMTP_USERNAME` / `SMTP_PASSWORD` | | Gmail + app password. Thiếu thì OTP và quên mật khẩu tắt |
@@ -139,7 +139,7 @@ internal/db              SQLite + migration
 internal/ytdlp           quản lý binary yt-dlp, chạy tiến trình con
 internal/textutil        tìm không dấu, làm sạch tiêu đề YouTube
 internal/server          HTTP API, tài khoản (auth.go, mail.go, admin.go), SSE theo người dùng, bộ tải, lời, thống kê, đề xuất (recs.go, external.go, features.go), YouTube Music (ytmusic.go)
-internal/discordrpc      client Discord Rich Presence qua IPC (để dành cho bản desktop; trình phát phát sự kiện `vang:nowplaying`)
+internal/discordrpc      client Discord Rich Presence qua IPC (để dành cho bản desktop; trình phát phát sự kiện `riimusic:nowplaying`)
 web/                     Vite + React + TypeScript (TanStack Router/Query, Zustand, Tailwind v4, Radix, dnd-kit)
 web/src/player           store hàng đợi + engine âm thanh (crossfade, gapless, Media Session)
 ```

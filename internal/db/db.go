@@ -251,7 +251,7 @@ ALTER TABLE download_jobs ADD COLUMN playlist_pos INTEGER NOT NULL DEFAULT 0;
 }
 
 // ErrLegacyDB: a database from the single-user version.
-var ErrLegacyDB = errors.New("cơ sở dữ liệu thuộc bản một người dùng cũ: xoá (hoặc đổi tên) vang.db, thư mục music và covers trong DATA_DIR rồi chạy lại")
+var ErrLegacyDB = errors.New("cơ sở dữ liệu thuộc bản một người dùng cũ: xoá (hoặc đổi tên) rii_music.db, thư mục music và covers trong DATA_DIR rồi chạy lại")
 
 func migrate(d *sql.DB) error {
 	var version int

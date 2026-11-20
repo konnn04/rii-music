@@ -71,7 +71,7 @@
   "SMTP chưa cấu hình": "SMTP not set up",
   "Sai quá nhiều lần, hãy gửi mã mới": "Too many wrong tries, request a new code",
   "Thiếu file nhạc": "Audio file missing",
-  "Thiếu header X-Vang": "Missing X-Vang header",
+  "Thiếu header X-RiiMusic": "Missing X-RiiMusic header",
   "Thiếu tên nghệ sĩ": "Artist name missing",
   "Thiếu xác nhận": "Confirmation missing",
   "Thêm quá nhanh, đợi một phút": "Adding too fast, wait a minute",

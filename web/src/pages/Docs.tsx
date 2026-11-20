@@ -52,7 +52,7 @@ export function DocsPage() {
 
   const example = `import { RiiMusic } from "./riimusic-client";
 
-const music = new RiiMusic("${base}", process.env.VANG_TOKEN!);
+const music = new RiiMusic("${base}", process.env.RIIMUSIC_TOKEN!);
 const hits = await music.search("tìm em");
 const { jobs } = await music.download(hits.results[0].url);
 const job = await music.waitForJob(jobs[0].id);
@@ -82,7 +82,7 @@ console.log(job.status, job.trackId);`;
           <ol className="mt-4 flex max-w-3xl list-decimal flex-col gap-1 pl-5 text-body-sm">
             <li>{t("docs.step1")}</li>
             <li>
-              {t("docs.step2")} <code className="rounded-xs bg-surface-2 px-1.5 font-mono">Authorization: Bearer vang_…</code>
+              {t("docs.step2")} <code className="rounded-xs bg-surface-2 px-1.5 font-mono">Authorization: Bearer rii_…</code>
             </li>
             <li>
               {t("docs.step3")}{" "}
@@ -120,7 +120,7 @@ function Endpoint({ base, path, method, op }: { base: string; path: string; meth
   const query = (op.parameters ?? []).filter((p) => p.in === "query");
   const curl =
     `curl -X ${method.toUpperCase()} "${base}${path}${query.length ? "?" + query.map((q) => `${q.name}=…`).join("&") : ""}"` +
-    (isPublic ? "" : ` \\\n  -H "Authorization: Bearer $VANG_TOKEN"`) +
+    (isPublic ? "" : ` \\\n  -H "Authorization: Bearer $RIIMUSIC_TOKEN"`) +
     (body !== undefined ? ` \\\n  -H "Content-Type: application/json" \\\n  -d '${JSON.stringify(body)}'` : "");
   return (
     <div className="rounded-card bg-surface-1">

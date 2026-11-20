@@ -431,7 +431,7 @@ func (s *Server) handleAdminSystem(w http.ResponseWriter, r *http.Request) {
 	}
 	musicBytes, musicFiles := dirUsage(s.cfg.MusicDir())
 	coverBytes, _ := dirUsage(s.cfg.CoverDir())
-	dbPath := filepath.Join(s.cfg.DataDir, "vang.db")
+	dbPath := filepath.Join(s.cfg.DataDir, "rii_music.db")
 
 	var tracks, orphans, loudPending, users, admins int
 	var storeBytes int64

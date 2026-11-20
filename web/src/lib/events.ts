@@ -55,8 +55,8 @@ export function connectEvents() {
   es.addEventListener("reset", (e) => {
     const { scope } = JSON.parse((e as MessageEvent).data) as { scope: string };
     if (scope === "all") {
-      localStorage.removeItem("vang-player");
-      localStorage.removeItem("vang-pos");
+      localStorage.removeItem("rii-player");
+      localStorage.removeItem("rii-pos");
       location.replace("/");
     } else {
       queryClient.invalidateQueries();

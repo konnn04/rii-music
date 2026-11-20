@@ -92,7 +92,7 @@ func (a *Agent) Run(ctx context.Context) error {
 			var act *Activity
 			if np != nil && np.Playing {
 				start := time.Now().Add(-time.Duration(np.PositionMs) * time.Millisecond).Unix()
-				act = &Activity{Title: np.Title, Artist: np.Artist, Album: np.Album, StartUnix: start, ImageURL: np.CoverURL, ImageKey: "vang"}
+				act = &Activity{Title: np.Title, Artist: np.Artist, Album: np.Album, StartUnix: start, ImageURL: np.CoverURL, ImageKey: "riimusic"}
 				if np.DurationMs > 0 {
 					act.EndUnix = start + np.DurationMs/1000
 				}

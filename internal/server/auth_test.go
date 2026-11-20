@@ -25,7 +25,7 @@ func newTestServer(t *testing.T) (*Server, *httptest.Server) {
 	for _, d := range []string{"music", "covers", "tmp", "bin"} {
 		os.MkdirAll(filepath.Join(dir, d), 0o755)
 	}
-	database, err := db.Open(filepath.Join(dir, "vang.db"))
+	database, err := db.Open(filepath.Join(dir, "rii_music.db"))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -64,7 +64,7 @@ func (c *client) do(method, path string, body any) (int, map[string]any) {
 	}
 	req, _ := http.NewRequest(method, c.base+path, rd)
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("X-Vang", "1")
+	req.Header.Set("X-RiiMusic", "1")
 	res, err := c.hc.Do(req)
 	if err != nil {
 		c.t.Fatal(err)
@@ -226,20 +226,20 @@ func TestPasswordHash(t *testing.T) {
 
 func TestDotEnv(t *testing.T) {
 	p := filepath.Join(t.TempDir(), ".env")
-	os.WriteFile(p, []byte("# comment\nVANG_TEST_A=one\nexport VANG_TEST_B=\"two words\"\nVANG_TEST_C=x # trailing\nVANG_TEST_SET=file\n"), 0o600)
-	t.Setenv("VANG_TEST_SET", "shell")
-	os.Unsetenv("VANG_TEST_A")
-	os.Unsetenv("VANG_TEST_B")
-	os.Unsetenv("VANG_TEST_C")
+	os.WriteFile(p, []byte("# comment\nRIIMUSIC_TEST_A=one\nexport RIIMUSIC_TEST_B=\"two words\"\nRIIMUSIC_TEST_C=x # trailing\nRIIMUSIC_TEST_SET=file\n"), 0o600)
+	t.Setenv("RIIMUSIC_TEST_SET", "shell")
+	os.Unsetenv("RIIMUSIC_TEST_A")
+	os.Unsetenv("RIIMUSIC_TEST_B")
+	os.Unsetenv("RIIMUSIC_TEST_C")
 	if err := LoadDotEnv(p); err != nil {
 		t.Fatal(err)
 	}
-	for k, want := range map[string]string{"VANG_TEST_A": "one", "VANG_TEST_B": "two words", "VANG_TEST_C": "x", "VANG_TEST_SET": "shell"} {
+	for k, want := range map[string]string{"RIIMUSIC_TEST_A": "one", "RIIMUSIC_TEST_B": "two words", "RIIMUSIC_TEST_C": "x", "RIIMUSIC_TEST_SET": "shell"} {
 		if got := os.Getenv(k); got != want {
 			t.Errorf("%s = %q, want %q", k, got, want)
 		}
 	}
-	for _, k := range []string{"VANG_TEST_A", "VANG_TEST_B", "VANG_TEST_C"} {
+	for _, k := range []string{"RIIMUSIC_TEST_A", "RIIMUSIC_TEST_B", "RIIMUSIC_TEST_C"} {
 		os.Unsetenv(k)
 	}
 }
@@ -249,7 +249,7 @@ func TestFromHeader(t *testing.T) {
 		"KonnnMusic <noreply@example.dev>": `"KonnnMusic" <noreply@example.dev>`,
 		"noreply@example.dev":              `"RiiMusic" <noreply@example.dev>`,
 		"":                                 `"RiiMusic" <me@gmail.com>`,
-		"Nhạc RiiMusic <a@b.co>":               "=?utf-8?q?Nh=E1=BA=A1c_RiiMusic?= <a@b.co>",
+		"Nhạc RiiMusic <a@b.co>":           "=?utf-8?q?Nh=E1=BA=A1c_RiiMusic?= <a@b.co>",
 	} {
 		if got := fromHeader(in, "me@gmail.com"); got != want {
 			t.Errorf("fromHeader(%q) = %s, want %s", in, got, want)

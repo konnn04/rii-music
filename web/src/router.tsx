@@ -51,12 +51,12 @@ function Private() {
   const uid = me.data?.user.id;
   useEffect(() => {
     if (!uid) return;
-    const prev = localStorage.getItem("vang-uid");
+    const prev = localStorage.getItem("rii-uid");
     if (prev === uid) return;
-    localStorage.setItem("vang-uid", uid);
-    if (prev !== null || localStorage.getItem("vang-player")) {
-      localStorage.removeItem("vang-player");
-      localStorage.removeItem("vang-pos");
+    localStorage.setItem("rii-uid", uid);
+    if (prev !== null || localStorage.getItem("rii-player")) {
+      localStorage.removeItem("rii-player");
+      localStorage.removeItem("rii-pos");
       location.reload();
     }
   }, [uid]);

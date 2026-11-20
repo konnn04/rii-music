@@ -1,5 +1,5 @@
 import { translateServer } from "@/i18n";
-// Typed client for the RiiMusic API. Mutating requests carry the X-Vang header the server requires.
+// Typed client for the RiiMusic API. Mutating requests carry the X-RiiMusic header the server requires.
 
 export type Track = {
   id: string;
@@ -168,7 +168,7 @@ export function setUnauthorizedHandler(fn: () => void) {
 
 export async function api<T>(path: string, init: RequestInit & { json?: unknown } = {}): Promise<T> {
   const headers = new Headers(init.headers);
-  headers.set("X-Vang", "1");
+  headers.set("X-RiiMusic", "1");
   let body = init.body;
   if (init.json !== undefined) {
     headers.set("Content-Type", "application/json");

@@ -13,10 +13,10 @@ import { t } from "@/i18n";
 
 const PRELOAD_BEFORE = 15; // seconds before the end to load the next track
 const FADE = 0.2; // pause/play/seek fade, seconds
-const POS_KEY = "vang-pos";
+const POS_KEY = "rii-pos";
 
 export const isIOS = /iP(hone|ad|od)/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
-const SIMPLE_KEY = "vang-simple-audio";
+const SIMPLE_KEY = "rii-simple-audio";
 
 export function getSimpleMode(): boolean {
   const v = localStorage.getItem(SIMPLE_KEY);
@@ -634,11 +634,11 @@ class Engine {
       ? ["96x96", "256x256", "512x512", "720x720"].map((sizes) => ({ src, sizes, type: "image/jpeg" }))
       : [{ src, sizes: "512x512", type: "image/png" }];
     ms.metadata = new MediaMetadata({ title: t.title, artist: t.artist, album: t.album, artwork: art });
-    document.title = `${t.title}${t.artist ? " · " + t.artist : ""} — ${window.__VANG_BRAND__?.name ?? "RiiMusic"}`;
+    document.title = `${t.title}${t.artist ? " · " + t.artist : ""} — ${window.__RII_BRAND__?.name ?? "RiiMusic"}`;
   }
 
   /**
-   * Announce what is playing as a window event ("vang:nowplaying"), debounced.
+   * Announce what is playing as a window event ("riimusic:nowplaying"), debounced.
    * A desktop wrapper (Tauri) can listen to it to show Discord presence.
    */
   private reportNowPlaying() {
@@ -649,7 +649,7 @@ class Engine {
       const t = cur?.track;
       const positionMs = Math.round((this.slots[this.active].el.currentTime || pb.position) * 1000);
       window.dispatchEvent(
-        new CustomEvent("vang:nowplaying", {
+        new CustomEvent("riimusic:nowplaying", {
           detail: t ? { trackId: t.id, title: t.title, artist: t.artist, album: t.album, durationMs: t.durationMs, positionMs, playing: pb.isPlaying } : null,
         }),
       );

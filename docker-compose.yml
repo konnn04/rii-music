@@ -15,9 +15,9 @@ services:
     ports:
       - "8080:8080"
     volumes:
-      - vang-data:/data # database, music, covers, yt-dlp, cookies.txt
+      - rii_music-data:/data # database, music, covers, yt-dlp, cookies.txt
     # Optional: YouTube cookies when it asks to "confirm you're not a bot":
     #   docker cp cookies.txt rii_music:/data/cookies.txt
 
 volumes:
-  vang-data:
+  rii_music-data:

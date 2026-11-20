@@ -260,7 +260,7 @@ func (s *Server) securityHeaders(next http.Handler) http.Handler {
 		if s.cfg.DevCORS != "" {
 			h.Set("Access-Control-Allow-Origin", s.cfg.DevCORS)
 			h.Set("Access-Control-Allow-Credentials", "true")
-			h.Set("Access-Control-Allow-Headers", "Content-Type, X-Vang")
+			h.Set("Access-Control-Allow-Headers", "Content-Type, X-RiiMusic")
 			h.Set("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE")
 			if r.Method == http.MethodOptions {
 				w.WriteHeader(http.StatusNoContent)

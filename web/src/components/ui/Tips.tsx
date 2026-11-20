@@ -46,7 +46,7 @@ const useSeen = create<{ seen: Record<string, true>; see: (id: string) => void; 
       see: (id) => set((s) => ({ seen: { ...s.seen, [id]: true } })),
       reset: () => set({ seen: {} }),
     }),
-    { name: "vang-hints" },
+    { name: "rii-hints" },
   ),
 );
 

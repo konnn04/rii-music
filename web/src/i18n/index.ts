@@ -22,7 +22,7 @@ function load(lang: Lang): Dict {
 
 function detect(): Lang {
   try {
-    const saved = localStorage.getItem("vang-lang");
+    const saved = localStorage.getItem("rii-lang");
     if (saved === "vi" || saved === "en") return saved;
   } catch {
     /* private mode */
@@ -59,14 +59,14 @@ export function tn(key: string, n: number, vars?: Record<string, string | number
 
 /** Switch language: remembered locally (and in the account by the caller), page reloads. */
 export function setLang(l: Lang) {
-  localStorage.setItem("vang-lang", l);
+  localStorage.setItem("rii-lang", l);
   location.reload();
 }
 
 /** Remember the account's language without reloading if it already matches. */
 export function syncLang(l: string | undefined) {
   if ((l === "vi" || l === "en") && l !== lang) {
-    localStorage.setItem("vang-lang", l);
+    localStorage.setItem("rii-lang", l);
     location.reload();
   }
 }

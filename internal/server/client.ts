@@ -2,7 +2,7 @@
  * RiiMusic API client: one file, no dependencies, works in Node 18+, Deno, Bun and browsers.
  *
  *   import { RiiMusic } from "./riimusic-client";
- *   const music = new RiiMusic("https://nhac.example.com", process.env.VANG_TOKEN!);
+ *   const music = new RiiMusic("https://nhac.example.com", process.env.RIIMUSIC_TOKEN!);
  *   const me = await music.me();
  *   const hits = await music.search("tìm em");
  *   await music.download(hits.results[0].url);
@@ -30,7 +30,7 @@ export type WebResult = { id: string; title: string; artist?: string; album?: st
 export type Lyrics = { plain: string; synced: string; source: string; offsetMs: number; choice: "auto" | "mine" | "community" };
 export type Mood = "happy" | "sad" | "chill" | "energetic" | "focus";
 
-export class VangError extends Error {
+export class RiiMusicError extends Error {
   constructor(public status: number, message: string) {
     super(message);
   }
@@ -58,7 +58,7 @@ export class RiiMusic {
       } catch {
         /* not json */
       }
-      throw new VangError(res.status, msg);
+      throw new RiiMusicError(res.status, msg);
     }
     if (res.status === 204) return undefined as T;
     const ct = res.headers.get("content-type") ?? "";
@@ -107,11 +107,11 @@ export class RiiMusic {
     const until = Date.now() + timeoutMs;
     while (Date.now() < until) {
       const j = (await this.jobs()).jobs.find((x) => x.id === id);
-      if (!j) throw new VangError(404, "job not found");
+      if (!j) throw new RiiMusicError(404, "job not found");
       if (j.status === "done" || j.status === "error" || j.status === "skipped") return j;
       await new Promise((r) => setTimeout(r, 2000));
     }
-    throw new VangError(408, "timeout");
+    throw new RiiMusicError(408, "timeout");
   }
 
   // playlists

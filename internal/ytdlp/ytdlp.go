@@ -194,7 +194,7 @@ func httpGet(ctx context.Context, hc *http.Client, url string) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	req.Header.Set("User-Agent", "vang-music")
+	req.Header.Set("User-Agent", "rii-music")
 	res, err := hc.Do(req)
 	if err != nil {
 		return nil, err

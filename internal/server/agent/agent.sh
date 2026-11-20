@@ -155,7 +155,7 @@ def main():
                         "details": clip(np.get("title"), 128),
                         "state": clip(np.get("artist") or "RiiMusic", 128),
                         "timestamps": ts,
-                        "assets": {"large_image": np.get("coverUrl") or "vang", "large_text": clip(np.get("album") or np.get("title"), 128)},
+                        "assets": {"large_image": np.get("coverUrl") or "riimusic", "large_text": clip(np.get("album") or np.get("title"), 128)},
                     }
                     key = "%s|%d" % (np.get("trackId"), start // 5)  # sent again after a seek
                 if key != shown:

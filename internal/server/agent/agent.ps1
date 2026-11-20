@@ -103,7 +103,7 @@
           $start = [DateTimeOffset]::UtcNow.ToUnixTimeSeconds() - [long][math]::Floor($np.positionMs / 1000)
           $artist = if ($np.artist) { $np.artist } else { 'RiiMusic' }
           $album = if ($np.album) { $np.album } else { $np.title }
-          $image = if ($np.coverUrl) { $np.coverUrl } else { 'vang' }
+          $image = if ($np.coverUrl) { $np.coverUrl } else { 'riimusic' }
           $ts = @{ start = $start }
           if ($np.durationMs -gt 0) { $ts.end = $start + [long][math]::Floor($np.durationMs / 1000) }
           $act = @{ type = 2; details = (Clip $np.title 128); state = (Clip $artist 128); timestamps = $ts; assets = @{ large_image = $image; large_text = (Clip $album 128) } }

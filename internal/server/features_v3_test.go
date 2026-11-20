@@ -239,7 +239,7 @@ func TestLogBufferMasksSecrets(t *testing.T) {
 		t.Fatalf("ring: %+v", recs)
 	}
 	b2 := NewLogBuffer(10)
-	slog.New(b2.Wrap(slog.NewTextHandler(io.Discard, nil))).Warn("m", "password", "hunter22", "token", "vang_x")
+	slog.New(b2.Wrap(slog.NewTextHandler(io.Discard, nil))).Warn("m", "password", "hunter22", "token", "rii_x")
 	r := b2.since(0)[0]
 	if r.Attrs["password"] != "••••" || r.Attrs["token"] != "••••" {
 		t.Fatalf("secret stored: %+v", r.Attrs)

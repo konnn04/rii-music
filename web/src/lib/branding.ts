@@ -3,14 +3,14 @@ import { api, type Branding } from "./api";
 
 declare global {
   interface Window {
-    __VANG_BRAND__?: { name: string; description: string; logoUrl: string };
+    __RII_BRAND__?: { name: string; description: string; logoUrl: string };
   }
 }
 
 const initial: Branding = {
-  name: window.__VANG_BRAND__?.name ?? "RiiMusic",
-  description: window.__VANG_BRAND__?.description ?? "",
-  logoUrl: window.__VANG_BRAND__?.logoUrl ?? "/icon.png",
+  name: window.__RII_BRAND__?.name ?? "RiiMusic",
+  description: window.__RII_BRAND__?.description ?? "",
+  logoUrl: window.__RII_BRAND__?.logoUrl ?? "/icon.png",
   customLogo: false,
 };
 

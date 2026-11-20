@@ -308,7 +308,7 @@ export const usePlayer = create<State & Actions>()(
       setLyricsFull: (v) => set({ lyricsFull: v }),
     }),
     {
-      name: "vang-player",
+      name: "rii-player",
       version: 1,
       partialize: (s) => ({
         context: s.context,

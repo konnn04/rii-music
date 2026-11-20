@@ -579,8 +579,8 @@ func (d *Downloader) fetch(ctx context.Context, j *Job, tmp string, st ServerSet
 			"-f", format,
 			"--match-filter", fmt.Sprintf("!is_live & duration < %d", d.s.cfg.MaxDuration),
 			"--write-info-json", "--write-thumbnail", "--convert-thumbnails", "jpg",
-			"--print", "before_dl:[vang-title]%(title)s",
-			"--progress-template", "download:[vang-dl]%(progress.downloaded_bytes)s/%(progress.total_bytes)s/%(progress.total_bytes_estimate)s",
+			"--print", "before_dl:[rii-title]%(title)s",
+			"--progress-template", "download:[rii-dl]%(progress.downloaded_bytes)s/%(progress.total_bytes)s/%(progress.total_bytes_estimate)s",
 			"-o", filepath.Join(tmp, "src.%(ext)s"),
 		}
 		if client != "" {
@@ -590,14 +590,14 @@ func (d *Downloader) fetch(ctx context.Context, j *Job, tmp string, st ServerSet
 
 		_, err := d.s.yt.Run(ctx, args, func(line string) {
 			switch {
-			case strings.HasPrefix(line, "[vang-title]"):
-				if t := strings.TrimPrefix(line, "[vang-title]"); t != "" && t != "NA" {
+			case strings.HasPrefix(line, "[rii-title]"):
+				if t := strings.TrimPrefix(line, "[rii-title]"); t != "" && t != "NA" {
 					j.Title = t
 					j.Stage = "Đang tải"
 					d.save(j)
 				}
-			case strings.HasPrefix(line, "[vang-dl]"):
-				p := parseProgress(strings.TrimPrefix(line, "[vang-dl]"))
+			case strings.HasPrefix(line, "[rii-dl]"):
+				p := parseProgress(strings.TrimPrefix(line, "[rii-dl]"))
 				if p >= 0 && time.Since(lastPublish) > 400*time.Millisecond {
 					lastPublish = time.Now()
 					j.Progress = p * 0.8

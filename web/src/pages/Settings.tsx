@@ -408,8 +408,8 @@ function DataSettings() {
     try {
       await api("/api/reset", { method: "POST", json: { scope, confirm: "XOA" } });
       if (scope === "all") {
-        localStorage.removeItem("vang-player");
-        localStorage.removeItem("vang-pos");
+        localStorage.removeItem("rii-player");
+        localStorage.removeItem("rii-pos");
         location.replace("/");
         return;
       }

@@ -10,7 +10,7 @@ type Mode = "password" | "otp" | "forgot";
 export function Login({ onDone }: { onDone: () => void }) {
   const brand = useBranding();
   const [mode, setMode] = useState<Mode>("password");
-  const [email, setEmail] = useState(() => localStorage.getItem("vang-last-email") ?? "");
+  const [email, setEmail] = useState(() => localStorage.getItem("rii-last-email") ?? "");
   const [pw, setPw] = useState("");
   const [pw2, setPw2] = useState("");
   const [code, setCode] = useState("");
@@ -57,7 +57,7 @@ export function Login({ onDone }: { onDone: () => void }) {
     });
 
   const signedIn = () => {
-    localStorage.setItem("vang-last-email", email.trim().toLowerCase());
+    localStorage.setItem("rii-last-email", email.trim().toLowerCase());
     onDone();
   };
 

@@ -11,7 +11,7 @@ import (
 )
 
 // Personal tokens. "api" tokens let a user's own scripts call the API
-// (Authorization: Bearer vang_…), "agent" tokens only let the Discord agent
+// (Authorization: Bearer rii_…), "agent" tokens only let the Discord agent
 // read what they are playing. Tokens are shown once; only a hash is stored.
 
 type APIToken struct {
@@ -35,7 +35,7 @@ func (s *Server) tokenUser(r *http.Request, kind string) *User {
 		return nil
 	}
 	tok := strings.TrimSpace(strings.TrimPrefix(h, "Bearer "))
-	if !strings.HasPrefix(tok, "vang_") || len(tok) > 100 {
+	if !strings.HasPrefix(tok, "rii_") || len(tok) > 100 {
 		return nil
 	}
 	var id, uid string
@@ -112,7 +112,7 @@ func (s *Server) handleCreateToken(w http.ResponseWriter, r *http.Request) {
 	}
 	b := make([]byte, 24)
 	rand.Read(b)
-	tok := "vang_" + hex.EncodeToString(b)
+	tok := "rii_" + hex.EncodeToString(b)
 	t := APIToken{ID: newID(), Kind: body.Kind, Name: name, Prefix: tok[:12], CreatedAt: nowMs()}
 	if _, err := s.db.Exec(`INSERT INTO api_tokens(id, user_id, kind, name, token_hash, prefix, created_at) VALUES (?,?,?,?,?,?,?)`,
 		t.ID, uid, t.Kind, t.Name, hashToken(tok), t.Prefix, t.CreatedAt); err != nil {

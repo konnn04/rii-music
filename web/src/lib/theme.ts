@@ -5,7 +5,7 @@ let mq: MediaQueryList | null = null;
 let listener: (() => void) | null = null;
 
 export function applyTheme(theme: Settings["theme"]) {
-  localStorage.setItem("vang-theme", JSON.stringify(theme));
+  localStorage.setItem("rii-theme", JSON.stringify(theme));
   const set = () => {
     const t = theme === "system" ? (matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark") : theme;
     document.documentElement.dataset.theme = t;
@@ -76,7 +76,7 @@ export function applyAccent(mode: string) {
     const follow = (c: string | null) => {
       const v = parseHsl(c);
       setVars(v);
-      localStorage.setItem("vang-accent", JSON.stringify(v));
+      localStorage.setItem("rii-accent", JSON.stringify(v));
     };
     follow(usePlayback.getState().accent);
     unsubSong = usePlayback.subscribe((s, prev) => s.accent !== prev.accent && follow(s.accent));
@@ -85,5 +85,5 @@ export function applyAccent(mode: string) {
   const a = ACCENTS.find((x) => x.id === mode);
   const v = a && a.id !== "indigo" ? a : null;
   setVars(v);
-  localStorage.setItem("vang-accent", JSON.stringify(v));
+  localStorage.setItem("rii-accent", JSON.stringify(v));
 }

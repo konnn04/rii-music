@@ -10,8 +10,8 @@
     <link rel="apple-touch-icon" href="/icon-192.png" />
     <title>RiiMusic</title>
     <script>
-      try { var t = JSON.parse(localStorage.getItem("vang-theme") || '"dark"'); if (t === "system") t = matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark"; document.documentElement.dataset.theme = t; } catch (e) {}
-      try { var a = JSON.parse(localStorage.getItem("vang-accent") || "null"); if (a) { var d = document.documentElement; d.dataset.accent = ""; d.style.setProperty("--ah", a.h); d.style.setProperty("--as", a.s + "%"); d.style.setProperty("--al", a.light + "%"); } } catch (e) {}
+      try { var t = JSON.parse(localStorage.getItem("rii-theme") || '"dark"'); if (t === "system") t = matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark"; document.documentElement.dataset.theme = t; } catch (e) {}
+      try { var a = JSON.parse(localStorage.getItem("rii-accent") || "null"); if (a) { var d = document.documentElement; d.dataset.accent = ""; d.style.setProperty("--ah", a.h); d.style.setProperty("--as", a.s + "%"); d.style.setProperty("--al", a.light + "%"); } } catch (e) {}
     </script>
   </head>
   <body>

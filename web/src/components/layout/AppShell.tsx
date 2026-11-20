@@ -28,14 +28,16 @@ import { FollowedRow } from "@/components/Follow";
 
 // `header`: shown as an icon in the top bar (desktop) and the mobile header
 // instead of the sidebar / tab bar; tablets (no top bar) keep it in the sidebar.
-const nav: { to: string; key: string; icon: IconName; mobile?: boolean; admin?: boolean; header?: boolean }[] = [
+// `account`: reached from the account chip in the top bar, so the sidebar only
+// shows it on tablets.
+const nav: { to: string; key: string; icon: IconName; mobile?: boolean; admin?: boolean; header?: boolean; account?: boolean }[] = [
   { to: "/", key: "home", icon: "home", mobile: true },
   { to: "/search", key: "search", icon: "search", mobile: true },
   { to: "/library", key: "library", icon: "library", mobile: true },
   { to: "/discover", key: "discover", icon: "radio" },
   { to: "/downloads", key: "downloads", icon: "download", header: true },
   { to: "/history", key: "history", icon: "stats" },
-  { to: "/settings", key: "settings", icon: "settings", mobile: true },
+  { to: "/settings", key: "settings", icon: "settings", mobile: true, account: true },
   { to: "/admin", key: "admin", icon: "shield", admin: true, header: true },
 ];
 const label = (k: string) => t(`common.nav.${k}`);
@@ -230,7 +232,7 @@ function Sidebar() {
               aria-label={label(n.key)}
               className={`focus-ring state-layer relative flex h-11 items-center justify-center gap-3 rounded-control px-3 text-label lg:justify-start ${
                 on ? "bg-accent-soft text-fg" : "text-fg-muted hover:text-fg"
-              } ${n.header ? "lg:hidden" : ""}`}
+              } ${n.header || n.account ? "lg:hidden" : ""}`}
             >
               <Icon name={n.icon} className={on ? "text-accent" : ""} />
               <span className="hidden truncate lg:inline">{label(n.key)}</span>

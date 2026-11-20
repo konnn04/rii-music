@@ -7,6 +7,8 @@ import { queryClient } from "./lib/queries";
 import { AppShell } from "./components/layout/AppShell";
 import { Toaster } from "./components/ui/Toast";
 import { Spinner } from "./components/ui/misc";
+import { Button } from "./components/ui/Button";
+import { Icon } from "./components/ui/Icon";
 import { Login } from "./pages/Login";
 import { HomePage } from "./pages/Home";
 import { SearchPage } from "./pages/Search";
@@ -43,9 +45,17 @@ function Private() {
   const me = useQuery({
     queryKey: ["me"],
     queryFn: () => api<Me>("/api/me"),
-    retry: (n, e) => !(e instanceof ApiError && e.status === 401) && n < 3,
+    // Server errors: a few tries. No connection: one, then the offline screen.
+    retry: (n, e) => (e instanceof ApiError ? e.status !== 401 && n < 3 : navigator.onLine && n < 1),
     staleTime: 60_000,
+    networkMode: "offlineFirst",
   });
+  // Back online: try again.
+  useEffect(() => {
+    const again = () => void me.refetch();
+    window.addEventListener("online", again);
+    return () => window.removeEventListener("online", again);
+  }, [me.refetch]);
   // The queue lives in localStorage: a different account on this browser
   // starts with an empty one instead of the previous person's.
   const uid = me.data?.user.id;
@@ -71,12 +81,30 @@ function Private() {
         }}
       />
     );
+  else if (!me.data && me.error)
+    // No connection and no offline copy of the account (offline listening off,
+    // or never opened online on this device): say so instead of a broken shell.
+    body = <OfflineScreen onRetry={() => void me.refetch()} retrying={me.isFetching} />;
   else body = <AppShell />;
   return (
     <Tooltip.Provider delayDuration={500}>
       {body}
       <Toaster />
     </Tooltip.Provider>
+  );
+}
+
+function OfflineScreen({ onRetry, retrying }: { onRetry: () => void; retrying: boolean }) {
+  const offline = !navigator.onLine;
+  return (
+    <div className="flex h-dvh flex-col items-center justify-center gap-4 p-6 text-center">
+      <Icon name="globe" size={40} className="text-fg-muted" />
+      <h1 className="text-title-2">{offline ? t("ui.offline.screenTitle") : t("ui.offline.serverTitle")}</h1>
+      <p className="max-w-sm text-body text-fg-muted">{t("ui.offline.screenBody")}</p>
+      <Button variant="primary" icon="retry" loading={retrying} onClick={onRetry}>
+        {t("ui.offline.retry")}
+      </Button>
+    </div>
   );
 }
 

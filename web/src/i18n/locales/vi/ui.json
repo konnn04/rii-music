@@ -59,7 +59,11 @@
   },
   "offline": {
     "onlyStored": "Đang offline · chỉ phát được bài đã lưu trên máy",
-    "noConnection": "Mất kết nối tới máy chủ"
+    "noConnection": "Mất kết nối tới máy chủ",
+    "screenTitle": "Không có kết nối mạng",
+    "serverTitle": "Không kết nối được máy chủ",
+    "screenBody": "Thiết bị này chưa có bản offline. Bật Cài đặt → Nghe offline khi có mạng để lần sau mở được app và nghe bài đã lưu. App sẽ tự thử lại khi có mạng.",
+    "retry": "Thử lại"
   },
   "follow": {
     "follow": "Theo dõi",

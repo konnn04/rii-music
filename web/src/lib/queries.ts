@@ -27,7 +27,9 @@ import { t, tsv } from "@/i18n";
 
 export const queryClient = new QueryClient({
   defaultOptions: {
-    queries: { staleTime: 30_000, retry: (n, err: any) => err?.status !== 401 && err?.status !== 404 && n < 2, refetchOnWindowFocus: false },
+    // offlineFirst: requests still go out when the browser reports no connection,
+    // so the service worker can answer from its offline copy (Cài đặt → Nghe offline).
+    queries: { staleTime: 30_000, retry: (n, err: any) => err?.status !== 401 && err?.status !== 404 && n < 2, refetchOnWindowFocus: false, networkMode: "offlineFirst" },
     mutations: { onError: (e: any) => toast(e?.message ?? t("common.error"), "error") },
   },
 });

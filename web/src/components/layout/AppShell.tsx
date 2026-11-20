@@ -34,10 +34,10 @@ const nav: { to: string; key: string; icon: IconName; mobile?: boolean; admin?: 
   { to: "/", key: "home", icon: "home", mobile: true },
   { to: "/search", key: "search", icon: "search", mobile: true },
   { to: "/library", key: "library", icon: "library", mobile: true },
-  { to: "/discover", key: "discover", icon: "radio" },
+  { to: "/discover", key: "discover", icon: "radio", mobile: true },
   { to: "/downloads", key: "downloads", icon: "download", header: true },
   { to: "/history", key: "history", icon: "stats" },
-  { to: "/settings", key: "settings", icon: "settings", mobile: true, account: true },
+  { to: "/settings", key: "settings", icon: "settings", account: true },
   { to: "/admin", key: "admin", icon: "shield", admin: true, header: true },
 ];
 const label = (k: string) => t(`common.nav.${k}`);
@@ -469,9 +469,6 @@ function MobileHeader() {
         <span className="truncate text-title-3 tracking-tight">{brand.name}</span>
       </Link>
       <div className="ml-auto flex items-center gap-1">
-        <Link to="/discover" className="focus-ring flex size-10 items-center justify-center rounded-full text-fg-muted" aria-label={label("discover")}>
-          <Icon name="radio" size={22} />
-        </Link>
         <HeaderLinks />
         {me && (
           <Link to="/settings" className="focus-ring rounded-full" aria-label={label("settings")}>

@@ -59,7 +59,11 @@
   },
   "offline": {
     "onlyStored": "Offline · only songs stored on this device play",
-    "noConnection": "Can't reach the server"
+    "noConnection": "Can't reach the server",
+    "screenTitle": "No internet connection",
+    "serverTitle": "Can't reach the server",
+    "screenBody": "This device has no offline copy yet. Turn on Settings → Offline listening while online to open the app and play saved songs next time. The app retries when you're back online.",
+    "retry": "Try again"
   },
   "follow": {
     "follow": "Follow",

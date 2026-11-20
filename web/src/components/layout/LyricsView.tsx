@@ -90,14 +90,14 @@ export function LyricsView({ size = "md", className = "" }: { size?: "md" | "lg"
   let body;
   if (empty) {
     body = (
-      <div className="h-full overflow-y-auto px-4 py-6">
-        <div className="mb-4 flex flex-col items-center gap-2 text-center text-body text-np-fg-muted">
-          <Icon name="lyrics" size={36} />
-          <span>{t("player.lyrics.none")}</span>
-          <span className="text-caption">{t("player.lyrics.noneHint")}</span>
-        </div>
-        <LyricsSearch trackId={track.id} defaultTitle={track.title} defaultArtist={track.artist} durationSec={track.durationMs / 1000} auto onDone={() => {}} />
-        <div className="mt-4 flex justify-center">
+      // Just say so; the search / paste tools open on demand.
+      <div className="flex h-full flex-col items-center justify-center gap-3 px-6 py-6 text-center text-np-fg-muted">
+        <Icon name="lyrics" size={36} />
+        <span className="text-body">{t("player.lyrics.none")}</span>
+        <div className="flex flex-wrap justify-center gap-2">
+          <Button size="sm" icon="search" onClick={() => setTools("search")}>
+            {t("player.lyrics.find")}
+          </Button>
           <Button size="sm" variant="ghost" icon="clipboard" onClick={() => setTools("paste")}>
             {t("player.lyrics.paste")}
           </Button>

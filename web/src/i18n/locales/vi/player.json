@@ -1,9 +1,18 @@
 {
   "autoplay": {
     "label": "Tự động gợi ý phát",
-    "off": { "title": "Tắt", "text": "Hết hàng đợi thì dừng." },
-    "lib": { "title": "Gợi ý trong thư viện", "text": "Sắp hết hàng đợi thì thêm bài tương tự có sẵn trong thư viện, cùng ngôn ngữ với bài đang nghe." },
-    "free": { "title": "Gợi ý tự do", "text": "Như trên, và tải ngầm trước vài bài mới của nghệ sĩ đó hoặc nghệ sĩ tương tự." },
+    "off": {
+      "title": "Tắt",
+      "text": "Hết hàng đợi thì dừng."
+    },
+    "lib": {
+      "title": "Gợi ý trong thư viện",
+      "text": "Sắp hết hàng đợi thì thêm bài tương tự có sẵn trong thư viện, cùng ngôn ngữ với bài đang nghe."
+    },
+    "free": {
+      "title": "Gợi ý tự do",
+      "text": "Như trên, và tải ngầm trước vài bài mới của nghệ sĩ đó hoặc nghệ sĩ tương tự."
+    },
     "hint": "Nút radio ở đầu hàng đợi bật/tắt Tự động gợi ý phát: Tắt → Trong thư viện → Tự do (gồm bài mới, tải ngầm)."
   },
   "queue": {
@@ -27,7 +36,6 @@
     "looking": "Đang tìm lời…",
     "sourceDown": "Không kết nối được nguồn lời bài hát.",
     "none": "Chưa có lời cho bài này",
-    "noneHint": "Tên bài hay nghệ sĩ có thể được viết khác. Sửa lại rồi tìm, chọn đúng lời là xong.",
     "unsynced": "Lời không đồng bộ",
     "tools": "Chỉnh lời bài hát",
     "toolsTitle": "Lời bài hát",
@@ -42,7 +50,11 @@
     "offsetZero": "Về 0",
     "offsetFailed": "Không lưu được độ lệch",
     "source": "Nguồn",
-    "choice": { "auto": "Tự động tìm", "mine": "Bạn đã chọn", "community": "Nhiều người nghe chọn" },
+    "choice": {
+      "auto": "Tự động tìm",
+      "mine": "Bạn đã chọn",
+      "community": "Nhiều người nghe chọn"
+    },
     "useAuto": "Dùng lời tự động",
     "resetDone": "Đã quay về lời tự động",
     "songTitle": "Tên bài",
@@ -55,7 +67,8 @@
     "picks": "{n} người chọn",
     "use": "Dùng lời này",
     "picked": "Đã chọn lời. Lần sau ai nghe bài này cũng được gợi ý lời đó khi nhiều người chọn giống bạn.",
-    "pasteHint": "Dán lời thường, hoặc định dạng LRC ([mm:ss.xx] dòng lời) để có lời đồng bộ. Chỉ bạn thấy lời này."
+    "pasteHint": "Dán lời thường, hoặc định dạng LRC ([mm:ss.xx] dòng lời) để có lời đồng bộ. Chỉ bạn thấy lời này.",
+    "find": "Tìm lời"
   },
   "np": {
     "title": "Đang phát",

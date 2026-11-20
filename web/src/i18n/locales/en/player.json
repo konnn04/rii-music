@@ -1,9 +1,18 @@
 {
   "autoplay": {
     "label": "Autoplay",
-    "off": { "title": "Off", "text": "Playback stops when the queue ends." },
-    "lib": { "title": "From your library", "text": "When the queue is about to end, similar songs from your library are added, in the same language as what's playing." },
-    "free": { "title": "Anything", "text": "Same, plus a few new songs by that artist or similar ones, downloaded in the background." },
+    "off": {
+      "title": "Off",
+      "text": "Playback stops when the queue ends."
+    },
+    "lib": {
+      "title": "From your library",
+      "text": "When the queue is about to end, similar songs from your library are added, in the same language as what's playing."
+    },
+    "free": {
+      "title": "Anything",
+      "text": "Same, plus a few new songs by that artist or similar ones, downloaded in the background."
+    },
     "hint": "The radio button at the top of the queue switches Autoplay: Off → From your library → Anything (adds new songs, downloaded in the background)."
   },
   "queue": {
@@ -27,7 +36,6 @@
     "looking": "Looking for lyrics…",
     "sourceDown": "Couldn't reach the lyrics source.",
     "none": "No lyrics for this song yet",
-    "noneHint": "The title or artist may be written differently. Edit them, search, and pick the right lyrics.",
     "unsynced": "Unsynced lyrics",
     "tools": "Lyrics settings",
     "toolsTitle": "Lyrics",
@@ -42,7 +50,11 @@
     "offsetZero": "Reset to 0",
     "offsetFailed": "Couldn't save the timing",
     "source": "Source",
-    "choice": { "auto": "Found automatically", "mine": "Picked by you", "community": "Picked by other listeners" },
+    "choice": {
+      "auto": "Found automatically",
+      "mine": "Picked by you",
+      "community": "Picked by other listeners"
+    },
     "useAuto": "Use automatic lyrics",
     "resetDone": "Back to automatic lyrics",
     "songTitle": "Title",
@@ -55,7 +67,8 @@
     "picks": "{n} picked",
     "use": "Use these",
     "picked": "Lyrics picked. When several listeners pick the same, others get them suggested too.",
-    "pasteHint": "Paste plain lyrics, or LRC ([mm:ss.xx] line) for synced lyrics. Only you see them."
+    "pasteHint": "Paste plain lyrics, or LRC ([mm:ss.xx] line) for synced lyrics. Only you see them.",
+    "find": "Find lyrics"
   },
   "np": {
     "title": "Now playing",

@@ -246,10 +246,10 @@ func TestDotEnv(t *testing.T) {
 
 func TestFromHeader(t *testing.T) {
 	for in, want := range map[string]string{
-		"KonnnMusic <noreply@example.dev>": `"KonnnMusic" <noreply@example.dev>`,
-		"noreply@example.dev":              `"RiiMusic" <noreply@example.dev>`,
-		"":                                 `"RiiMusic" <me@gmail.com>`,
-		"Nhạc RiiMusic <a@b.co>":           "=?utf-8?q?Nh=E1=BA=A1c_RiiMusic?= <a@b.co>",
+		"RiiMusic <noreply@example.dev>": `"RiiMusic" <noreply@example.dev>`,
+		"noreply@example.dev":            `"RiiMusic" <noreply@example.dev>`,
+		"":                               `"RiiMusic" <me@gmail.com>`,
+		"Nhạc RiiMusic <a@b.co>":         "=?utf-8?q?Nh=E1=BA=A1c_RiiMusic?= <a@b.co>",
 	} {
 		if got := fromHeader(in, "me@gmail.com"); got != want {
 			t.Errorf("fromHeader(%q) = %s, want %s", in, got, want)

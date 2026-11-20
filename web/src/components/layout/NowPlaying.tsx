@@ -37,9 +37,9 @@ export function NowPlayingSurface({ children, className = "", style }: { childre
           style={
             fx
               ? {
-                  transform: "scale(calc(1.25 + var(--beat, 0) * 0.12))",
-                  filter: "blur(var(--np-blur)) saturate(calc(1.15 + var(--energy, 0) * 0.75)) brightness(calc(0.92 + var(--energy, 0) * 0.4))",
-                }
+                transform: "scale(calc(1.25 + var(--beat, 0) * 0.12))",
+                filter: "blur(var(--np-blur)) saturate(calc(1.15 + var(--energy, 0) * 0.75)) brightness(calc(0.92 + var(--energy, 0) * 0.4))",
+              }
               : { transform: "scale(1.25)", filter: "blur(var(--np-blur)) saturate(1.2)" }
           }
         />
@@ -337,7 +337,13 @@ export function LyricsFullscreen() {
       <div className="flex shrink-0 items-center gap-4 px-6 pt-6">
         <Cover trackId={current.track.id} hasCover={current.track.hasCover} size={64} rounded="rounded-control" />
         <TrackTitle big />
-        <IconButton icon="close" label={t("player.np.closeLyrics")} shortcut="Esc" onClick={() => set(false)} className="!text-fg" />
+        <IconButton
+          icon="close"
+          label={t("player.np.closeLyrics")}
+          shortcut="Esc"
+          onClick={() => set(false)}
+          className="!text-fg opacity-0 transition-opacity duration-200 hover:opacity-100 focus-visible:opacity-100"
+        />
       </div>
       <div className="mx-auto min-h-0 w-full max-w-4xl flex-1">
         <LyricsView size="lg" />

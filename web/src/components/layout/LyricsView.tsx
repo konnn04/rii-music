@@ -79,7 +79,7 @@ export function LyricsView({ size = "md", className = "" }: { size?: "md" | "lg"
   const empty = !data || data.source === "none" || (!data.synced && !data.plain);
   const gear = (
     <button
-      className="focus-ring absolute right-2 top-2 z-10 flex size-10 items-center justify-center rounded-full bg-black/20 text-np-fg-muted backdrop-blur hover:text-fg"
+      className="focus-ring absolute right-2 top-2 z-10 flex size-10 items-center justify-center rounded-full bg-black/20 text-np-fg-muted backdrop-blur transition-opacity duration-200 hover:text-fg [@media(hover:hover)]:opacity-0 [@media(hover:hover)]:hover:opacity-100 focus-visible:opacity-100"
       aria-label={t("player.lyrics.tools")}
       onClick={() => setTools("offset")}
     >

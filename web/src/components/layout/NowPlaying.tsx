@@ -162,15 +162,20 @@ export function MobileNowPlaying() {
       }}
     >
       <div role="dialog" aria-modal aria-label={t("player.np.title")} className="flex min-h-0 flex-1 flex-col">
-        <header className="flex shrink-0 items-center gap-2 px-2 pt-2" {...gesture(true)}>
-          <IconButton icon="chevron-down" label={t("player.np.minimize")} onClick={close} className="!text-fg" />
-          <div className="min-w-0 flex-1 text-center">
+        {/* Equal side columns keep the title centred on the screen (1 button left, 3 right). */}
+        <header className="grid shrink-0 grid-cols-[1fr_auto_1fr] items-center gap-2 px-2 pt-2" {...gesture(true)}>
+          <div className="flex justify-start">
+            <IconButton icon="chevron-down" label={t("player.np.minimize")} onClick={close} className="!text-fg" />
+          </div>
+          <div className="min-w-0 max-w-[45vw] text-center">
             <div className="text-overline uppercase text-np-fg-muted">{t("player.np.playingFrom")}</div>
             <div className="truncate text-label">{source?.name ? tsv(source.name) : t("common.nav.library")}</div>
           </div>
-          <SoundButton size={22} className="!text-fg" />
-          <SleepButton size={22} className="!text-fg" />
-          <TrackMenuButton track={current.track} className="!text-fg" />
+          <div className="flex justify-end">
+            <SoundButton size={22} className="!text-fg" />
+            <SleepButton size={22} className="!text-fg" />
+            <TrackMenuButton track={current.track} className="!text-fg" />
+          </div>
         </header>
 
         <div role="tablist" className="mx-auto mt-2 flex shrink-0 gap-1 rounded-full bg-white/10 p-1">

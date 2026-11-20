@@ -1,8 +1,8 @@
 import { useState, type ReactNode } from "react";
 import { useNavigate, useParams } from "@tanstack/react-router";
-import { api, type Track, type WebList } from "@/lib/api";
+import { api, ApiError, type Track, type WebList, type WebResult } from "@/lib/api";
 import { useQuery } from "@tanstack/react-query";
-import { WebRow } from "./Search";
+import { CollectionRow, WebRow } from "./Search";
 import { invalidateLibrary, queryClient, useAlbum, useArtist, usePlaylist, useSimilarArtists } from "@/lib/queries";
 import { fmtTotal } from "@/lib/format";
 import { usePlayback, usePlayer, type Source } from "@/player/store";
@@ -279,22 +279,45 @@ function FullAlbum({ name, artist, have }: { name: string; artist: string; have:
 
 export function ArtistPage() {
   const { name } = useParams({ from: "/artist/$name" });
-  const { data, isLoading, error, refetch } = useArtist(name);
+  const lib = useArtist(name);
+  // The artist on YouTube Music: songs and albums, also for artists with
+  // nothing in the library yet (e.g. opened from search or a featured credit).
+  const web = useQuery({
+    queryKey: ["artistWeb", name],
+    queryFn: () => api<{ songs: WebResult[]; albums: WebResult[] }>(`/api/artist/web?name=${encodeURIComponent(name)}`),
+    staleTime: 10 * 60_000,
+    retry: 1,
+  });
   const [all, setAll] = useState(false);
-  if (isLoading) return <Spinner />;
-  if (error || !data) return <ErrorState error={error} onRetry={refetch} />;
+  const notInLibrary = lib.error instanceof ApiError && lib.error.status === 404;
+  if (lib.isLoading) return <Spinner />;
+  if (lib.error && !notInLibrary) return <ErrorState error={lib.error} onRetry={lib.refetch} />;
+  const data = lib.data ?? { name, tracks: [] as Track[], albums: [], others: [] };
   const cover = data.tracks.find((tr) => tr.hasCover);
+  const webPic = web.data?.songs.find((s) => s.thumbnail)?.thumbnail;
   const source: Source = { type: "artist", id: name, name };
   const shown = all ? data.tracks : data.tracks.slice(0, 10);
+  const webSongs = web.data?.songs ?? [];
+  const webAlbums = web.data?.albums ?? [];
   return (
     <div className="flex flex-col gap-8">
       <DetailHeader
-        art={<Cover trackId={cover?.id} hasCover={!!cover} size="100%" rounded="rounded-full" />}
+        art={
+          cover || !webPic ? (
+            <Cover trackId={cover?.id} hasCover={!!cover} size="100%" rounded="rounded-full" />
+          ) : (
+            <img src={webPic} alt="" referrerPolicy="no-referrer" className="aspect-square rounded-full bg-surface-3 object-cover" />
+          )
+        }
         kicker={t("detail.artist.kicker")}
         title={name}
-        meta={`${tn("common.songs", data.tracks.length)} · ${tn("detail.artist.albumsCount", data.albums.length)} · ${tn("detail.artist.playsCount", data.tracks.reduce((a, tr) => a + tr.playCount, 0))}`}
+        meta={
+          data.tracks.length
+            ? `${tn("common.songs", data.tracks.length)} · ${tn("detail.artist.albumsCount", data.albums.length)} · ${tn("detail.artist.playsCount", data.tracks.reduce((a, tr) => a + tr.playCount, 0))}`
+            : t("detail.artist.notInLibrary")
+        }
         actions={
-          <PlayActions
+          data.tracks.length > 0 && <PlayActions
             tracks={data.tracks}
             source={source}
             extra={
@@ -311,17 +334,34 @@ export function ArtistPage() {
           />
         }
       />
-      <section className="md:px-6">
-        <SectionHeader title={t("detail.artist.popular")} />
-        <div className="px-2 md:px-0">
-          <TrackList tracks={shown} source={source} numbered selectable={false} />
+      {data.tracks.length > 0 && (
+        <section className="md:px-6">
+          <SectionHeader title={t("detail.artist.inLibrary")} />
+          <div className="px-2 md:px-0">
+            <TrackList tracks={shown} source={source} numbered selectable={false} />
+          </div>
+          {data.tracks.length > 10 && (
+            <button className="focus-ring state-layer mx-4 mt-2 h-10 rounded-control px-3 text-label text-fg-muted md:mx-0" onClick={() => setAll(!all)}>
+              {all ? t("detail.artist.collapse") : tn("detail.artist.showAll", data.tracks.length)}
+            </button>
+          )}
+        </section>
+      )}
+      {web.isLoading && (
+        <div className="px-4 md:px-6">
+          <Spinner />
         </div>
-        {data.tracks.length > 10 && (
-          <button className="focus-ring state-layer mx-4 mt-2 h-10 rounded-control px-3 text-label text-fg-muted md:mx-0" onClick={() => setAll(!all)}>
-            {all ? t("detail.artist.collapse") : tn("detail.artist.showAll", data.tracks.length)}
-          </button>
-        )}
-      </section>
+      )}
+      {webSongs.length > 0 && (
+        <section className="md:px-6">
+          <SectionHeader title={t("detail.artist.webSongs")} />
+          <ul className="px-2 md:px-0">
+            {webSongs.slice(0, 10).map((r) => (
+              <WebRow key={r.id} r={r} />
+            ))}
+          </ul>
+        </section>
+      )}
       {data.albums.length > 0 && (
         <section className="md:px-6">
           <SectionHeader title={t("detail.artist.albums")} />
@@ -332,6 +372,17 @@ export function ArtistPage() {
           </Shelf>
         </section>
       )}
+      {webAlbums.length > 0 && (
+        <section className="md:px-6">
+          <SectionHeader title={t("detail.artist.webAlbums")} />
+          <ul className="px-2 md:px-0">
+            {webAlbums.map((r) => (
+              <CollectionRow key={r.id} r={r} />
+            ))}
+          </ul>
+        </section>
+      )}
+      {!web.isLoading && notInLibrary && !webSongs.length && !webAlbums.length && <Empty icon="artist" title={t("detail.artist.nothing")} />}
       <SimilarArtists name={name} />
       {data.others.length > 0 && (
         <section className="md:px-6">
@@ -343,11 +394,13 @@ export function ArtistPage() {
           </Shelf>
         </section>
       )}
-      <div className="px-4 md:px-6">
-        <Button variant="ghost" icon="playlist-add" onClick={() => openDialog({ kind: "addToPlaylist", trackIds: data.tracks.map((tr) => tr.id) })}>
-          {t("detail.artist.addAllToPlaylist")}
-        </Button>
-      </div>
+      {data.tracks.length > 0 && (
+        <div className="px-4 md:px-6">
+          <Button variant="ghost" icon="playlist-add" onClick={() => openDialog({ kind: "addToPlaylist", trackIds: data.tracks.map((tr) => tr.id) })}>
+            {t("detail.artist.addAllToPlaylist")}
+          </Button>
+        </div>
+      )}
     </div>
   );
 }

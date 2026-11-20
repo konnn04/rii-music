@@ -51,7 +51,12 @@
     "others": "Nghệ sĩ khác bạn hay nghe",
     "addAllToPlaylist": "Thêm tất cả vào playlist",
     "similar": "Nghệ sĩ tương tự",
-    "similarBy": "Theo {provider}"
+    "similarBy": "Theo {provider}",
+    "inLibrary": "Trong thư viện của bạn",
+    "webSongs": "Bài hát trên YouTube Music",
+    "webAlbums": "Album trên YouTube Music",
+    "notInLibrary": "Chưa có bài nào trong thư viện",
+    "nothing": "Không tìm thấy bài hát của nghệ sĩ này"
   },
   "fullAlbum": {
     "looking": "Đang tìm đủ album trên YouTube Music…",

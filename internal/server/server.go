@@ -135,6 +135,7 @@ func (s *Server) Handler() http.Handler {
 	api("GET /api/recs/foryou", s.handleForYou)
 	api("GET /api/recs/discover", s.handleDiscover)
 	api("GET /api/artist/similar", s.handleArtistSimilar)
+	api("GET /api/artist/web", s.handleArtistWeb)
 	api("GET /api/tracks/{id}/similar", s.handleTrackSimilar)
 	api("POST /api/feedback", s.handleFeedback)
 	api("GET /api/onboarding/artists", s.handleOnboardingArtists)

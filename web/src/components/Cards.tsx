@@ -6,6 +6,7 @@ import { engine } from "@/player/engine";
 import { Collage, Cover } from "./ui/Cover";
 import { Icon } from "./ui/Icon";
 import { t, tn, tsv } from "@/i18n";
+import { ArtistLinks } from "@/components/ArtistLinks";
 
 /** Horizontal scroller on mobile, wrapping grid from md up. */
 export function Shelf({ children, grid = true }: { children: ReactNode; grid?: boolean }) {
@@ -67,7 +68,7 @@ export function TrackCard({ track, tracks, index, source }: { track: Track; trac
       </button>
       <div className="min-w-0">
         <div className={`truncate text-label ${isCur ? "text-accent" : ""}`}>{track.title}</div>
-        <div className="truncate text-body-sm text-fg-muted">{track.artist || t("common.unknownArtist")}</div>
+        <ArtistLinks artist={track.artist} className="block truncate text-body-sm text-fg-muted" />
       </div>
     </div>
   );

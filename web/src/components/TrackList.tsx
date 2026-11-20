@@ -18,6 +18,7 @@ import { TrackContextMenu, TrackMenuButton } from "./TrackMenu";
 import { openDialog, type TrackContext } from "./dialogs";
 import { toast } from "./ui/Toast";
 import { t, tn } from "@/i18n";
+import { ArtistLinks } from "@/components/ArtistLinks";
 
 /** The scrolling <main> element, so lists can virtualise against it. */
 export const useScrollEl = create<{ el: HTMLElement | null }>(() => ({ el: null }));
@@ -319,9 +320,7 @@ const Row = memo(function Row({
             {track.liked && !desktop && <Icon name="heart-filled" size={12} className="mr-1 inline text-accent align-[-1px]" aria-label={t("tracks.row.liked")} />}
             {track.artist ? (
               desktop ? (
-                <Link to="/artist/$name" params={{ name: track.artist }} className="hover:text-fg hover:underline" onClick={(e) => e.stopPropagation()}>
-                  {track.artist}
-                </Link>
+                <ArtistLinks artist={track.artist} />
               ) : (
                 track.artist
               )

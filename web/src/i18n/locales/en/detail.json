@@ -51,7 +51,12 @@
     "others": "Other artists you listen to",
     "addAllToPlaylist": "Add all to playlist",
     "similar": "Similar artists",
-    "similarBy": "via {provider}"
+    "similarBy": "via {provider}",
+    "inLibrary": "In your library",
+    "webSongs": "Songs on YouTube Music",
+    "webAlbums": "Albums on YouTube Music",
+    "notInLibrary": "Nothing in your library yet",
+    "nothing": "No songs found for this artist"
   },
   "fullAlbum": {
     "looking": "Looking up the full album on YouTube Music…",

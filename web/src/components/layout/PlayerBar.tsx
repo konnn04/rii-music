@@ -6,6 +6,7 @@ import { IconButton } from "../ui/Button";
 import { Icon } from "../ui/Icon";
 import { LikeCurrent, SeekBar, Transport, VolumeControl } from "./controls";
 import { t } from "@/i18n";
+import { ArtistLinks } from "@/components/ArtistLinks";
 
 /** Fixed bottom player for tablet and desktop. */
 export function PlayerBar() {
@@ -25,7 +26,7 @@ export function PlayerBar() {
             </button>
             <div className="min-w-0">
               <div className="truncate text-label">{current.track.title}</div>
-              <div className="truncate text-body-sm text-fg-muted">{current.track.artist}</div>
+              <ArtistLinks artist={current.track.artist} className="block truncate text-body-sm text-fg-muted" />
             </div>
             <LikeCurrent size={20} />
           </>

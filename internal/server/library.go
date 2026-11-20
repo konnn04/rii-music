@@ -448,19 +448,34 @@ func (s *Server) handleListArtists(w http.ResponseWriter, r *http.Request) {
 func (s *Server) handleGetArtist(w http.ResponseWriter, r *http.Request) {
 	uid := userOf(r).ID
 	name := r.URL.Query().Get("name")
-	tracks, err := s.libTracks(uid, `AND t.artist = ? ORDER BY ut.play_count DESC, ut.added_at DESC`, name)
+	all, err := s.libTracks(uid, `ORDER BY ut.play_count DESC, ut.added_at DESC`)
 	if err != nil {
 		s.internalError(w, r, err)
 		return
+	}
+	// Every song the artist is on, featured ones too ("Rhymastic, SOOBIN, Binz"
+	// counts for each), whatever the accents or case.
+	key := looseName(name)
+	tracks := []Track{}
+	for _, t := range all {
+		if hasArtist(t.Artist, key) {
+			tracks = append(tracks, t)
+		}
 	}
 	if len(tracks) == 0 {
 		httpError(w, http.StatusNotFound, "Không có nghệ sĩ này")
 		return
 	}
-	albums, err := s.listAlbums(uid, name)
+	allAlbums, err := s.listAlbums(uid, "")
 	if err != nil {
 		s.internalError(w, r, err)
 		return
+	}
+	albums := []Album{}
+	for _, a := range allAlbums {
+		if hasArtist(a.Artist, key) {
+			albums = append(albums, a)
+		}
 	}
 	others, err := s.listArtists(uid)
 	if err != nil {
@@ -469,7 +484,7 @@ func (s *Server) handleGetArtist(w http.ResponseWriter, r *http.Request) {
 	}
 	similar := []Artist{}
 	for _, a := range others {
-		if a.Name != name {
+		if looseName(a.Name) != key {
 			similar = append(similar, a)
 		}
 	}
@@ -478,6 +493,54 @@ func (s *Server) handleGetArtist(w http.ResponseWriter, r *http.Request) {
 		similar = similar[:8]
 	}
 	writeJSON(w, http.StatusOK, map[string]any{"name": name, "tracks": tracks, "albums": albums, "others": similar})
+}
+
+// hasArtist: one of the artists credited in s is the one with this loose key.
+func hasArtist(s, key string) bool {
+	for _, a := range splitArtists(s) {
+		if looseName(a) == key {
+			return true
+		}
+	}
+	return false
+}
+
+// handleArtistWeb: the artist's songs and albums on YouTube Music, for the
+// artist page (also for artists with nothing in the library yet).
+func (s *Server) handleArtistWeb(w http.ResponseWriter, r *http.Request) {
+	uid := userOf(r).ID
+	name := strings.TrimSpace(r.URL.Query().Get("name"))
+	if name == "" || len(name) > 200 {
+		httpError(w, http.StatusBadRequest, "Thiếu tên nghệ sĩ")
+		return
+	}
+	key := looseName(name)
+	var songs, albums []WebResult
+	var songErr, albumErr error
+	done := make(chan struct{}, 2)
+	go func() { songs, songErr = ytmSearch(r.Context(), s.ext.hc, name, "songs"); done <- struct{}{} }()
+	go func() { albums, albumErr = ytmSearch(r.Context(), s.ext.hc, name, "albums"); done <- struct{}{} }()
+	<-done
+	<-done
+	if songErr != nil && albumErr != nil {
+		httpError(w, http.StatusBadGateway, "Tìm trên YouTube Music lỗi: "+songErr.Error())
+		return
+	}
+	keep := func(in []WebResult, n int) []WebResult {
+		out := []WebResult{}
+		for _, x := range in {
+			if len(out) < n && hasArtist(x.Artist, key) {
+				out = append(out, x)
+			}
+		}
+		return out
+	}
+	songs, albums = keep(songs, 20), keep(albums, 20)
+	s.markResults(uid, songs, true)
+	for i := range albums {
+		albums[i].InLibrary = s.savedPlaylistID(uid, albums[i].ID)
+	}
+	writeJSON(w, http.StatusOK, map[string]any{"songs": songs, "albums": albums})
 }
 
 func (s *Server) handleListAlbums(w http.ResponseWriter, r *http.Request) {

@@ -12,6 +12,7 @@ import { Equalizer } from "../ui/misc";
 import { toast } from "../ui/Toast";
 import { Hint } from "../ui/Tips";
 import { AutoplayButton } from "./AutoplayButton";
+import { ArtistLinks } from "@/components/ArtistLinks";
 
 const LIMIT = 150;
 
@@ -56,7 +57,7 @@ export function QueueView({ compact }: { compact?: boolean }) {
             <Cover trackId={current.track.id} hasCover={current.track.hasCover} size={48} />
             <div className="min-w-0 flex-1">
               <div className="truncate text-body font-medium text-np-accent">{current.track.title}</div>
-              <div className="truncate text-body-sm text-np-fg-muted">{current.track.artist}</div>
+              <ArtistLinks artist={current.track.artist} className="block truncate text-body-sm text-np-fg-muted" />
             </div>
             <Equalizer paused={!isPlaying} />
           </div>
@@ -149,15 +150,26 @@ function QueueRow({ e }: { e: QueueEntry }) {
       <span {...attributes} {...listeners} className="focus-ring flex size-9 shrink-0 cursor-grab touch-none items-center justify-center rounded-xs text-np-fg-muted" aria-label={t("player.queue.drag", { title: e.track.title })}>
         <Icon name="grip" size={20} />
       </span>
-      <button className="focus-ring flex min-w-0 flex-1 items-center gap-3 rounded-xs text-left" onClick={() => usePlayer.getState().jumpTo(e.uid)}>
+      <div
+        role="button"
+        tabIndex={0}
+        className="focus-ring flex min-w-0 flex-1 cursor-pointer items-center gap-3 rounded-xs text-left"
+        onClick={() => usePlayer.getState().jumpTo(e.uid)}
+        onKeyDown={(ev) => {
+          if (ev.key === "Enter" || ev.key === " ") {
+            ev.preventDefault();
+            usePlayer.getState().jumpTo(e.uid);
+          }
+        }}
+      >
         <Cover trackId={e.track.id} hasCover={e.track.hasCover} size={40} />
         <span className="min-w-0 flex-1">
           <span className="block truncate text-body-sm text-fg">{e.track.title}</span>
           <span className="block truncate text-caption text-np-fg-muted">
-            {e.track.artist} · {fmtMs(e.track.durationMs)}
+            <ArtistLinks artist={e.track.artist} /> · {fmtMs(e.track.durationMs)}
           </span>
         </span>
-      </button>
+      </div>
       <button
         className="focus-ring flex size-10 shrink-0 items-center justify-center rounded-full text-np-fg-muted hover:text-fg"
         aria-label={t("player.queue.remove", { title: e.track.title })}

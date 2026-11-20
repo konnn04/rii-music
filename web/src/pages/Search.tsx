@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/Button";
 import { Empty, ErrorState } from "@/components/ui/misc";
 import { PageHeader } from "@/components/layout/AppShell";
 import { t } from "@/i18n";
+import { ArtistLinks } from "@/components/ArtistLinks";
 
 export function SearchPage() {
   const { q = "" } = useSearch({ from: "/search" });
@@ -169,7 +170,7 @@ const HINT: Record<WebKind, string> = {
 };
 
 /** Album or playlist: tap to see its songs, play them, or save it as a playlist. */
-function CollectionRow({ r }: { r: WebResult }) {
+export function CollectionRow({ r }: { r: WebResult }) {
   const [open, setOpen] = useState(false);
   return (
     <li>
@@ -292,7 +293,13 @@ export function WebRow({ r, index }: { r: WebResult; index?: number }) {
               aria-label={r.inLibrary ? t("search.row.inLibrary") : t("search.row.onServer")}
             />
           )}
-          <span className="truncate">{[r.artist || r.channel, index === undefined ? r.album : "", r.duration > 0 ? fmtTime(r.duration) : ""].filter(Boolean).join(" · ")}</span>
+          <span className="truncate">
+            {r.artist ? <ArtistLinks artist={r.artist} /> : r.channel}
+            {[index === undefined ? r.album : "", r.duration > 0 ? fmtTime(r.duration) : ""]
+              .filter(Boolean)
+              .map((x) => " · " + x)
+              .join("")}
+          </span>
         </div>
       </div>
       {active && waiting ? (

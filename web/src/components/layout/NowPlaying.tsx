@@ -1,5 +1,4 @@
 import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
-import { useNavigate } from "@tanstack/react-router";
 import { coverUrl } from "@/lib/api";
 import { usePlayback, usePlayer } from "@/player/store";
 import { t, tsv } from "@/i18n";
@@ -11,6 +10,7 @@ import { QueueView } from "./QueueView";
 import { TrackMenuButton } from "../TrackMenu";
 import { useSettings } from "@/lib/queries";
 import { usePulse } from "./Pulse";
+import { ArtistLinks } from "@/components/ArtistLinks";
 
 /** Dark scope with the cover blurred behind a scrim and the accent taken from the cover. */
 export function NowPlayingSurface({ children, className = "", style }: { children: ReactNode; className?: string; style?: CSSProperties }) {
@@ -70,24 +70,13 @@ export function NowPlayingSurface({ children, className = "", style }: { childre
 
 function TrackTitle({ big }: { big?: boolean }) {
   const track = usePlayer((s) => s.current?.track);
-  const navigate = useNavigate();
-  const setNp = usePlayer((s) => s.setNp);
   if (!track) return null;
   return (
     <div className="min-w-0 flex-1">
       <h2 className={`truncate ${big ? "text-title-2" : "text-title-3"}`} title={track.title}>
         {track.title}
       </h2>
-      <button
-        className="focus-ring block max-w-full truncate rounded-xs text-left text-body text-np-fg-muted hover:underline"
-        onClick={() => {
-          if (!track.artist) return;
-          setNp(false);
-          navigate({ to: "/artist/$name", params: { name: track.artist } });
-        }}
-      >
-        {track.artist || t("common.unknownArtist")}
-      </button>
+      <ArtistLinks artist={track.artist} className="block max-w-full truncate text-body text-np-fg-muted" linkClassName="hover:text-fg hover:underline" />
     </div>
   );
 }

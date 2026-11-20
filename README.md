@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="web/public/icon.png" alt="RiiMusic" width="128" />
+</p>
+
 # RiiMusic
 
 Web nghe nhạc tự host cho bạn và nhóm bạn bè. Tìm và tải nhạc từ YouTube Music, mỗi người một thư viện riêng, nghe trên điện thoại và máy tính như một app.

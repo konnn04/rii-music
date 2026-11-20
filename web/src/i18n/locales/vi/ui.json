@@ -37,7 +37,8 @@
     "unlike": "Bỏ thích",
     "playError": "Không phát được bài này",
     "playErrorToast": "Không phát được “{title}” (thiếu file hoặc lỗi định dạng)",
-    "endOfQueue": "Đã hết hàng đợi"
+    "endOfQueue": "Đã hết hàng đợi",
+    "more": "Thêm tuỳ chọn"
   },
   "time": {
     "minutes": "{n} phút",

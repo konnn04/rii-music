@@ -55,7 +55,7 @@ export function TrackContextMenu({ track, ctx, children, disabled }: { track: Tr
   );
 }
 
-function MenuItems({
+export function MenuItems({
   track,
   ctx,
   Item,

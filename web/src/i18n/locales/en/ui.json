@@ -37,7 +37,8 @@
     "unlike": "Unlike",
     "playError": "Couldn't play this song",
     "playErrorToast": "Couldn't play “{title}” (missing file or unsupported format)",
-    "endOfQueue": "End of queue"
+    "endOfQueue": "End of queue",
+    "more": "More options"
   },
   "time": {
     "minutes": "{n} min",

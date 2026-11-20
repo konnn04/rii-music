@@ -1,0 +1,13 @@
+{
+  "invalid": "Invalid share link, or the song was removed",
+  "openApp": "Open {name}",
+  "playPreview": "Play preview",
+  "previewNote": "{n}-second preview. Sign in to hear it all.",
+  "signIn": "Sign in to hear it all",
+  "addAndPlay": "Add to library and play",
+  "play": "Play",
+  "share": "Share",
+  "shareTitle": "{title} · {artist}",
+  "linkCopied": "Share link copied",
+  "linkNote": "People who aren't signed in can only hear a 30-second preview."
+}

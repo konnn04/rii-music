@@ -1,0 +1,94 @@
+{
+  "columns": {
+    "title": "Tên",
+    "album": "Album",
+    "dateAdded": "Ngày thêm",
+    "duration": "Thời lượng"
+  },
+  "row": {
+    "dragToReorder": "Kéo để sắp xếp",
+    "playAria": "Phát {title}",
+    "liked": "Đã thích"
+  },
+  "selection": {
+    "cancel": "Huỷ chọn",
+    "count": "{count} đã chọn",
+    "selectAll": "Chọn hết",
+    "addedToQueue": {
+      "one": "Đã thêm {n} bài vào hàng đợi",
+      "other": "Đã thêm {n} bài vào hàng đợi"
+    },
+    "queue": "Hàng đợi",
+    "playlist": "Playlist"
+  },
+  "hint": {
+    "mobile": "Giữ lâu một bài để chọn nhiều",
+    "desktop": "Chuột phải một bài để xem thao tác"
+  },
+  "menu": {
+    "moreAria": "Thêm thao tác cho {title}"
+  },
+  "action": {
+    "playNext": "Phát tiếp theo",
+    "addToQueue": "Thêm vào hàng đợi",
+    "addToPlaylist": "Thêm vào playlist",
+    "like": "Thích",
+    "unlike": "Bỏ thích",
+    "radio": "Radio từ bài này",
+    "similar": "Bài nghe giống",
+    "similarMixName": "Giống “{title}”",
+    "goToArtist": "Đến nghệ sĩ",
+    "goToAlbum": "Đến album",
+    "editInfo": "Sửa thông tin",
+    "removeFromLiked": "Xoá khỏi Yêu thích",
+    "removeFromPlaylist": "Xoá khỏi playlist",
+    "deleteFromLibrary": "Xoá khỏi thư viện"
+  },
+  "toast": {
+    "playNext": "Sẽ phát tiếp theo",
+    "addedToQueue": "Đã thêm vào hàng đợi",
+    "noSimilar": "Chưa tìm được bài giống — thư viện cần thêm bài hoặc đang phân tích âm thanh"
+  },
+  "addToPlaylist": {
+    "selectedCount": "{count} bài đã chọn",
+    "newPlaylist": "Playlist mới…"
+  },
+  "smartRule": {
+    "top30": "Nghe nhiều nhất 30 ngày",
+    "recent": "Mới thêm",
+    "unplayed": "Chưa nghe",
+    "artist": "Theo nghệ sĩ"
+  },
+  "newPlaylist": {
+    "title": "Playlist mới",
+    "titleSmart": "Playlist thông minh",
+    "willAdd": {
+      "one": "Sẽ thêm {n} bài",
+      "other": "Sẽ thêm {n} bài"
+    },
+    "created": "Đã tạo “{name}”",
+    "nameLabel": "Tên",
+    "namePlaceholder": "Playlist của tôi",
+    "smartToggle": "Playlist thông minh (tự cập nhật theo luật)",
+    "ruleLabel": "Luật",
+    "artistLabel": "Nghệ sĩ",
+    "chooseArtist": "Chọn nghệ sĩ…",
+    "maxSongs": "Tối đa {count} bài"
+  },
+  "edit": {
+    "title": "Sửa thông tin bài",
+    "youtubeSource": "Nguồn YouTube",
+    "trackTitle": "Tên bài",
+    "artist": "Nghệ sĩ",
+    "artistHint": "Nhiều nghệ sĩ: cách nhau bằng dấu phẩy",
+    "album": "Album",
+    "albumHint": "Để trống nếu là đĩa đơn"
+  },
+  "delete": {
+    "titleMultiple": "Xoá {count} bài?",
+    "titleSingle": "Xoá “{title}”?",
+    "description": "File nhạc, ảnh bìa, lời và lịch sử nghe của bài sẽ bị xoá khỏi máy chủ. Không hoàn tác được.",
+    "toastMultiple": "Đã xoá {count} bài",
+    "toastSingle": "Đã xoá bài khỏi thư viện"
+  }
+}

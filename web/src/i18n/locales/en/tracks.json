@@ -1,0 +1,94 @@
+{
+  "columns": {
+    "title": "Title",
+    "album": "Album",
+    "dateAdded": "Date added",
+    "duration": "Duration"
+  },
+  "row": {
+    "dragToReorder": "Drag to reorder",
+    "playAria": "Play {title}",
+    "liked": "Liked"
+  },
+  "selection": {
+    "cancel": "Clear selection",
+    "count": "{count} selected",
+    "selectAll": "Select all",
+    "addedToQueue": {
+      "one": "Added {n} song to queue",
+      "other": "Added {n} songs to queue"
+    },
+    "queue": "Queue",
+    "playlist": "Playlist"
+  },
+  "hint": {
+    "mobile": "Long-press a song to select multiple",
+    "desktop": "Right-click a song for actions"
+  },
+  "menu": {
+    "moreAria": "More actions for {title}"
+  },
+  "action": {
+    "playNext": "Play next",
+    "addToQueue": "Add to queue",
+    "addToPlaylist": "Add to playlist",
+    "like": "Like",
+    "unlike": "Unlike",
+    "radio": "Start radio",
+    "similar": "Similar songs",
+    "similarMixName": "Similar to “{title}”",
+    "goToArtist": "Go to artist",
+    "goToAlbum": "Go to album",
+    "editInfo": "Edit info",
+    "removeFromLiked": "Remove from Liked songs",
+    "removeFromPlaylist": "Remove from playlist",
+    "deleteFromLibrary": "Delete from library"
+  },
+  "toast": {
+    "playNext": "Playing next",
+    "addedToQueue": "Added to queue",
+    "noSimilar": "No similar songs found yet — your library needs more songs or audio analysis is still running"
+  },
+  "addToPlaylist": {
+    "selectedCount": "{count} songs selected",
+    "newPlaylist": "New playlist…"
+  },
+  "smartRule": {
+    "top30": "Most played (30 days)",
+    "recent": "Recently added",
+    "unplayed": "Unplayed",
+    "artist": "By artist"
+  },
+  "newPlaylist": {
+    "title": "New playlist",
+    "titleSmart": "Smart playlist",
+    "willAdd": {
+      "one": "Will add {n} song",
+      "other": "Will add {n} songs"
+    },
+    "created": "Created “{name}”",
+    "nameLabel": "Name",
+    "namePlaceholder": "My playlist",
+    "smartToggle": "Smart playlist (auto-updates by rule)",
+    "ruleLabel": "Rule",
+    "artistLabel": "Artist",
+    "chooseArtist": "Choose an artist…",
+    "maxSongs": "Up to {count} songs"
+  },
+  "edit": {
+    "title": "Edit song info",
+    "youtubeSource": "YouTube source",
+    "trackTitle": "Title",
+    "artist": "Artist",
+    "artistHint": "Multiple artists: separate with commas",
+    "album": "Album",
+    "albumHint": "Leave blank for singles"
+  },
+  "delete": {
+    "titleMultiple": "Delete {count} songs?",
+    "titleSingle": "Delete “{title}”?",
+    "description": "Audio files, cover art, lyrics, and play history will be permanently deleted from the server. This cannot be undone.",
+    "toastMultiple": "Deleted {count} songs",
+    "toastSingle": "Deleted song from library"
+  }
+}

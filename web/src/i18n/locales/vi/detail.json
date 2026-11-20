@@ -1,0 +1,63 @@
+{
+  "playAll": "Phát tất cả",
+  "shufflePlay": "Phát trộn bài",
+  "addAllToQueue": "Thêm tất cả vào hàng đợi",
+  "addedToQueue": {
+    "one": "Đã thêm {n} bài vào hàng đợi",
+    "other": "Đã thêm {n} bài vào hàng đợi"
+  },
+  "playlist": {
+    "deleteConfirm": "Xoá playlist “{name}”? Các bài trong thư viện vẫn giữ nguyên.",
+    "actions": "Thao tác playlist",
+    "rename": "Đổi tên",
+    "exportM3u": "Xuất M3U",
+    "exportJson": "Xuất JSON",
+    "delete": "Xoá playlist",
+    "kickerSystem": "Playlist hệ thống",
+    "kickerSmart": "Playlist thông minh",
+    "kicker": "Playlist",
+    "emptyLikedTitle": "Chưa thích bài nào",
+    "emptyTitle": "Playlist trống",
+    "emptySmartBody": "Chưa có bài nào khớp luật của playlist này.",
+    "emptyBody": "Dùng nút ⋯ trên một bài rồi chọn “Thêm vào playlist”, hoặc chọn nhiều bài trong Thư viện.",
+    "reorderHint": "Kéo số thứ tự (PC) hoặc giữ rồi kéo (mobile) để sắp xếp.",
+    "renameTitle": "Đổi tên playlist",
+    "nameLabel": "Tên"
+  },
+  "album": {
+    "kicker": "Album",
+    "variousArtists": "Nhiều nghệ sĩ",
+    "goToArtist": "Đến nghệ sĩ"
+  },
+  "artist": {
+    "kicker": "Nghệ sĩ",
+    "albumsCount": {
+      "one": "{n} album",
+      "other": "{n} album"
+    },
+    "playsCount": {
+      "one": "{n} lượt nghe",
+      "other": "{n} lượt nghe"
+    },
+    "radio": "Radio nghệ sĩ",
+    "radioName": "Radio {name}",
+    "popular": "Bài phổ biến",
+    "collapse": "Thu gọn",
+    "showAll": {
+      "one": "Xem tất cả {n} bài",
+      "other": "Xem tất cả {n} bài"
+    },
+    "albums": "Album",
+    "others": "Nghệ sĩ khác bạn hay nghe",
+    "addAllToPlaylist": "Thêm tất cả vào playlist",
+    "similar": "Nghệ sĩ tương tự",
+    "similarBy": "Theo {provider}"
+  },
+  "fullAlbum": {
+    "looking": "Đang tìm đủ album trên YouTube Music…",
+    "title": "Cả album ({have}/{total} bài bạn đã có)",
+    "sub": "Các bài còn lại của album này. Bấm phát để tải và nghe.",
+    "saveAll": "Lưu cả album",
+    "saved": "Đã lưu album, {n} bài đang tải"
+  }
+}

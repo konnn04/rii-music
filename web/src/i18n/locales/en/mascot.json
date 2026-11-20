@@ -1,0 +1,34 @@
+{
+  "name": "Vani",
+  "talk": "Chat with Vani",
+  "hello": {
+    "night": "It's late, {name}. Something gentle?",
+    "morning": "Good morning, {name}! What are we playing today?",
+    "noon": "Lunch time, {name}. A song for the break?",
+    "afternoon": "Have a nice afternoon, {name}!",
+    "evening": "Evening, {name}. Time to unwind with a few songs."
+  },
+  "helloAnon": {
+    "night": "It's late. Something gentle?",
+    "morning": "Good morning! What are we playing today?",
+    "noon": "Lunch time. A song for the break?",
+    "afternoon": "Have a nice afternoon!",
+    "evening": "Evening. Time to unwind with a few songs."
+  },
+  "listening": "Vani is listening with you ♪",
+  "todayMinutes": "You've listened for {n} minutes today.",
+  "nothingYet": "Nothing played yet today.",
+  "chat": "Chat",
+  "askMood": "How are you feeling today? I'll make a playlist that fits.",
+  "moods": { "happy": "Happy", "sad": "Sad", "chill": "Chill", "energetic": "Energetic", "focus": "Focus" },
+  "moodEmoji": { "happy": "😊", "sad": "🥲", "chill": "🌙", "energetic": "⚡", "focus": "🎧" },
+  "comfort": "It's okay to feel down for a while. It'll pass, and I'm here listening with you.",
+  "madeList": "I picked {n} “{name}” songs from your library.",
+  "noTracks": "Your library is still small, I couldn't pick enough. Add a few songs and ask me again.",
+  "thinking": "Vani is picking songs…",
+  "savePlaylist": "Save as playlist",
+  "saved": "Saved “{name}”",
+  "howLongQ": "How long have I listened?",
+  "howLongA": "{today} minutes today, {week} minutes in the last 7 days.",
+  "newMusic": "Find new music"
+}

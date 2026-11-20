@@ -1,0 +1,13 @@
+{
+  "invalid": "Link chia sẻ không hợp lệ hoặc bài đã bị xoá",
+  "openApp": "Mở {name}",
+  "playPreview": "Nghe thử",
+  "previewNote": "Nghe thử {n} giây. Đăng nhập để nghe đầy đủ.",
+  "signIn": "Đăng nhập để nghe đầy đủ",
+  "addAndPlay": "Thêm vào thư viện và phát",
+  "play": "Phát",
+  "share": "Chia sẻ",
+  "shareTitle": "{title} · {artist}",
+  "linkCopied": "Đã chép link chia sẻ",
+  "linkNote": "Người chưa đăng nhập chỉ nghe thử được 30 giây."
+}

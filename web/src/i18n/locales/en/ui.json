@@ -1,0 +1,51 @@
+{
+  "card": {
+    "playAria": "Play {title}",
+    "albumAria": "Album {name}",
+    "artistAria": "Artist {name}",
+    "playlistAria": "Playlist {name}",
+    "variousArtists": "Various artists",
+    "artistLabel": "Artist"
+  },
+  "error": {
+    "loadFailed": "Couldn't load data"
+  },
+  "equalizer": {
+    "playing": "Playing"
+  },
+  "player": {
+    "region": "Player",
+    "openNowPlaying": "Open Now Playing panel",
+    "openNowPlayingTrack": "Open Now Playing: {title}",
+    "nothingPlaying": "Nothing playing",
+    "lyrics": "Lyrics",
+    "queue": "Queue",
+    "nowPlayingPanel": "Now Playing panel",
+    "seek": "Seek",
+    "shuffleOff": "Turn off shuffle",
+    "prevTrack": "Previous track",
+    "nextTrack": "Next track",
+    "playShortcut": "Play (Space)",
+    "pauseShortcut": "Pause (Space)",
+    "repeatOff": "Repeat: off",
+    "repeatAll": "Repeat: all",
+    "repeatOne": "Repeat: one",
+    "mute": "Mute",
+    "unmute": "Unmute",
+    "volume": "Volume",
+    "like": "Like",
+    "unlike": "Unlike",
+    "playError": "Couldn't play this song",
+    "playErrorToast": "Couldn't play “{title}” (missing file or unsupported format)",
+    "endOfQueue": "End of queue"
+  },
+  "time": {
+    "minutes": "{n} min",
+    "hoursMinutes": "{h} h {m} min"
+  },
+  "toast": {
+    "downloadError": "Download failed: {target}",
+    "addedToPlaylist": "Added to playlist",
+    "addedManyToPlaylist": "Added {count} songs to playlist"
+  }
+}

@@ -1,0 +1,45 @@
+{
+  "subtitle": "Recommendations based on what you play, like, and skip. Similar artists come from {provider}; “sounds like” compares audio features of songs in your library.",
+  "dismissArtistToast": "Will suggest fewer songs by {artist}",
+  "loading": "Asking {provider} for similar artists… (this may take a few seconds the first time)",
+  "forYou": {
+    "title": "Made for you",
+    "sub": "From your library",
+    "loading": "Ranking your library…",
+    "empty": "Listen to a few more songs to get recommendations."
+  },
+  "needHistory": {
+    "title": "Not enough listening history",
+    "action": "Open library",
+    "body": "Play, like, or add songs to playlists — Vang will use that to find new music for you."
+  },
+  "artists": {
+    "title": "Artists you might like",
+    "sub": "Not in your library — tap to search YouTube"
+  },
+  "tracks": {
+    "title": "New songs for you",
+    "sub": "Top tracks from the artists above",
+    "bulkButton": "Download top 10",
+    "bulkToast": "Added top 10 songs to download queue",
+    "empty": "No new recommendations yet."
+  },
+  "rec": {
+    "play": "Play {title}",
+    "lessLike": "Suggest less like “{title}”",
+    "lessToast": "Will suggest this song less",
+    "lessTitle": "Suggest less like this"
+  },
+  "extArtist": {
+    "ariaInLibrary": "{name} (in library)",
+    "ariaSearch": "{name} — search on YouTube",
+    "inLibrary": "In library",
+    "notInLibrary": "Not in library"
+  },
+  "row": {
+    "queued": "Queued",
+    "downloadAria": "Download {title} — {artist}",
+    "lessArtistAria": "Suggest fewer songs by {artist}"
+  },
+  "link": "Discover more"
+}

@@ -1,0 +1,27 @@
+{
+  "hello": "Hi {name}! What do you listen to?",
+  "genresTitle": "Genres you like",
+  "artistsTitle": "Artists you listen to",
+  "step0": "Pick languages. Suggestions and radio stay in one language instead of mixing.",
+  "step1": "Pick a few genres (optional).",
+  "step2": "Pick or type artists. They are the starting point for suggestions before you have listened to anything.",
+  "lang": { "vi": "Vietnamese", "en": "Western", "ko": "Korean (K-pop)", "ja": "Japanese (J-pop)", "zh": "Chinese", "th": "Thai" },
+  "genre": {
+    "pop": "Pop",
+    "ballad": "Ballads",
+    "rap": "Rap / Hip-hop",
+    "indie": "Indie",
+    "rnb": "R&B",
+    "edm": "EDM",
+    "rock": "Rock",
+    "lofi": "Lo-fi / Chill",
+    "acoustic": "Acoustic",
+    "bolero": "Bolero / Folk",
+    "anime": "Soundtracks / OST"
+  },
+  "typeArtist": "Type an artist…",
+  "removeArtist": "Remove {name}",
+  "suggested": "Suggestions",
+  "skip": "Skip",
+  "start": "Start listening"
+}

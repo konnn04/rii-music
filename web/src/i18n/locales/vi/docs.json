@@ -1,0 +1,11 @@
+{
+  "filter": "Lọc endpoint…",
+  "sections": "Mục",
+  "intro": "Mọi thứ trong app đều làm được qua API này: tìm và tải nhạc, quản lý thư viện, playlist, lấy gợi ý. Mỗi token hành động như chính tài khoản của bạn.",
+  "step1": "Tạo token trong Cài đặt → API.",
+  "step2": "Gửi kèm mỗi request:",
+  "step3": "Hoặc dùng thư viện TypeScript (một file, không phụ thuộc):",
+  "public": "Công khai",
+  "body": "Gửi lên",
+  "response": "Trả về"
+}

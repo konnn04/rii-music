@@ -1,0 +1,31 @@
+{
+  "tabs": {
+    "songs": "Songs",
+    "artists": "Artists",
+    "albums": "Albums",
+    "playlists": "Playlists"
+  },
+  "sort": {
+    "added": "Recently added",
+    "title": "Title",
+    "artist": "Artist",
+    "plays": "Most played"
+  },
+  "empty": {
+    "songsTitle": "No songs yet",
+    "songsBody": "Download music from YouTube to get started.",
+    "downloadMusic": "Download music",
+    "artistsTitle": "No artists yet",
+    "albumsTitle": "No albums yet",
+    "albumsBody": "Songs with an album name (from YouTube Music, or edited via “Edit info”) will be grouped into albums here."
+  },
+  "hint": {
+    "mobile": "Long-press a song to select multiple.",
+    "desktop": "Double-click to play · right-click for actions · Ctrl+click to multi-select."
+  },
+  "playlists": {
+    "new": "New playlist",
+    "smart": "Smart playlist"
+  },
+  "langFilter": "Filter by language"
+}

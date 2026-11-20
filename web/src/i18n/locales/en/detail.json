@@ -1,0 +1,63 @@
+{
+  "playAll": "Play all",
+  "shufflePlay": "Shuffle play",
+  "addAllToQueue": "Add all to queue",
+  "addedToQueue": {
+    "one": "Added {n} song to queue",
+    "other": "Added {n} songs to queue"
+  },
+  "playlist": {
+    "deleteConfirm": "Delete playlist “{name}”? Songs in your library won't be removed.",
+    "actions": "Playlist actions",
+    "rename": "Rename",
+    "exportM3u": "Export M3U",
+    "exportJson": "Export JSON",
+    "delete": "Delete playlist",
+    "kickerSystem": "System playlist",
+    "kickerSmart": "Smart playlist",
+    "kicker": "Playlist",
+    "emptyLikedTitle": "No liked songs yet",
+    "emptyTitle": "Empty playlist",
+    "emptySmartBody": "No songs match this playlist's rules yet.",
+    "emptyBody": "Use the ⋯ button on a song and choose “Add to playlist”, or select multiple songs in Library.",
+    "reorderHint": "Drag the track number (desktop) or press and drag (mobile) to reorder.",
+    "renameTitle": "Rename playlist",
+    "nameLabel": "Name"
+  },
+  "album": {
+    "kicker": "Album",
+    "variousArtists": "Various artists",
+    "goToArtist": "Go to artist"
+  },
+  "artist": {
+    "kicker": "Artist",
+    "albumsCount": {
+      "one": "{n} album",
+      "other": "{n} albums"
+    },
+    "playsCount": {
+      "one": "{n} play",
+      "other": "{n} plays"
+    },
+    "radio": "Artist radio",
+    "radioName": "{name} Radio",
+    "popular": "Popular",
+    "collapse": "Show less",
+    "showAll": {
+      "one": "See all {n} song",
+      "other": "See all {n} songs"
+    },
+    "albums": "Albums",
+    "others": "Other artists you listen to",
+    "addAllToPlaylist": "Add all to playlist",
+    "similar": "Similar artists",
+    "similarBy": "via {provider}"
+  },
+  "fullAlbum": {
+    "looking": "Looking up the full album on YouTube Music…",
+    "title": "Full album (you have {have} of {total})",
+    "sub": "The rest of this album. Press play to download and listen.",
+    "saveAll": "Save whole album",
+    "saved": "Album saved, {n} songs downloading"
+  }
+}

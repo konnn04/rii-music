@@ -1,0 +1,85 @@
+// Vang icon set v0.1 — 24×24, stroke 1.75, round caps/joins. Color = currentColor.
+export type IconDef = { d: string; fill?: boolean; label: string };
+export const icons = {
+  "home": { d: "M4 10.5 12 4l8 6.5V19a1 1 0 0 1-1 1h-4.5v-5.5h-5V20H5a1 1 0 0 1-1-1z", label: "Trang chủ" },
+  "search": { d: "M10.5 4a6.5 6.5 0 1 1 0 13 6.5 6.5 0 0 1 0-13zM15.5 15.5 20 20", label: "Tìm kiếm" },
+  "library": { d: "M4 9a1 1 0 0 1 1-1h14a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1zM6.5 5h11M13 11.5v5M13 16.5a1.75 1.75 0 1 1-3.5 0 1.75 1.75 0 0 1 3.5 0zM13 11.5l2.5 1", label: "Thư viện" },
+  "download": { d: "M12 4v11M7.5 10.5 12 15l4.5-4.5M5 20h14", label: "Tải về" },
+  "stats": { d: "M4 20h16M7 16v-5M12 16V7M17 16v-8", label: "Thống kê" },
+  "history": { d: "M4.5 12a7.5 7.5 0 1 0 2.2-5.3M4.5 4.5v3.5H8M12 8.5V12l2.5 1.75", label: "Lịch sử" },
+  "settings": { d: "M4 7h7.5M16.5 7H20M14 4.5a2.5 2.5 0 1 1 0 5 2.5 2.5 0 0 1 0-5zM4 17h3.5M12.5 17H20M10 14.5a2.5 2.5 0 1 1 0 5 2.5 2.5 0 0 1 0-5z", label: "Cài đặt" },
+  "play": { d: "M8 5.5v13a1 1 0 0 0 1.5.86l10.2-6.5a1 1 0 0 0 0-1.72L9.5 4.64A1 1 0 0 0 8 5.5z", fill: true, label: "Phát" },
+  "pause": { d: "M7 5h3v14H7zM14 5h3v14h-3z", fill: true, label: "Tạm dừng" },
+  "skip-back": { d: "M6 5v14M18 6.2v11.6a.8.8 0 0 1-1.25.66L9 13.1a1.3 1.3 0 0 1 0-2.2l7.75-5.36A.8.8 0 0 1 18 6.2z", fill: true, label: "Bài trước" },
+  "skip-forward": { d: "M18 5v14M6 6.2v11.6a.8.8 0 0 0 1.25.66L15 13.1a1.3 1.3 0 0 0 0-2.2L7.25 5.54A.8.8 0 0 0 6 6.2z", fill: true, label: "Bài sau" },
+  "shuffle": { d: "M4 7h3.5c2 0 3.2 1 4.2 2.6l1.6 2.8c1 1.6 2.2 2.6 4.2 2.6H20M17 12l3 3-3 3M4 17h3.5c1.4 0 2.4-.5 3.2-1.4M13.3 8.4c.8-.9 1.8-1.4 3.2-1.4H20M17 4l3 3-3 3", label: "Trộn bài" },
+  "repeat": { d: "M5 11V9a2 2 0 0 1 2-2h12M16 4l3 3-3 3M19 13v2a2 2 0 0 1-2 2H5M8 20l-3-3 3-3", label: "Lặp lại" },
+  "repeat-one": { d: "M5 11V9a2 2 0 0 1 2-2h12M16 4l3 3-3 3M19 13v2a2 2 0 0 1-2 2H5M8 20l-3-3 3-3M11 10.75l1.25-.75v4", label: "Lặp một bài" },
+  "heart": { d: "M12 19.5s-7.5-4.4-7.5-9.7A4.3 4.3 0 0 1 12 7.2a4.3 4.3 0 0 1 7.5 2.6c0 5.3-7.5 9.7-7.5 9.7z", label: "Thích" },
+  "heart-filled": { d: "M12 19.5s-7.5-4.4-7.5-9.7A4.3 4.3 0 0 1 12 7.2a4.3 4.3 0 0 1 7.5 2.6c0 5.3-7.5 9.7-7.5 9.7z", fill: true, label: "Đã thích" },
+  "queue": { d: "M4 6h12M4 11h12M4 16h6M14.5 14v6l5-3z", label: "Hàng đợi" },
+  "lyrics": { d: "M4 6h9M4 10h9M4 14h5M17 4v10.5M17 14.5a2.5 2.5 0 1 1-5 0 2.5 2.5 0 0 1 5 0zM17 4l3 1", label: "Lời bài hát" },
+  "volume": { d: "M4 9.5h3l4.5-4v13l-4.5-4H4zM15 9a4 4 0 0 1 0 6M17.5 6.5a7.5 7.5 0 0 1 0 11", label: "Âm lượng" },
+  "volume-mute": { d: "M4 9.5h3l4.5-4v13l-4.5-4H4zM16 10l4 4M20 10l-4 4", label: "Tắt tiếng" },
+  "more": { d: "M6 10.75a1.25 1.25 0 1 1 0 2.5 1.25 1.25 0 0 1 0-2.5zM12 10.75a1.25 1.25 0 1 1 0 2.5 1.25 1.25 0 0 1 0-2.5zM18 10.75a1.25 1.25 0 1 1 0 2.5 1.25 1.25 0 0 1 0-2.5z", fill: true, label: "Thêm (ngang)" },
+  "more-vertical": { d: "M12 4.75a1.25 1.25 0 1 1 0 2.5 1.25 1.25 0 0 1 0-2.5zM12 10.75a1.25 1.25 0 1 1 0 2.5 1.25 1.25 0 0 1 0-2.5zM12 16.75a1.25 1.25 0 1 1 0 2.5 1.25 1.25 0 0 1 0-2.5z", fill: true, label: "Thêm (dọc)" },
+  "grip": { d: "M9 5.75a1.25 1.25 0 1 1 0 2.5 1.25 1.25 0 0 1 0-2.5zM15 5.75a1.25 1.25 0 1 1 0 2.5 1.25 1.25 0 0 1 0-2.5zM9 10.75a1.25 1.25 0 1 1 0 2.5 1.25 1.25 0 0 1 0-2.5zM15 10.75a1.25 1.25 0 1 1 0 2.5 1.25 1.25 0 0 1 0-2.5zM9 15.75a1.25 1.25 0 1 1 0 2.5 1.25 1.25 0 0 1 0-2.5zM15 15.75a1.25 1.25 0 1 1 0 2.5 1.25 1.25 0 0 1 0-2.5z", fill: true, label: "Kéo thả" },
+  "plus": { d: "M12 5v14M5 12h14", label: "Thêm" },
+  "check": { d: "M5 12.5l4.5 4.5L19 7.5", label: "Xong" },
+  "close": { d: "M6 6l12 12M18 6 6 18", label: "Đóng" },
+  "chevron-down": { d: "M6 9l6 6 6-6", label: "Mở xuống" },
+  "chevron-right": { d: "M9 6l6 6-6 6", label: "Tiếp" },
+  "chevron-left": { d: "M15 6l-6 6 6 6", label: "Quay lại" },
+  "playlist-add": { d: "M4 6h11M4 11h11M4 16h7M17 13v7M13.5 16.5h7", label: "Thêm vào playlist" },
+  "trash": { d: "M5 7h14M10 4h4M7 7l.8 11.2a1 1 0 0 0 1 .8h6.4a1 1 0 0 0 1-.8L17 7M10 11v5M14 11v5", label: "Xoá" },
+  "link": { d: "M10 14a4 4 0 0 0 5.7 0l2.6-2.6a4 4 0 0 0-5.7-5.7l-1.1 1.1M14 10a4 4 0 0 0-5.7 0l-2.6 2.6a4 4 0 0 0 5.7 5.7l1.1-1.1", label: "Dán liên kết" },
+  "retry": { d: "M19 12a7 7 0 1 1-2.1-5M19 4v4h-4", label: "Thử lại" },
+  "alert": { d: "M12 4.5 20.5 19h-17zM12 10v4M12 16.75v.01", label: "Cảnh báo" },
+  "file-missing": { d: "M7 3.5h7l4 4V20a.5.5 0 0 1-.5.5h-10A.5.5 0 0 1 6.5 20V4a.5.5 0 0 1 .5-.5zM14 3.5V8h4M10 12l4 4M14 12l-4 4", label: "Thiếu file" },
+  "music-note": { d: "M9 18V6.5l10-2V16M9 18a2.5 2.5 0 1 1-5 0 2.5 2.5 0 0 1 5 0zM19 16a2.5 2.5 0 1 1-5 0 2.5 2.5 0 0 1 5 0zM9 10l10-2", label: "Không có bìa" },
+  "artist": { d: "M12 4a4 4 0 1 1 0 8 4 4 0 0 1 0-8zM4.5 20a7.5 7.5 0 0 1 15 0", label: "Nghệ sĩ" },
+  "album": { d: "M12 4a8 8 0 1 1 0 16 8 8 0 0 1 0-16zM12 10a2 2 0 1 1 0 4 2 2 0 0 1 0-4z", label: "Album" },
+  "filter": { d: "M4 5h16l-6 7.5V19l-4 2v-8.5z", label: "Lọc" },
+  "radio": { d: "M12 10.5a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3zM8.5 8.5a5 5 0 0 0 0 7M15.5 8.5a5 5 0 0 1 0 7M5.6 5.6a9 9 0 0 0 0 12.8M18.4 5.6a9 9 0 0 1 0 12.8", label: "Radio" },
+  "mix": { d: "M4 9a1 1 0 0 1 1-1h8a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1zM10 8V5a1 1 0 0 1 1-1h8a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1h-5", label: "Mix" },
+  "playing": { d: "M6 18v-6M10 18V6M14 18v-9M18 18v-4", label: "Đang phát" },
+  "sort": { d: "M7 5v14M4 16l3 3 3-3M17 19V5M14 8l3-3 3 3", label: "Sắp xếp" },
+  "sidebar": { d: "M4 6a1 1 0 0 1 1-1h14a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1zM9 5v14", label: "Thu gọn sidebar" },
+  "panel-right": { d: "M4 6a1 1 0 0 1 1-1h14a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1zM15 5v14", label: "Panel phải" },
+  "clipboard": { d: "M9 5H7a1 1 0 0 0-1 1v13a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1V6a1 1 0 0 0-1-1h-2M9 4h6v3H9z", label: "Dán" },
+  "plug": { d: "M9 4v4M15 4v4M7 8h10v3a5 5 0 0 1-10 0zM12 16v4", label: "Tích hợp" },
+  "keyboard": { d: "M4 7a1 1 0 0 1 1-1h14a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1zM8 14h8M7.5 10h.01M10.5 10h.01M13.5 10h.01M16.5 10h.01", label: "Phím tắt" },
+  "sun": { d: "M12 8.5a3.5 3.5 0 1 1 0 7 3.5 3.5 0 0 1 0-7zM12 3v2M12 19v2M3 12h2M19 12h2M5.6 5.6 7 7M17 17l1.4 1.4M5.6 18.4 7 17M17 7l1.4-1.4", label: "Sáng" },
+  "moon": { d: "M19 14.5A7.5 7.5 0 0 1 9.5 5a7.5 7.5 0 1 0 9.5 9.5z", label: "Tối" },
+  "download-done": { d: "M12 4v9M8 9.5l4 3.5 4-3.5M5 16v3h14v-3M9.5 17.5l1.8 1.5 3.2-3", label: "Đã có" },
+  "list": { d: "M8 6h12M8 12h12M8 18h12M4 6h.01M4 12h.01M4 18h.01", label: "Danh sách" },
+  "info": { d: "M12 3a9 9 0 1 1 0 18 9 9 0 0 1 0-18zM12 11v5M12 7.5h.01", label: "Thông tin" },
+  "lightbulb": { d: "M9 18h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2.1h5c0-.9.4-1.6 1-2.1A6 6 0 0 0 12 3z", label: "Mẹo" },
+  "share": { d: "M12 15V4M8 8l4-4 4 4M5 12v7a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-7", label: "Chia sẻ" },
+  "sliders": { d: "M5 4v16M12 4v16M19 4v16M3 8h4M10 15h4M17 10h4", label: "Chỉnh" },
+  "headphones": { d: "M4 15v-3a8 8 0 0 1 16 0v3M4 15a2 2 0 0 1 2-2h1v7H6a2 2 0 0 1-2-2zM20 15a2 2 0 0 0-2-2h-1v7h1a2 2 0 0 0 2-2z", label: "Tai nghe" },
+  "globe": { d: "M12 3a9 9 0 1 1 0 18 9 9 0 0 1 0-18zM3 12h18M12 3c2.5 2.6 3.8 5.6 3.8 9s-1.3 6.4-3.8 9c-2.5-2.6-3.8-5.6-3.8-9S9.5 5.6 12 3z", label: "Ngôn ngữ" },
+  "code": { d: "M9 8l-4 4 4 4M15 8l4 4-4 4M13.5 5l-3 14", label: "API" },
+  "key": { d: "M14.5 3a6.5 6.5 0 1 1-5.8 9.5L3 18.2V21h3v-2h2v-2h2l1.7-1.7A6.5 6.5 0 0 1 14.5 3zM16 7.5h.01", label: "Token" },
+  "upload": { d: "M12 16V4M7 9l5-5 5 5M5 20h14", label: "Tải lên" },
+  "image": { d: "M4 5h16v14H4zM4 16l5-5 4 4 2-2 5 5M15.5 9a1 1 0 1 0 0-2 1 1 0 0 0 0 2z", label: "Ảnh" },
+  "chat": { d: "M5 5h14a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H10l-4 3v-3H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1z", label: "Trò chuyện" },
+  "shield": { d: "M12 3l7 3v5c0 4.5-3 8.2-7 10-4-1.8-7-5.5-7-10V6zM9 12l2 2 4-4", label: "Quản trị" },
+  "users": { d: "M9 4a3.5 3.5 0 1 1 0 7 3.5 3.5 0 0 1 0-7zM3 20a6 6 0 0 1 12 0M16 4.5a3 3 0 0 1 0 6M18 14.5a5 5 0 0 1 3 4.5", label: "Người dùng" },
+  "mail": { d: "M4 6h16v12H4zM4 7l8 6 8-6", label: "Email" },
+  "lock": { d: "M6 11h12v9H6zM8.5 11V8a3.5 3.5 0 0 1 7 0v3", label: "Khoá" },
+  "logout": { d: "M14 5h4a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1h-4M10 8l-4 4 4 4M6 12h9", label: "Đăng xuất" },
+  "loader": { d: "M12 4a8 8 0 1 0 8 8", label: "Đang tải" },
+} as const satisfies Record<string, IconDef>;
+export type IconName = keyof typeof icons;
+
+// Usage:
+// export function Icon({ name, size = 24, ...rest }: { name: IconName; size?: number } & React.SVGProps<SVGSVGElement>) {
+//   const i = icons[name];
+//   return (
+//     <svg width={size} height={size} viewBox="0 0 24 24" fill={'fill' in i && i.fill ? 'currentColor' : 'none'}
+//       stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round" aria-hidden {...rest}>
+//       <path d={i.d} />
+//     </svg>
+//   );
+// }

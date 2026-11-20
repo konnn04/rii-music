@@ -1,0 +1,14 @@
+{
+  "greeting": { "night": "Khuya rồi", "morning": "Chào buổi sáng", "noon": "Chào buổi trưa", "afternoon": "Chào buổi chiều", "evening": "Chào buổi tối" },
+  "empty": {
+    "title": "Thư viện còn trống",
+    "action": "Tìm bài đầu tiên",
+    "body": "Tìm trên YouTube Music rồi bấm phát: bài sẽ được tải về máy chủ và nằm trong thư viện của bạn."
+  },
+  "continue": "Tiếp tục nghe",
+  "mixes": { "title": "Mix hằng ngày", "sub": "Trộn từ thư viện theo thói quen nghe của bạn, đổi mỗi ngày" },
+  "forYou": { "title": "Gợi ý cho bạn", "sub": "Xếp hạng từ thư viện theo thói quen nghe" },
+  "similar": { "title": "Giống {name}", "sub": "Nghệ sĩ tương tự với người bạn hay nghe" },
+  "topArtists": "Nghệ sĩ bạn hay nghe",
+  "recent": "Mới thêm"
+}

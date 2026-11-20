@@ -1,0 +1,31 @@
+{
+  "tabs": {
+    "songs": "Bài hát",
+    "artists": "Nghệ sĩ",
+    "albums": "Album",
+    "playlists": "Playlist"
+  },
+  "sort": {
+    "added": "Mới thêm",
+    "title": "Tên bài",
+    "artist": "Nghệ sĩ",
+    "plays": "Nghe nhiều"
+  },
+  "empty": {
+    "songsTitle": "Chưa có bài nào",
+    "songsBody": "Tải nhạc từ YouTube để bắt đầu.",
+    "downloadMusic": "Tải nhạc",
+    "artistsTitle": "Chưa có nghệ sĩ",
+    "albumsTitle": "Chưa có album",
+    "albumsBody": "Bài có tên album (từ YouTube Music, hoặc sửa tay ở “Sửa thông tin”) sẽ được gom thành album ở đây."
+  },
+  "hint": {
+    "mobile": "Giữ lâu một bài để chọn nhiều bài.",
+    "desktop": "Nháy đúp để phát · chuột phải để xem thao tác · Ctrl+click để chọn nhiều."
+  },
+  "playlists": {
+    "new": "Playlist mới",
+    "smart": "Playlist thông minh"
+  },
+  "langFilter": "Lọc theo ngôn ngữ"
+}

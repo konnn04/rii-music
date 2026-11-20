@@ -1,0 +1,10 @@
+.git
+.agy
+.prepare
+.env
+data
+*.exe
+vang
+web/node_modules
+web/dist
+**/testdata

@@ -1,0 +1,28 @@
+{
+  "branding": {
+    "title": "Thương hiệu",
+    "tip": "Tên, mô tả và logo hiện ở tiêu đề tab, đầu trang, khi cài app (PWA) và trên công cụ tìm kiếm. Chỉ trang web được lập chỉ mục, các bài hát thì không.",
+    "uploadLogo": "Tải logo lên",
+    "defaultLogo": "Dùng logo mặc định",
+    "name": "Tên trang",
+    "description": "Mô tả ngắn (SEO)",
+    "saved": "Đã lưu thương hiệu",
+    "logoSaved": "Đã đổi logo"
+  },
+  "discord": {
+    "tip": "Tạo một Application tại discord.com/developers/applications: tên của nó là chữ hiện sau “Đang nghe”. Người dùng chỉ cần tải agent và chạy một lệnh.",
+    "appId": "Discord Application ID",
+    "agentUrl": "Link tải agent (không bắt buộc)",
+    "agentUrlHint": "Bản Docker đã có sẵn file agent cho Windows / macOS / Linux. Đặt link (vd GitHub Releases) nếu muốn người dùng tải ở nơi khác.",
+    "saved": "Đã lưu cài đặt Discord"
+  },
+  "logs": {
+    "title": "Log hệ thống",
+    "tip": "3.000 dòng log gần nhất của máy chủ, cập nhật mỗi 3 giây. Mật khẩu và token đã được che.",
+    "level": "Mức độ",
+    "filter": "Lọc theo nội dung…",
+    "pause": "Tạm dừng",
+    "resume": "Tiếp tục",
+    "empty": "Chưa có dòng log nào khớp."
+  }
+}

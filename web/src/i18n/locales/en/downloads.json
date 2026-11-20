@@ -1,0 +1,37 @@
+{
+  "status": {
+    "queued": "Queued",
+    "downloading": "Downloading",
+    "processing": "Converting",
+    "error": "Error",
+    "skipped": "Already in library"
+  },
+  "form": {
+    "label": "YouTube link or search query",
+    "placeholder": "https://www.youtube.com/watch?v=…\nhttps://www.youtube.com/playlist?list=…\nor: Song title Artist",
+    "hint": "One item per line, up to 50. Playlists are split into individual tracks. Existing tracks are skipped.",
+    "paste": "Paste"
+  },
+  "ytdlp": {
+    "notReady": "yt-dlp is not ready",
+    "errorDetail": "{error}. Check the server's internet connection or set YTDLP_PATH.",
+    "preparing": "Preparing yt-dlp… Queued items will wait until it's ready."
+  },
+  "empty": {
+    "title": "No downloads yet",
+    "body": "Downloads are converted to m4a/opus, tagged, cropped to square cover art, and loudness-normalized for smooth playback."
+  },
+  "section": {
+    "active": "In progress ({count})",
+    "recent": "Recent"
+  },
+  "clearList": "Clear list",
+  "job": {
+    "play": "Play {title}",
+    "originAuto": "Auto",
+    "originAutoplay": "Autoplay",
+    "searchPrefix": "Search: {query}",
+    "progress": "Progress",
+    "removeFromList": "Remove from list"
+  }
+}

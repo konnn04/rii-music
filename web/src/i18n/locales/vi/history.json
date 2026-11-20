@@ -1,0 +1,40 @@
+{
+  "ranges": {
+    "week": "Tuần",
+    "month": "Tháng",
+    "year": "Năm"
+  },
+  "stats": {
+    "minutes": "Phút đã nghe",
+    "plays": "Lượt nghe",
+    "skips": "Bỏ qua sớm",
+    "libraryCount": "Bài trong thư viện"
+  },
+  "chart": {
+    "title": "Phút nghe mỗi ngày",
+    "ariaLabel": "Biểu đồ số phút nghe mỗi ngày",
+    "entry": "{date}: {minutes} phút"
+  },
+  "topTracks": {
+    "title": "Bài nghe nhiều",
+    "empty": "Chưa có lượt nghe trong khoảng này.",
+    "plays": {
+      "one": "{n} lượt",
+      "other": "{n} lượt"
+    }
+  },
+  "topArtists": {
+    "title": "Nghệ sĩ nghe nhiều",
+    "empty": "Chưa có dữ liệu."
+  },
+  "recent": {
+    "title": "Nghe gần đây",
+    "empty": "Chưa có lịch sử nghe",
+    "sourceName": "Lịch sử"
+  },
+  "action": {
+    "skipped": "Bỏ qua sau {time}",
+    "repeated": "Lặp lại",
+    "finished": "Nghe hết"
+  }
+}

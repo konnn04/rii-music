@@ -1,0 +1,37 @@
+{
+  "status": {
+    "queued": "Đang chờ",
+    "downloading": "Đang tải",
+    "processing": "Đang chuyển mã",
+    "error": "Lỗi",
+    "skipped": "Đã có"
+  },
+  "form": {
+    "label": "Liên kết YouTube hoặc từ khoá",
+    "placeholder": "https://www.youtube.com/watch?v=…\nhttps://www.youtube.com/playlist?list=…\nhoặc: Mùa Hè Ở Lại Linh Đan",
+    "hint": "Mỗi dòng một mục, tối đa 50. Playlist sẽ được tách thành từng bài. Bài đã có sẽ được bỏ qua.",
+    "paste": "Dán"
+  },
+  "ytdlp": {
+    "notReady": "yt-dlp chưa sẵn sàng",
+    "errorDetail": "{error}. Kiểm tra kết nối mạng của máy chủ hoặc đặt YTDLP_PATH.",
+    "preparing": "Đang chuẩn bị yt-dlp… Các mục thêm vào sẽ chờ đến khi xong."
+  },
+  "empty": {
+    "title": "Chưa có lượt tải nào",
+    "body": "Nhạc tải về được chuyển sang m4a/opus, gắn tag, cắt ảnh bìa vuông và đo độ ồn để chuyển bài không bị giật to nhỏ."
+  },
+  "section": {
+    "active": "Đang xử lý ({count})",
+    "recent": "Gần đây"
+  },
+  "clearList": "Dọn danh sách",
+  "job": {
+    "play": "Phát {title}",
+    "originAuto": "Tự động",
+    "originAutoplay": "Gợi ý phát",
+    "searchPrefix": "Tìm: {query}",
+    "progress": "Tiến độ",
+    "removeFromList": "Xoá khỏi danh sách"
+  }
+}

@@ -1,0 +1,63 @@
+{
+  "placeholder": "Bài hát, nghệ sĩ, album…",
+  "empty": {
+    "title": "Tìm trên YouTube Music",
+    "body": "Bấm phát một bài: bài đã có phát ngay, bài chưa có sẽ được tải và tự phát khi xong."
+  },
+  "kind": {
+    "songs": "Bài hát",
+    "albums": "Album",
+    "playlists": "Playlist",
+    "videos": "Video"
+  },
+  "filter": {
+    "kindLabel": "Loại kết quả",
+    "haveLabel": "Đã tải hay chưa",
+    "downloadedCount": "Đã tải ({count})",
+    "namePlaceholder": "Lọc theo tên…",
+    "nameAria": "Lọc kết quả theo tên bài hoặc nghệ sĩ"
+  },
+  "fallbackYoutube": "YouTube Music không trả lời, đang dùng tìm kiếm YouTube thường",
+  "hint": {
+    "songs": "Bài hát chính thức từ YouTube Music",
+    "albums": "Album, EP, đĩa đơn: tải cả album một lần",
+    "playlists": "Playlist cộng đồng: tải mọi bài trong playlist",
+    "videos": "MV, live, cover từ YouTube Music"
+  },
+  "searching": "Đang tìm…",
+  "noResults": "Không có kết quả",
+  "noFilterMatch": "Không có kết quả khớp bộ lọc",
+  "clearFilter": "Bỏ lọc",
+  "collection": {
+    "downloadAlbum": "Tải album",
+    "downloadPlaylist": "Tải playlist",
+    "downloadAlbumAria": "Tải album {title}",
+    "downloadPlaylistAria": "Tải playlist {title}",
+    "reading": "Đang đọc danh sách",
+    "queued": "Đã đưa vào Tải về",
+    "saved": "Đã lưu",
+    "savedTitle": "Đã lưu “{name}”",
+    "savedQueued": "{n} bài đang tải, xong bài nào sẽ tự vào playlist bài đó.",
+    "savedAll": "Mọi bài đã có sẵn, playlist đã đầy đủ.",
+    "open": "Mở",
+    "playAll": "Phát tất cả",
+    "openSaved": "Mở playlist đã lưu",
+    "save": "Lưu vào thư viện",
+    "saveHint": "Lưu thành playlist của bạn: bài đã có trên máy chủ vào ngay, bài chưa có được tải và tự vào đúng vị trí."
+  },
+  "row": {
+    "inLibrary": "Đã có trong thư viện",
+    "downloadedSr": "Đã tải · ",
+    "playAria": "Phát {title}",
+    "processing": "Xử lý",
+    "queued": "Chờ",
+    "addAria": "Thêm {title}",
+    "downloadAria": "Tải về {title}",
+    "onServerHint": "Đã có trên máy chủ: thêm vào thư viện ngay, không cần tải",
+    "onServer": "Có sẵn trên máy chủ",
+    "preparing": "Đang tải…",
+    "willPlay": "Đang tải “{title}”, xong là phát.",
+    "downloadPlayAria": "Tải và phát {title}",
+    "downloadPlayHint": "Chưa có trên máy chủ: tải về rồi tự phát"
+  }
+}

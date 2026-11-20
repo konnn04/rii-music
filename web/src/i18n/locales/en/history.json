@@ -1,0 +1,40 @@
+{
+  "ranges": {
+    "week": "Week",
+    "month": "Month",
+    "year": "Year"
+  },
+  "stats": {
+    "minutes": "Minutes listened",
+    "plays": "Plays",
+    "skips": "Early skips",
+    "libraryCount": "Songs in library"
+  },
+  "chart": {
+    "title": "Minutes per day",
+    "ariaLabel": "Daily listening minutes chart",
+    "entry": "{date}: {minutes} min"
+  },
+  "topTracks": {
+    "title": "Top songs",
+    "empty": "No plays in this period.",
+    "plays": {
+      "one": "{n} play",
+      "other": "{n} plays"
+    }
+  },
+  "topArtists": {
+    "title": "Top artists",
+    "empty": "No data yet."
+  },
+  "recent": {
+    "title": "Recently played",
+    "empty": "No listening history yet",
+    "sourceName": "History"
+  },
+  "action": {
+    "skipped": "Skipped at {time}",
+    "repeated": "Repeated",
+    "finished": "Completed"
+  }
+}

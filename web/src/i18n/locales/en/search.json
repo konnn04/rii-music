@@ -1,0 +1,63 @@
+{
+  "placeholder": "Songs, artists, albums…",
+  "empty": {
+    "title": "Search YouTube Music",
+    "body": "Press play on a song: songs on the server play at once, others download first and start when ready."
+  },
+  "kind": {
+    "songs": "Songs",
+    "albums": "Albums",
+    "playlists": "Playlists",
+    "videos": "Videos"
+  },
+  "filter": {
+    "kindLabel": "Result type",
+    "haveLabel": "Download status",
+    "downloadedCount": "Downloaded ({count})",
+    "namePlaceholder": "Filter by name…",
+    "nameAria": "Filter results by title or artist"
+  },
+  "fallbackYoutube": "YouTube Music didn't respond, using regular YouTube search",
+  "hint": {
+    "songs": "Official tracks from YouTube Music",
+    "albums": "Albums, EPs, singles: download the whole release at once",
+    "playlists": "Community playlists: download every track in the playlist",
+    "videos": "Music videos, live performances, covers from YouTube Music"
+  },
+  "searching": "Searching…",
+  "noResults": "No results",
+  "noFilterMatch": "No results match your filter",
+  "clearFilter": "Clear filter",
+  "collection": {
+    "downloadAlbum": "Download album",
+    "downloadPlaylist": "Download playlist",
+    "downloadAlbumAria": "Download album {title}",
+    "downloadPlaylistAria": "Download playlist {title}",
+    "reading": "Reading tracklist",
+    "queued": "Added to Downloads",
+    "saved": "Saved",
+    "savedTitle": "Saved “{name}”",
+    "savedQueued": "{n} songs are downloading; each joins the playlist when it's done.",
+    "savedAll": "Every song was already here, the playlist is complete.",
+    "open": "Open",
+    "playAll": "Play all",
+    "openSaved": "Open saved playlist",
+    "save": "Save to library",
+    "saveHint": "Saved as your playlist: songs already on the server go in now, the others download and land in their place."
+  },
+  "row": {
+    "inLibrary": "In your library",
+    "downloadedSr": "Downloaded · ",
+    "playAria": "Play {title}",
+    "processing": "Processing",
+    "queued": "Queued",
+    "addAria": "Add {title}",
+    "downloadAria": "Download {title}",
+    "onServerHint": "Already on server: add to your library immediately without downloading",
+    "onServer": "Already on the server",
+    "preparing": "Downloading…",
+    "willPlay": "Downloading “{title}”, it plays as soon as it's ready.",
+    "downloadPlayAria": "Download and play {title}",
+    "downloadPlayHint": "Not on the server yet: downloads, then plays"
+  }
+}

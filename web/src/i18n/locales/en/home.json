@@ -1,0 +1,14 @@
+{
+  "greeting": { "night": "Up late?", "morning": "Good morning", "noon": "Good afternoon", "afternoon": "Good afternoon", "evening": "Good evening" },
+  "empty": {
+    "title": "Your library is empty",
+    "action": "Find your first song",
+    "body": "Search YouTube Music and press play: the song is downloaded to the server and kept in your library."
+  },
+  "continue": "Jump back in",
+  "mixes": { "title": "Daily mixes", "sub": "Mixed from your library by what you listen to, new every day" },
+  "forYou": { "title": "For you", "sub": "Ranked from your library by your listening" },
+  "similar": { "title": "Like {name}", "sub": "Artists similar to ones you play a lot" },
+  "topArtists": "Your top artists",
+  "recent": "Recently added"
+}

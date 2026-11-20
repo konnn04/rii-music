@@ -1,0 +1,51 @@
+{
+  "card": {
+    "playAria": "Phát {title}",
+    "albumAria": "Album {name}",
+    "artistAria": "Nghệ sĩ {name}",
+    "playlistAria": "Playlist {name}",
+    "variousArtists": "Nhiều nghệ sĩ",
+    "artistLabel": "Nghệ sĩ"
+  },
+  "error": {
+    "loadFailed": "Không tải được dữ liệu"
+  },
+  "equalizer": {
+    "playing": "Đang phát"
+  },
+  "player": {
+    "region": "Trình phát",
+    "openNowPlaying": "Mở khung Đang phát",
+    "openNowPlayingTrack": "Mở Đang phát: {title}",
+    "nothingPlaying": "Chưa phát bài nào",
+    "lyrics": "Lời bài hát",
+    "queue": "Hàng đợi",
+    "nowPlayingPanel": "Khung Đang phát",
+    "seek": "Tua",
+    "shuffleOff": "Tắt trộn bài",
+    "prevTrack": "Bài trước",
+    "nextTrack": "Bài sau",
+    "playShortcut": "Phát (Space)",
+    "pauseShortcut": "Tạm dừng (Space)",
+    "repeatOff": "Lặp lại: tắt",
+    "repeatAll": "Lặp lại: tất cả",
+    "repeatOne": "Lặp lại: một bài",
+    "mute": "Tắt tiếng",
+    "unmute": "Bật tiếng",
+    "volume": "Âm lượng",
+    "like": "Thích",
+    "unlike": "Bỏ thích",
+    "playError": "Không phát được bài này",
+    "playErrorToast": "Không phát được “{title}” (thiếu file hoặc lỗi định dạng)",
+    "endOfQueue": "Đã hết hàng đợi"
+  },
+  "time": {
+    "minutes": "{n} phút",
+    "hoursMinutes": "{h} giờ {m} phút"
+  },
+  "toast": {
+    "downloadError": "Tải lỗi: {target}",
+    "addedToPlaylist": "Đã thêm vào playlist",
+    "addedManyToPlaylist": "Đã thêm {count} bài vào playlist"
+  }
+}

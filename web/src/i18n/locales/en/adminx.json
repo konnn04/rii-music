@@ -1,0 +1,28 @@
+{
+  "branding": {
+    "title": "Branding",
+    "tip": "Name, description and logo appear in the tab title, the header, the installed app (PWA) and search engines. Only the site itself is indexed, never the songs.",
+    "uploadLogo": "Upload logo",
+    "defaultLogo": "Use default logo",
+    "name": "Site name",
+    "description": "Short description (SEO)",
+    "saved": "Branding saved",
+    "logoSaved": "Logo updated"
+  },
+  "discord": {
+    "tip": "Create an Application at discord.com/developers/applications: its name is what shows after “Listening to”. Users only download the agent and run one command.",
+    "appId": "Discord Application ID",
+    "agentUrl": "Agent download link (optional)",
+    "agentUrlHint": "The Docker image already ships the agent for Windows / macOS / Linux. Set a link (e.g. GitHub Releases) to send users elsewhere.",
+    "saved": "Discord settings saved"
+  },
+  "logs": {
+    "title": "System logs",
+    "tip": "The server's latest 3,000 log lines, refreshed every 3 seconds. Passwords and tokens are masked.",
+    "level": "Level",
+    "filter": "Filter by text…",
+    "pause": "Pause",
+    "resume": "Resume",
+    "empty": "No matching log lines yet."
+  }
+}

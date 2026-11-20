@@ -1,0 +1,38 @@
+{
+  "language": {
+    "title": "Language",
+    "showHints": "Show tips again",
+    "hintsBack": "Tips will show again"
+  },
+  "api": {
+    "title": "API",
+    "tip": "Personal tokens let scripts or other apps use your library through the API. A token acts as your account: keep it secret and revoke it when unused.",
+    "namePlaceholder": "Token name (e.g. download script)",
+    "create": "Create token",
+    "onlyOnce": "Copy it now: the token is shown only once.",
+    "unnamed": "Unnamed",
+    "created": "created {ago}",
+    "used": "used {ago}",
+    "neverUsed": "never used",
+    "revoke": "Revoke",
+    "revoked": "Token revoked",
+    "docs": "API documentation"
+  },
+  "discord": {
+    "title": "Discord status",
+    "tip": "Shows “Listening to …” on Discord. A small program has to run on the computer with Discord desktop, because Discord doesn't let servers set your status.",
+    "notConfigured": "The admin hasn't set a Discord Application ID for this server yet.",
+    "toggle": "Show what I'm playing on Discord",
+    "toggleHint": "Only while the agent runs on a computer with Discord.",
+    "on": "Discord status on",
+    "off": "Discord status off",
+    "step1": "Download the agent for your computer:",
+    "step2": "Create a token for it (an older one stops working):",
+    "step3": "Open a terminal in the folder with the downloaded file and run:",
+    "keepRunning": "Keep that window open. The agent reconnects by itself if Discord or the network drops.",
+    "makeToken": "Create token",
+    "otherDownloads": "Other builds",
+    "noDownloads": "This server has no agent downloads yet. Ask the admin.",
+    "os": { "windows": "Windows", "macos-arm64": "macOS (Apple Silicon)", "macos-amd64": "macOS (Intel)", "linux": "Linux" }
+  }
+}

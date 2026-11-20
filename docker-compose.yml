@@ -1,0 +1,23 @@
+# docker compose up -d --build
+# Configuration: .env next to this file (copy .env.example). DATA_DIR / PORT inside
+# the container are fixed by the image; change the published port below instead.
+services:
+  vang:
+    build: .
+    image: vang:latest
+    container_name: vang
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      DATA_DIR: /data
+      PORT: "8080"
+      TRUST_PROXY: "true" # behind a reverse proxy (Caddy, Nginx, Traefik, Coolify)
+    ports:
+      - "8080:8080"
+    volumes:
+      - vang-data:/data # database, music, covers, yt-dlp, cookies.txt
+    # Optional: YouTube cookies when it asks to "confirm you're not a bot":
+    #   docker cp cookies.txt vang:/data/cookies.txt
+
+volumes:
+  vang-data:

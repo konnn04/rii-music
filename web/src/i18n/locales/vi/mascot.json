@@ -1,0 +1,34 @@
+{
+  "name": "Vani",
+  "talk": "Trò chuyện với Vani",
+  "hello": {
+    "night": "Khuya rồi {name} ơi, nghe nhẹ thôi nhé.",
+    "morning": "Chào buổi sáng {name}! Hôm nay nghe gì đây?",
+    "noon": "Trưa rồi {name}, nghỉ tay nghe một bài không?",
+    "afternoon": "Chiều vui nhé {name}!",
+    "evening": "Tối rồi {name}, thả lỏng với vài bài nào."
+  },
+  "helloAnon": {
+    "night": "Khuya rồi, nghe nhẹ thôi nhé.",
+    "morning": "Chào buổi sáng! Hôm nay nghe gì đây?",
+    "noon": "Trưa rồi, nghỉ tay nghe một bài không?",
+    "afternoon": "Chiều vui nhé!",
+    "evening": "Tối rồi, thả lỏng với vài bài nào."
+  },
+  "listening": "Vani đang nghe cùng bạn đây ♪",
+  "todayMinutes": "Hôm nay bạn đã nghe {n} phút.",
+  "nothingYet": "Hôm nay mình chưa nghe bài nào.",
+  "chat": "Trò chuyện",
+  "askMood": "Hôm nay bạn thấy thế nào? Mình làm playlist hợp tâm trạng cho bạn nhé.",
+  "moods": { "happy": "Vui", "sad": "Buồn", "chill": "Thư giãn", "energetic": "Sôi động", "focus": "Tập trung" },
+  "moodEmoji": { "happy": "😊", "sad": "🥲", "chill": "🌙", "energetic": "⚡", "focus": "🎧" },
+  "comfort": "Buồn thì cứ buồn một chút, rồi sẽ ổn thôi. Mình ở đây nghe cùng bạn.",
+  "madeList": "Mình chọn {n} bài “{name}” trong thư viện của bạn nè.",
+  "noTracks": "Thư viện còn ít bài quá, mình chưa chọn được. Tải thêm vài bài rồi hỏi lại mình nhé.",
+  "thinking": "Vani đang chọn bài…",
+  "savePlaylist": "Lưu thành playlist",
+  "saved": "Đã lưu “{name}”",
+  "howLongQ": "Mình nghe bao lâu rồi?",
+  "howLongA": "Hôm nay {today} phút, 7 ngày qua {week} phút.",
+  "newMusic": "Tìm nhạc mới"
+}

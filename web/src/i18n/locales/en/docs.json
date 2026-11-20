@@ -1,0 +1,11 @@
+{
+  "filter": "Filter endpoints…",
+  "sections": "Sections",
+  "intro": "Everything the app does is available through this API: search and download music, manage your library and playlists, get recommendations. A token acts as your own account.",
+  "step1": "Create a token in Settings → API.",
+  "step2": "Send it with every request:",
+  "step3": "Or use the TypeScript client (one file, no dependencies):",
+  "public": "Public",
+  "body": "Request body",
+  "response": "Response"
+}

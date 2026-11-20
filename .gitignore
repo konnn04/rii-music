@@ -1,0 +1,8 @@
+/data/
+/vang
+/vang.exe
+web/node_modules/
+web/dist/*
+!web/dist/.keep
+.env
+.agy/

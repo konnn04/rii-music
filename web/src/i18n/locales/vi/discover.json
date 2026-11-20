@@ -1,0 +1,45 @@
+{
+  "subtitle": "Gợi ý dựa trên những gì bạn nghe, thích và bỏ qua. Nghệ sĩ tương tự lấy từ {provider}; “nghe giống” so sánh đặc trưng âm thanh của các bài trong thư viện.",
+  "dismissArtistToast": "Sẽ ít gợi ý nhạc của {artist} hơn",
+  "loading": "Đang hỏi {provider} về nghệ sĩ tương tự… (lần đầu có thể mất vài chục giây)",
+  "forYou": {
+    "title": "Gợi ý cho bạn",
+    "sub": "Trong thư viện của bạn",
+    "loading": "Đang xếp hạng thư viện…",
+    "empty": "Nghe thêm vài bài để có gợi ý."
+  },
+  "needHistory": {
+    "title": "Chưa đủ dữ liệu nghe",
+    "action": "Mở thư viện",
+    "body": "Nghe, thích hoặc thêm bài vào playlist — Vang sẽ dựa vào đó để tìm nhạc mới cho bạn."
+  },
+  "artists": {
+    "title": "Nghệ sĩ bạn có thể thích",
+    "sub": "Chưa có trong thư viện — chạm để tìm trên YouTube"
+  },
+  "tracks": {
+    "title": "Bài mới cho bạn",
+    "sub": "Bài nổi bật của các nghệ sĩ trên",
+    "bulkButton": "Tải 10 bài đầu",
+    "bulkToast": "Đã thêm 10 bài đầu vào hàng chờ tải",
+    "empty": "Chưa có gợi ý mới."
+  },
+  "rec": {
+    "play": "Phát {title}",
+    "lessLike": "Ít gợi ý kiểu “{title}”",
+    "lessToast": "Sẽ ít gợi ý bài này hơn",
+    "lessTitle": "Ít gợi ý kiểu này"
+  },
+  "extArtist": {
+    "ariaInLibrary": "{name} (trong thư viện)",
+    "ariaSearch": "{name} — tìm trên YouTube",
+    "inLibrary": "Trong thư viện",
+    "notInLibrary": "Chưa có trong thư viện"
+  },
+  "row": {
+    "queued": "Đang chờ",
+    "downloadAria": "Tải về {title} — {artist}",
+    "lessArtistAria": "Ít gợi ý nhạc của {artist}"
+  },
+  "link": "Khám phá thêm"
+}

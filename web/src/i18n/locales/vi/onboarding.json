@@ -1,0 +1,27 @@
+{
+  "hello": "Chào {name}! Bạn hay nghe nhạc gì?",
+  "genresTitle": "Thể loại bạn thích",
+  "artistsTitle": "Nghệ sĩ bạn hay nghe",
+  "step0": "Chọn các ngôn ngữ. Gợi ý và radio sẽ giữ đúng ngôn ngữ, không trộn lẫn.",
+  "step1": "Chọn vài thể loại (không bắt buộc).",
+  "step2": "Chọn hoặc gõ tên nghệ sĩ. Đây là điểm xuất phát cho gợi ý khi bạn chưa nghe gì.",
+  "lang": { "vi": "Nhạc Việt", "en": "Âu Mỹ", "ko": "Hàn (K-pop)", "ja": "Nhật (J-pop)", "zh": "Hoa", "th": "Thái" },
+  "genre": {
+    "pop": "Pop",
+    "ballad": "Ballad",
+    "rap": "Rap / Hip-hop",
+    "indie": "Indie",
+    "rnb": "R&B",
+    "edm": "EDM",
+    "rock": "Rock",
+    "lofi": "Lofi / Chill",
+    "acoustic": "Acoustic",
+    "bolero": "Bolero / Trữ tình",
+    "anime": "Nhạc phim / OST"
+  },
+  "typeArtist": "Gõ tên nghệ sĩ…",
+  "removeArtist": "Bỏ {name}",
+  "suggested": "Gợi ý",
+  "skip": "Bỏ qua",
+  "start": "Bắt đầu nghe"
+}

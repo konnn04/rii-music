@@ -12,7 +12,7 @@ import (
 	"sync"
 	"time"
 
-	"vang/internal/textutil"
+	"rii_music/internal/textutil"
 )
 
 // AutoExt is a suggestion that is not in the library yet: a YouTube Music song

@@ -7,7 +7,7 @@ import (
 	"sync"
 	"time"
 
-	"vang/internal/textutil"
+	"rii_music/internal/textutil"
 )
 
 // Song language keeps recommendations from mixing, say, V-pop into a J-pop

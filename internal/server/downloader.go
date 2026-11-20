@@ -18,8 +18,8 @@ import (
 	"sync"
 	"time"
 
-	"vang/internal/textutil"
-	"vang/internal/ytdlp"
+	"rii_music/internal/textutil"
+	"rii_music/internal/ytdlp"
 )
 
 type Job struct {

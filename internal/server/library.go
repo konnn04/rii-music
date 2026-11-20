@@ -9,7 +9,7 @@ import (
 	"sort"
 	"strings"
 
-	"vang/internal/textutil"
+	"rii_music/internal/textutil"
 )
 
 // Track is a shared song as seen from one user's library (play count, like

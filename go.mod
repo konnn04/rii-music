@@ -1,4 +1,4 @@
-module vang
+module rii_music
 
 go 1.27.0
 

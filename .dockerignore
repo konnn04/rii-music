@@ -4,7 +4,7 @@
 .env
 data
 *.exe
-vang
+rii_music
 web/node_modules
 web/dist
 **/testdata

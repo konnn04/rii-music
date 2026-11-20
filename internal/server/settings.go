@@ -170,7 +170,7 @@ func (s *Server) agentDownloads() []agentDownload {
 		return out
 	}
 	for _, d := range []struct{ os, file string }{
-		{"windows", "vang-windows-amd64.exe"}, {"macos-arm64", "vang-macos-arm64"}, {"macos-amd64", "vang-macos-amd64"}, {"linux", "vang-linux-amd64"},
+		{"windows", "rii_music-windows-amd64.exe"}, {"macos-arm64", "rii_music-macos-arm64"}, {"macos-amd64", "rii_music-macos-amd64"}, {"linux", "rii_music-linux-amd64"},
 	} {
 		if st, err := os.Stat(filepath.Join(s.cfg.AgentDir, d.file)); err == nil && st.Mode().IsRegular() {
 			out = append(out, agentDownload{OS: d.os, File: d.file, URL: "/download/agent/" + d.file, Size: st.Size()})

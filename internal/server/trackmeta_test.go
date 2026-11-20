@@ -5,7 +5,7 @@ import (
 	"os"
 	"testing"
 
-	"vang/internal/textutil"
+	"rii_music/internal/textutil"
 )
 
 // Real /next responses: names come from YouTube Music, not from guessing.

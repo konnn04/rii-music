@@ -11,7 +11,7 @@ import (
 	"strings"
 	"time"
 
-	"vang/internal/textutil"
+	"rii_music/internal/textutil"
 )
 
 // YouTube Music search through its InnerTube endpoint, the same one

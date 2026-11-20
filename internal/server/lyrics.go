@@ -14,7 +14,7 @@ import (
 	"strings"
 	"time"
 
-	"vang/internal/textutil"
+	"rii_music/internal/textutil"
 )
 
 // Lyrics as one user sees them.

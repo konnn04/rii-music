@@ -74,8 +74,8 @@ Cần: Go 1.27+, Node 22+ và pnpm, ffmpeg trong PATH. yt-dlp sẽ tự tải v�
 ```bash
 cp .env.example .env   # điền ADMIN_EMAIL, ADMIN_PASSWORD, SMTP_*
 cd web && pnpm install && pnpm build && cd ..
-go build -o vang .
-./vang
+go build -o rii_music .
+./rii_music
 # mở http://localhost:8080, đăng nhập bằng ADMIN_EMAIL / ADMIN_PASSWORD
 ```
 
@@ -88,7 +88,7 @@ Phát triển giao diện: chạy server như trên, rồi `cd web && pnpm dev` 
 Trên máy chủ (cần Docker + Compose):
 
 ```bash
-git clone <repo> vang && cd vang
+git clone <repo> rii_music && cd rii_music
 cp .env.example .env        # điền ADMIN_EMAIL, ADMIN_PASSWORD, SMTP_*, PUBLIC_URL
 docker compose up -d --build
 docker compose logs -f      # lần đầu: yt-dlp tự tải về /data/bin
@@ -126,7 +126,7 @@ docker compose logs -f      # lần đầu: yt-dlp tự tải về /data/bin
 | `WEB_DIR` | | Phát triển: đọc giao diện từ thư mục này |
 | `LOG_LEVEL` | `info` | `debug` để log mọi request |
 | `PUBLIC_URL` | | Địa chỉ công khai (https) của trang: link trong email, link chia sẻ, ảnh bìa cho Discord |
-| `AGENT_DIR` | `/opt/vang/agent` trong Docker | Thư mục chứa bản exe của agent Discord (chỉ khi build với `AGENT_BINARIES=true`) |
+| `AGENT_DIR` | `/opt/rii_music/agent` trong Docker | Thư mục chứa bản exe của agent Discord (chỉ khi build với `AGENT_BINARIES=true`) |
 | `TZ` | `Asia/Ho_Chi_Minh` trong Docker | Múi giờ log |
 
 Khi YouTube báo “Sign in to confirm you're not a bot”: xuất cookies.txt từ trình duyệt (tiện ích “Get cookies.txt LOCALLY”) và đặt vào `$DATA_DIR/cookies.txt`.

@@ -148,7 +148,7 @@ export function DiscordPresence() {
   };
   const guess = /Windows/i.test(navigator.userAgent) ? "windows" : /Mac/i.test(navigator.userAgent) ? "macos-arm64" : "linux";
   const mine = d.downloads.find((x) => x.os === guess) ?? d.downloads[0];
-  const exe = mine?.file ?? (guess === "windows" ? "vang.exe" : "./vang");
+  const exe = mine?.file ?? (guess === "windows" ? "rii_music.exe" : "./rii_music");
   const exeCmd = `${guess === "windows" ? `.\\${exe}` : `chmod +x ${exe} && ./${exe}`} discord-agent -server ${d.server} -token ${token ?? "<token>"}`;
   return (
     <Card title={t("settingsx.discord.title")} icon="headphones" tip={t("settingsx.discord.tip")}>

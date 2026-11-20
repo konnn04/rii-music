@@ -15,7 +15,7 @@ import (
 	"strings"
 	"time"
 
-	"vang/internal/ytdlp"
+	"rii_music/internal/ytdlp"
 )
 
 type Server struct {

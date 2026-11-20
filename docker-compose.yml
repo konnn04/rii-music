@@ -2,10 +2,10 @@
 # Configuration: .env next to this file (copy .env.example). DATA_DIR / PORT inside
 # the container are fixed by the image; change the published port below instead.
 services:
-  vang:
+  rii_music:
     build: .
-    image: vang:latest
-    container_name: vang
+    image: rii_music:latest
+    container_name: rii_music
     restart: unless-stopped
     env_file: .env
     environment:
@@ -17,7 +17,7 @@ services:
     volumes:
       - vang-data:/data # database, music, covers, yt-dlp, cookies.txt
     # Optional: YouTube cookies when it asks to "confirm you're not a bot":
-    #   docker cp cookies.txt vang:/data/cookies.txt
+    #   docker cp cookies.txt rii_music:/data/cookies.txt
 
 volumes:
   vang-data:

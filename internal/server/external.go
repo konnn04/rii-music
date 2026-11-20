@@ -13,7 +13,7 @@ import (
 	"sync"
 	"time"
 
-	"vang/internal/textutil"
+	"rii_music/internal/textutil"
 )
 
 // External music metadata for tier-1 recommendations. Deezer's public API

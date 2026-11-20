@@ -1,8 +1,9 @@
 /data/
-/vang
-/vang.exe
+/rii_music
+/rii_music.exe
 web/node_modules/
 web/dist/*
 !web/dist/.keep
 .env
 .agy/
+.prepare

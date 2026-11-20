@@ -15,8 +15,8 @@ import (
 	"testing/fstest"
 	"time"
 
-	"vang/internal/db"
-	"vang/internal/ytdlp"
+	"rii_music/internal/db"
+	"rii_music/internal/ytdlp"
 )
 
 func newTestServer(t *testing.T) (*Server, *httptest.Server) {

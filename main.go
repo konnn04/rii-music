@@ -15,11 +15,11 @@ import (
 	"syscall"
 	"time"
 
-	"vang/internal/db"
-	"vang/internal/discordrpc"
-	"vang/internal/server"
-	"vang/internal/ytdlp"
-	"vang/web"
+	"rii_music/internal/db"
+	"rii_music/internal/discordrpc"
+	"rii_music/internal/server"
+	"rii_music/internal/ytdlp"
+	"rii_music/web"
 )
 
 func main() {
@@ -149,7 +149,7 @@ func envOr(k, def string) string {
 	return def
 }
 
-// runDiscordAgent: "vang discord-agent -server URL -token TOKEN" on the computer
+// runDiscordAgent: "rii_music discord-agent -server URL -token TOKEN" on the computer
 // where Discord desktop runs. Shows what you play on RiiMusic as Discord presence.
 // The token comes from RiiMusic → Cài đặt → Trạng thái Discord; the Discord
 // Application ID from the server (set by its admin).

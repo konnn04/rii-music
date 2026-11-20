@@ -245,7 +245,9 @@ func (e *extClient) trackGenres(ctx context.Context, artist, title string) ([]st
 		for g := range set {
 			tags = append(tags, g)
 		}
-		sort.Slice(tags, func(i, j int) bool { return set[tags[i]] > set[tags[j]] || (set[tags[i]] == set[tags[j]] && tags[i] < tags[j]) })
+		sort.Slice(tags, func(i, j int) bool {
+			return set[tags[i]] > set[tags[j]] || (set[tags[i]] == set[tags[j]] && tags[i] < tags[j])
+		})
 		if len(tags) > 6 {
 			tags = tags[:6]
 		}
@@ -413,6 +415,8 @@ func (s *Server) handleGenres(w http.ResponseWriter, r *http.Request) {
 	for g, c := range n {
 		out = append(out, genre{g, c})
 	}
-	sort.Slice(out, func(i, j int) bool { return out[i].Count > out[j].Count || (out[i].Count == out[j].Count && out[i].Name < out[j].Name) })
+	sort.Slice(out, func(i, j int) bool {
+		return out[i].Count > out[j].Count || (out[i].Count == out[j].Count && out[i].Name < out[j].Name)
+	})
 	writeJSON(w, http.StatusOK, out)
 }

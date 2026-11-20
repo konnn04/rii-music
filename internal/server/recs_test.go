@@ -71,7 +71,7 @@ func TestExtractFeaturesFFmpeg(t *testing.T) {
 		if err != nil {
 			t.Fatalf("extract %s: %v", p, err)
 		}
-		if len(v) != 2*len(spectralMeasures)+4 {
+		if len(v) != 2*len(spectralMeasures)+4+2*tMFCC+12 { // spectral + energy + tempo, then MFCC and chroma
 			t.Fatalf("dim = %d", len(v))
 		}
 		vecs = append(vecs, v)

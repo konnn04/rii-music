@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"strings"
 	"sync"
+	"time"
 
 	"vang/internal/textutil"
 )
@@ -180,7 +181,7 @@ func (s *Server) handleOnboardingArtists(w http.ResponseWriter, r *http.Request)
 	var mu sync.Mutex
 	var wg sync.WaitGroup
 	results := make([][]WebResult, len(queries))
-	ctx, cancel := context.WithTimeout(r.Context(), 15e9)
+	ctx, cancel := context.WithTimeout(r.Context(), 25*time.Second)
 	defer cancel()
 	for i, q := range queries {
 		wg.Add(1)
@@ -198,7 +199,7 @@ func (s *Server) handleOnboardingArtists(w http.ResponseWriter, r *http.Request)
 	seen := map[string]bool{}
 	out := []suggestedArtist{}
 	// Round-robin across queries so every genre gets a few.
-	for round := 0; round < 20 && len(out) < 30; round++ {
+	for round := 0; round < 20 && len(out) < 40; round++ {
 		for i, res := range results {
 			if round >= len(res) {
 				continue
@@ -212,5 +213,36 @@ func (s *Server) handleOnboardingArtists(w http.ResponseWriter, r *http.Request)
 			out = append(out, suggestedArtist{Name: a, Image: res[round].Thumbnail, Lang: queries[i].lang})
 		}
 	}
-	writeJSON(w, http.StatusOK, map[string]any{"artists": out})
+	// Keep real artists only: compilation channels ("Nhạc Ballad Hay", "XYZ Music")
+	// have no artist page on Deezer. Its picture is also a proper artist photo.
+	// (with a few fans), and their names aren't generic words.
+	real := []suggestedArtist{}
+	for _, a := range out {
+		if ctx.Err() != nil || len(real) == 18 {
+			break
+		}
+		if genericName(a.Name) {
+			continue
+		}
+		if dz, _ := s.ext.deezerArtist(ctx, a.Name, false); dz.Picture != "" && dz.NbFan >= 20 { // V-pop artists have few Deezer fans (hundreds); compilation channels ~0
+			a.Image = dz.Picture
+			real = append(real, a)
+		}
+	}
+	writeJSON(w, http.StatusOK, map[string]any{"artists": real})
+}
+
+var genericWords = map[string]bool{
+	"nhac": true, "music": true, "musik": true, "playlist": true, "radio": true, "remix": true, "karaoke": true, "cover": true,
+	"hits": true, "mix": true, "official": true, "channel": true, "tv": true, "records": true, "lofi": true, "ballad": true, "songs": true, "vevo": true,
+}
+
+// genericName: compilation / label channels ("Nhạc Của Gió", "XYZ Music").
+func genericName(name string) bool {
+	for _, w := range strings.Fields(textutil.Fold(name)) {
+		if genericWords[strings.Trim(w, ".,-!")] {
+			return true
+		}
+	}
+	return false
 }

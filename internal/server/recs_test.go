@@ -87,3 +87,11 @@ func TestExtractFeaturesFFmpeg(t *testing.T) {
 		t.Fatalf("two sine tones should be closer to each other than to noise: tone/tone=%.2f tone/noise=%.2f", cos(z[0], z[1]), cos(z[0], z[2]))
 	}
 }
+
+func TestGenericName(t *testing.T) {
+	for name, want := range map[string]bool{"Nhạc Của Gió": true, "Nghe Tôi Viết Music": true, "SURIF MUSIK": true, "SOOBIN": false, "Bùi Anh Tuấn": false, "Vũ.": false} {
+		if got := genericName(name); got != want {
+			t.Errorf("genericName(%q) = %v", name, got)
+		}
+	}
+}

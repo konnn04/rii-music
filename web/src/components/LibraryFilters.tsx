@@ -11,6 +11,7 @@ export type DurationFilter = "" | "short" | "medium" | "long";
 export type LibraryFilter = {
   query: string;
   langs: string[];
+  genres: string[];
   artist: string;
   album: string;
   liked: boolean;
@@ -22,6 +23,7 @@ export type LibraryFilter = {
 export const emptyFilter: LibraryFilter = {
   query: "",
   langs: [],
+  genres: [],
   artist: "",
   album: "",
   liked: false,
@@ -31,6 +33,8 @@ export const emptyFilter: LibraryFilter = {
 };
 
 const DAY_MS = 86_400_000;
+
+const fmtGenre = (g: string) => (g ? g.charAt(0).toUpperCase() + g.slice(1) : g);
 
 function fold(s: string): string {
   return s.normalize("NFD").replace(/\p{M}/gu, "").replace(/đ/g, "d").replace(/Đ/g, "D").toLowerCase();
@@ -55,6 +59,7 @@ export function applyFilter(tracks: Track[], f: LibraryFilter): Track[] {
       }
     }
     if (f.langs.length > 0 && (!tr.lang || !f.langs.includes(tr.lang))) return false;
+    if (f.genres.length > 0 && !tr.genres?.some((g) => f.genres.includes(g))) return false;
     if (f.artist && tr.artist !== f.artist) return false;
     if (f.album && tr.album !== f.album) return false;
     if (f.liked && !tr.liked) return false;
@@ -73,6 +78,7 @@ export function activeCount(f: LibraryFilter): number {
   return (
     (f.query.trim() ? 1 : 0) +
     f.langs.length +
+    f.genres.length +
     (f.artist ? 1 : 0) +
     (f.album ? 1 : 0) +
     (f.liked ? 1 : 0) +
@@ -117,18 +123,25 @@ export function LibraryFilterBar({
   const [artistQuery, setArtistQuery] = useState("");
   const [albumQuery, setAlbumQuery] = useState("");
 
-  const { langs, artists, albums } = useMemo(() => {
+  const { langs, genres, artists, albums } = useMemo(() => {
     const langSet = new Set<string>();
+    const genreCounts = new Map<string, number>();
     const artistSet = new Set<string>();
     const albumSet = new Set<string>();
     for (const tr of tracks) {
       if (tr.lang) langSet.add(tr.lang);
+      if (tr.genres) {
+        for (const g of tr.genres) if (g) genreCounts.set(g, (genreCounts.get(g) ?? 0) + 1);
+      }
       if (tr.artist) artistSet.add(tr.artist);
       if (tr.album) albumSet.add(tr.album);
     }
     const loc = locale();
     return {
       langs: [...langSet],
+      genres: [...genreCounts.entries()]
+        .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0], loc))
+        .map(([g]) => g),
       artists: [...artistSet].sort((a, b) => a.localeCompare(b, loc)),
       albums: [...albumSet].sort((a, b) => a.localeCompare(b, loc)),
     };
@@ -156,6 +169,14 @@ export function LibraryFilterBar({
     });
   };
 
+  const toggleGenre = (g: string) => {
+    const exists = value.genres.includes(g);
+    onChange({
+      ...value,
+      genres: exists ? value.genres.filter((x) => x !== g) : [...value.genres, g],
+    });
+  };
+
   const chips: Chip[] = [];
   for (const code of value.langs) {
     chips.push({
@@ -163,6 +184,14 @@ export function LibraryFilterBar({
       label: t(`common.lang.${code}`),
       icon: "globe",
       onRemove: () => onChange({ ...value, langs: value.langs.filter((l) => l !== code) }),
+    });
+  }
+  for (const g of value.genres) {
+    chips.push({
+      key: `genre:${g}`,
+      label: fmtGenre(g),
+      icon: "music-note",
+      onRemove: () => onChange({ ...value, genres: value.genres.filter((x) => x !== g) }),
     });
   }
   if (value.artist) {
@@ -314,6 +343,30 @@ export function LibraryFilterBar({
                           }`}
                         >
                           {t(`common.lang.${code}`)}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {genres.length > 0 && (
+                <div className="space-y-1.5">
+                  <div className="text-caption font-medium text-fg-muted">{t("library.filter.genre")}</div>
+                  <div className="flex flex-wrap gap-1.5">
+                    {genres.map((g) => {
+                      const active = value.genres.includes(g);
+                      return (
+                        <button
+                          key={g}
+                          type="button"
+                          aria-pressed={active}
+                          onClick={() => toggleGenre(g)}
+                          className={`focus-ring h-7 rounded-full px-2.5 text-caption transition-colors duration-fast ${
+                            active ? "bg-fg text-canvas" : "bg-surface-2 text-fg hover:bg-surface-4"
+                          }`}
+                        >
+                          {fmtGenre(g)}
                         </button>
                       );
                     })}

@@ -3,6 +3,7 @@ import {
   api,
   type Album,
   type Artist,
+  type Genre,
   type HistoryItem,
   type Home,
   type Job,
@@ -37,6 +38,7 @@ export const useTracks = (sort: TrackSort = "added") =>
   useQuery({ queryKey: ["tracks", sort], queryFn: () => api<Track[]>(`/api/tracks?sort=${sort}`) });
 export const useArtists = () => useQuery({ queryKey: ["artists"], queryFn: () => api<Artist[]>("/api/artists") });
 export const useAlbums = () => useQuery({ queryKey: ["albums"], queryFn: () => api<Album[]>("/api/albums") });
+export const useGenres = () => useQuery({ queryKey: ["genres"], queryFn: () => api<Genre[]>("/api/genres"), staleTime: 5 * 60_000 });
 export const useArtist = (name: string) =>
   useQuery({
     queryKey: ["artist", name],

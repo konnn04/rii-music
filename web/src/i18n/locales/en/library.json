@@ -37,6 +37,7 @@
     "emptyTitle": "No matching songs",
     "emptyBody": "Try loosening or clearing some filters.",
     "lang": "Language",
+    "genre": "Genre",
     "artist": "Artist",
     "searchArtist": "Search artists…",
     "album": "Album",

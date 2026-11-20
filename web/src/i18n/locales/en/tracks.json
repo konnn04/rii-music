@@ -57,7 +57,8 @@
     "top30": "Most played (30 days)",
     "recent": "Recently added",
     "unplayed": "Unplayed",
-    "artist": "By artist"
+    "artist": "By artist",
+    "genre": "By genre"
   },
   "newPlaylist": {
     "title": "New playlist",
@@ -73,6 +74,10 @@
     "ruleLabel": "Rule",
     "artistLabel": "Artist",
     "chooseArtist": "Choose an artist…",
+    "genreLabel": "Genre",
+    "chooseGenre": "Choose a genre…",
+    "genreEmptyHint": "Genres are tagged automatically after download and may take a few minutes",
+    "genreDefaultName": "My {genre}",
     "maxSongs": "Up to {count} songs"
   },
   "edit": {

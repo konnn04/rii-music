@@ -16,11 +16,13 @@ export type Track = {
   liked: boolean;
   sourceUrl: string;
   lang?: string;
+  genres?: string[];
 };
 
 export type Artist = { name: string; trackCount: number; albumCount: number; coverTrackId: string; playCount: number };
 export type Album = { name: string; artist: string; trackCount: number; coverTrackId: string; addedAt: number; durationMs: number };
-export type Rule = { type: "top30" | "recent" | "unplayed" | "artist"; value?: string; limit?: number };
+export type Genre = { name: string; count: number };
+export type Rule = { type: "top30" | "recent" | "unplayed" | "artist" | "genre"; value?: string; limit?: number };
 export type Playlist = {
   id: string;
   name: string;

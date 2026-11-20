@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { create } from "zustand";
 import { useNavigate } from "@tanstack/react-router";
 import { api, type Rule, type Track } from "@/lib/api";
-import { invalidateLibrary, useAddToPlaylist, useArtists, useCreatePlaylist, usePlaylists, useToggleLike } from "@/lib/queries";
+import { invalidateLibrary, useAddToPlaylist, useArtists, useCreatePlaylist, useGenres, usePlaylists, useToggleLike } from "@/lib/queries";
 import { usePlayer } from "@/player/store";
 import { Dialog } from "./ui/Dialog";
 import { Button } from "./ui/Button";
@@ -155,16 +155,22 @@ const ruleLabels: Record<Rule["type"], string> = {
   recent: t("tracks.smartRule.recent"),
   unplayed: t("tracks.smartRule.unplayed"),
   artist: t("tracks.smartRule.artist"),
+  genre: t("tracks.smartRule.genre"),
 };
+
+const fmtGenre = (g: string) => (g ? g.charAt(0).toUpperCase() + g.slice(1) : g);
 
 function NewPlaylist({ trackIds, smart: smartInit }: { trackIds?: string[]; smart?: boolean }) {
   const [name, setName] = useState("");
+  const [nameTouched, setNameTouched] = useState(false);
   const [smart, setSmart] = useState(!!smartInit);
   const [ruleType, setRuleType] = useState<Rule["type"]>("top30");
   const [artist, setArtist] = useState("");
+  const [genre, setGenre] = useState("");
   const [limit, setLimit] = useState(50);
   const create = useCreatePlaylist();
   const artists = useArtists();
+  const genres = useGenres();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -173,7 +179,8 @@ function NewPlaylist({ trackIds, smart: smartInit }: { trackIds?: string[]; smar
 
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
-    const rule = smart ? { type: ruleType, value: ruleType === "artist" ? artist : undefined, limit } : undefined;
+    const value = ruleType === "artist" ? artist : ruleType === "genre" ? genre : undefined;
+    const rule = smart ? { type: ruleType, value, limit } : undefined;
     create.mutate(
       { name: name.trim(), rule, trackIds: smart ? undefined : trackIds },
       {
@@ -196,7 +203,13 @@ function NewPlaylist({ trackIds, smart: smartInit }: { trackIds?: string[]; smar
           <Button variant="ghost" onClick={close}>
             {t("common.cancel")}
           </Button>
-          <Button variant="primary" type="submit" form="new-pl" loading={create.isPending} disabled={!name.trim() || (smart && ruleType === "artist" && !artist)}>
+          <Button
+            variant="primary"
+            type="submit"
+            form="new-pl"
+            loading={create.isPending}
+            disabled={!name.trim() || (smart && ((ruleType === "artist" && !artist) || (ruleType === "genre" && !genre)))}
+          >
             {t("common.create")}
           </Button>
         </>
@@ -204,7 +217,17 @@ function NewPlaylist({ trackIds, smart: smartInit }: { trackIds?: string[]; smar
     >
       <form id="new-pl" onSubmit={submit} className="flex flex-col gap-4">
         <Field label={t("tracks.newPlaylist.nameLabel")}>
-          <input autoFocus value={name} onChange={(e) => setName(e.target.value)} maxLength={200} className="input" placeholder={t("tracks.newPlaylist.namePlaceholder")} />
+          <input
+            autoFocus
+            value={name}
+            onChange={(e) => {
+              setName(e.target.value);
+              setNameTouched(e.target.value.trim().length > 0);
+            }}
+            maxLength={200}
+            className="input"
+            placeholder={t("tracks.newPlaylist.namePlaceholder")}
+          />
         </Field>
         {!trackIds?.length && (
           <label className="flex items-center gap-3 text-body-sm">
@@ -230,6 +253,31 @@ function NewPlaylist({ trackIds, smart: smartInit }: { trackIds?: string[]; smar
                   {artists.data?.map((a) => (
                     <option key={a.name} value={a.name}>
                       {a.name}
+                    </option>
+                  ))}
+                </select>
+              </Field>
+            )}
+            {ruleType === "genre" && (
+              <Field
+                label={t("tracks.newPlaylist.genreLabel")}
+                hint={!genres.isLoading && !genres.data?.length ? t("tracks.newPlaylist.genreEmptyHint") : undefined}
+              >
+                <select
+                  value={genre}
+                  onChange={(e) => {
+                    const g = e.target.value;
+                    setGenre(g);
+                    if (g && !nameTouched) {
+                      setName(t("tracks.newPlaylist.genreDefaultName", { genre: g, Genre: fmtGenre(g) }));
+                    }
+                  }}
+                  className="input"
+                >
+                  <option value="">{t("tracks.newPlaylist.chooseGenre")}</option>
+                  {genres.data?.map((g) => (
+                    <option key={g.name} value={g.name}>
+                      {`${fmtGenre(g.name)} · ${tn("common.songs", g.count)}`}
                     </option>
                   ))}
                 </select>

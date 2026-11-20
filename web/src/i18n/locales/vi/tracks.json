@@ -57,7 +57,8 @@
     "top30": "Nghe nhiều nhất 30 ngày",
     "recent": "Mới thêm",
     "unplayed": "Chưa nghe",
-    "artist": "Theo nghệ sĩ"
+    "artist": "Theo nghệ sĩ",
+    "genre": "Theo thể loại"
   },
   "newPlaylist": {
     "title": "Playlist mới",
@@ -73,6 +74,10 @@
     "ruleLabel": "Luật",
     "artistLabel": "Nghệ sĩ",
     "chooseArtist": "Chọn nghệ sĩ…",
+    "genreLabel": "Thể loại",
+    "chooseGenre": "Chọn thể loại…",
+    "genreEmptyHint": "Thể loại được gắn tự động sau khi tải, có thể cần vài phút",
+    "genreDefaultName": "{Genre} của tôi",
     "maxSongs": "Tối đa {count} bài"
   },
   "edit": {

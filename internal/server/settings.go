@@ -39,7 +39,7 @@ var accentNames = map[string]bool{
 }
 
 func defaultSettings() Settings {
-	return Settings{CrossfadeSec: 4, GaplessAlbum: true, Normalize: true, Theme: "dark", Accent: "indigo", Visualizer: true, AutoplayMode: "lib", PrefLangs: []string{}, PrefGenres: []string{}, PrefArtists: []string{}}
+	return Settings{CrossfadeSec: 4, GaplessAlbum: true, Normalize: true, Theme: "dark", Accent: "indigo", Visualizer: true, AutoplayMode: "free", PrefLangs: []string{}, PrefGenres: []string{}, PrefArtists: []string{}}
 }
 
 func (st *Settings) sanitize() {
@@ -55,7 +55,7 @@ func (st *Settings) sanitize() {
 	switch st.AutoplayMode {
 	case "off", "lib", "free":
 	default:
-		st.AutoplayMode = "lib"
+		st.AutoplayMode = "free"
 	}
 	if st.Language != "en" {
 		st.Language = "vi"

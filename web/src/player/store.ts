@@ -100,7 +100,7 @@ export const usePlayer = create<State & Actions>()(
       repeat: "off",
       playToken: 0,
       autoplay: false,
-      autoplayMode: "lib",
+      autoplayMode: "free",
       panel: null,
       npOpen: false,
       npTab: "cover",

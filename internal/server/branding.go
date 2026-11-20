@@ -25,7 +25,7 @@ type Branding struct {
 
 func (b Branding) LogoURL() string {
 	if b.LogoExt == "" {
-		return "/icon.svg"
+		return "/icon.png"
 	}
 	return "/branding/logo?v=" + strconv.FormatInt(b.Version, 10)
 }
@@ -141,12 +141,12 @@ func (s *Server) handleDeleteLogo(w http.ResponseWriter, r *http.Request) {
 func (s *Server) handleLogo(w http.ResponseWriter, r *http.Request) {
 	b := s.branding()
 	if b.LogoExt == "" {
-		http.Redirect(w, r, "/icon.svg", http.StatusFound)
+		http.Redirect(w, r, "/icon.png", http.StatusFound)
 		return
 	}
 	f, err := os.Open(filepath.Join(s.brandingDir(), "logo."+b.LogoExt))
 	if err != nil {
-		http.Redirect(w, r, "/icon.svg", http.StatusFound)
+		http.Redirect(w, r, "/icon.png", http.StatusFound)
 		return
 	}
 	defer f.Close()
@@ -175,7 +175,7 @@ func (s *Server) brandIndex(page []byte, path string) []byte {
 	head += `<script>window.__VANG_BRAND__=` + strings.ReplaceAll(string(brandJSON), "<", `<`) + `</script>`
 	page = bytes.Replace(page, []byte("<title>RiiMusic</title>"), []byte("<title>"+name+"</title>"+head), 1)
 	if b.LogoExt != "" {
-		page = bytes.Replace(page, []byte(`<link rel="icon" href="/icon.svg" type="image/svg+xml" />`), []byte(`<link rel="icon" href="`+logo+`" />`), 1)
+		page = bytes.Replace(page, []byte(`<link rel="icon" href="/icon.png" type="image/svg+xml" />`), []byte(`<link rel="icon" href="`+logo+`" />`), 1)
 		page = bytes.Replace(page, []byte(`<link rel="apple-touch-icon" href="/icon-192.png" />`), []byte(`<link rel="apple-touch-icon" href="`+logo+`" />`), 1)
 	}
 	return page

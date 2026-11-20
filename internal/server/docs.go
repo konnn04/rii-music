@@ -32,7 +32,7 @@ var apiDocs = []apiDoc{
 	{"GET", "/api/tokens", "Tài khoản", "Danh sách token cá nhân", "", nil, ``, `[{"id":"…","kind":"api","name":"script","prefix":"vang_1a2b3c","createdAt":0,"lastUsedAt":0}]`},
 	{"POST", "/api/tokens", "Tài khoản", "Tạo token (kind: api | agent). Token chỉ hiện một lần", "", nil, `{"kind":"api","name":"script của tôi"}`, `{"token":"vang_…","info":{"id":"…"}}`},
 	{"DELETE", "/api/tokens/{id}", "Tài khoản", "Thu hồi token", "", nil, ``, ``},
-	{"GET", "/api/settings", "Tài khoản", "Cài đặt cá nhân", "", nil, ``, `{"crossfadeSec":4,"normalize":true,"autoplayMode":"lib","language":"vi"}`},
+	{"GET", "/api/settings", "Tài khoản", "Cài đặt cá nhân", "", nil, ``, `{"crossfadeSec":4,"normalize":true,"autoplayMode":"free","language":"vi"}`},
 	{"PUT", "/api/settings", "Tài khoản", "Lưu cài đặt cá nhân (gửi một phần cũng được)", "", nil, `{"crossfadeSec":6}`, ``},
 
 	// library

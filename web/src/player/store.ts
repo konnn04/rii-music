@@ -55,7 +55,7 @@ type State = {
 };
 
 type Actions = {
-  playList: (tracks: Track[], start: number, source: Source, opts?: { shuffle?: boolean }) => void;
+  playList: (tracks: Track[], start: number, source: Source, opts?: { shuffle?: boolean; oneLang?: boolean }) => void;
   playNext: (tracks: Track[]) => void;
   addToQueue: (tracks: Track[]) => void;
   /** Advance; returns false when the queue ended. */
@@ -108,6 +108,16 @@ export const usePlayer = create<State & Actions>()(
 
       playList: (tracks, start, source, opts) => {
         if (!tracks.length) return;
+        if (opts?.oneLang && start >= 0 && start < tracks.length) {
+          // Mixed shelves (continue listening, recently added…): keep only the
+          // songs in the language of the one picked, autoplay fills the rest.
+          const lang = tracks[start].lang;
+          if (lang) {
+            const picked = tracks[start];
+            tracks = tracks.filter((t) => !t.lang || t.lang === lang);
+            start = tracks.indexOf(picked);
+          }
+        }
         const list = entries(tracks);
         const startEntry = list[Math.max(0, Math.min(start, list.length - 1))];
         const shuffle = opts?.shuffle ?? get().shuffle;

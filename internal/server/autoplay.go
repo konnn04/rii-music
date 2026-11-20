@@ -38,7 +38,7 @@ func (s *Server) handleAutoplay(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	nExt, _ := strconv.Atoi(r.URL.Query().Get("ext"))
-	nExt = max(0, min(nExt, 4))
+	nExt = max(0, min(nExt, 6))
 	ctx, cancel := context.WithTimeout(r.Context(), 20*time.Second)
 	defer cancel()
 	rc, err := s.newRecCtx(ctx, uid, false)

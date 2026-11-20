@@ -267,9 +267,13 @@ func (s *Server) handleHome(w http.ResponseWriter, r *http.Request) {
 		s.internalError(w, r, err)
 		return
 	}
+	// Send each track's resolved language (artist majority beats a weak
+	// title guess) so the client can keep a queue in one language.
+	langs := resolveLangs(all)
 	byID := map[string]Track{}
-	for _, t := range all {
-		byID[t.ID] = t
+	for i := range all {
+		all[i].Lang = langs[all[i].ID]
+		byID[all[i].ID] = all[i]
 	}
 
 	// Continue listening: most recent distinct tracks.
@@ -350,6 +354,9 @@ func (s *Server) handleHome(w http.ResponseWriter, r *http.Request) {
 	if rc, err := s.newRecCtx(r.Context(), uid, false); err == nil {
 		mixes = s.dailyMixes(rc, 4)
 		forYou = s.forYou(rc, 20)
+		for i := range forYou {
+			forYou[i].Lang = langs[forYou[i].ID]
+		}
 		seeds := rc.taste.seeds(8)
 		if len(rc.similar) < len(seeds) {
 			go s.warmRecs(uid)

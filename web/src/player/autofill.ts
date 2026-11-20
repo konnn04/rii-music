@@ -9,9 +9,10 @@
 import { api, type Job, type Track } from "@/lib/api";
 import { usePlayback, usePlayer } from "./store";
 
-const LOW_WATER = 3; // refill when fewer upcoming tracks than this
-const LIB_BATCH = 6;
-const EXT_BATCH = 2;
+const LOW_WATER = 5; // refill when fewer upcoming tracks than this
+const TARGET = 10; // each refill tops the queue up to at least this many
+const EXT_MIN = 2;
+const EXT_MAX = 6; // new songs downloaded when the library has too few matches
 const RECENT = 80; // don't suggest anything among the last N queue entries
 
 let inflight = false;
@@ -46,18 +47,21 @@ async function refill() {
   inflight = true;
   lastSeed = cur.uid;
   try {
-    const [radio, ext] = await Promise.all([
-      api<{ tracks: Track[] }>(`/api/radio?seed=${encodeURIComponent(cur.track.id)}`).catch(() => ({ tracks: [] as Track[] })),
-      s.autoplayMode === "free" && pending.size < 4
-        ? api<{ external: ExtSuggestion[] }>(`/api/recs/autoplay?seed=${encodeURIComponent(cur.track.id)}&ext=${EXT_BATCH}`).catch(() => ({ external: [] as ExtSuggestion[] }))
-        : Promise.resolve({ external: [] as ExtSuggestion[] }),
-    ]);
+    const radio = await api<{ tracks: Track[] }>(`/api/radio?seed=${encodeURIComponent(cur.track.id)}`).catch(() => ({ tracks: [] as Track[] }));
     const now = usePlayer.getState();
     if (now.autoplayMode === "off") return;
     const skip = new Set([...now.context.slice(-RECENT), ...now.manual].map((e) => e.track.id));
     skip.add(cur.track.id);
-    const pick = radio.tracks.filter((t) => !skip.has(t.id)).slice(0, LIB_BATCH);
+    const want = Math.max(TARGET - upcomingCount(), LOW_WATER);
+    const pick = radio.tracks.filter((t) => !skip.has(t.id)).slice(0, want);
     if (pick.length) now.appendAuto(pick);
+
+    // Free mode: download new songs too, more of them when the library is short.
+    const extN = Math.min(EXT_MAX, Math.max(EXT_MIN, want - pick.length)) - pending.size;
+    const ext =
+      s.autoplayMode === "free" && extN > 0
+        ? await api<{ external: ExtSuggestion[] }>(`/api/recs/autoplay?seed=${encodeURIComponent(cur.track.id)}&ext=${extN}`).catch(() => ({ external: [] as ExtSuggestion[] }))
+        : { external: [] as ExtSuggestion[] };
 
     for (const x of ext.external) {
       try {

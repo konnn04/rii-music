@@ -58,7 +58,7 @@ function useSourcePlaying(src: Source) {
 export function TrackCard({ track, tracks, index, source }: { track: Track; tracks: Track[]; index: number; source: Source }) {
   const isCur = usePlayer((s) => s.current?.track.id === track.id);
   const playing = usePlayback((s) => s.isPlaying) && isCur;
-  const play = () => (isCur ? engine.toggle() : usePlayer.getState().playList(tracks, index, source, { shuffle: false }));
+  const play = () => (isCur ? engine.toggle() : usePlayer.getState().playList(tracks, index, source, { shuffle: false, oneLang: true }));
   return (
     <div className="group flex w-[140px] shrink-0 snap-start flex-col gap-2 md:-m-2 md:w-auto md:rounded-card md:p-2 md:hover:bg-surface-1">
       <button className="focus-ring relative rounded-card text-left" onClick={play} aria-label={t("ui.card.playAria", { title: track.title })}>

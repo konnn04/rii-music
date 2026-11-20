@@ -15,7 +15,7 @@ import { t, tsv } from "@/i18n";
 export function RecCard({ rec, list, index, source }: { rec: RecTrack; list: RecTrack[]; index: number; source: Source }) {
   const isCur = usePlayer((s) => s.current?.track.id === rec.id);
   const playing = usePlayback((s) => s.isPlaying) && isCur;
-  const play = () => (isCur ? engine.toggle() : usePlayer.getState().playList(list, index, source, { shuffle: false }));
+  const play = () => (isCur ? engine.toggle() : usePlayer.getState().playList(list, index, source, { shuffle: false, oneLang: true }));
   return (
     <div className="group relative flex w-[150px] shrink-0 snap-start flex-col gap-2 md:-m-2 md:w-auto md:rounded-card md:p-2 md:hover:bg-surface-1">
       <button className="focus-ring relative rounded-card text-left" onClick={play} aria-label={t("discover.rec.play", { title: rec.title })}>

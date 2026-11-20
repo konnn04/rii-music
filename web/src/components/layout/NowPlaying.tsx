@@ -11,8 +11,7 @@ import { TrackMenuButton } from "../TrackMenu";
 import { useSettings } from "@/lib/queries";
 import { usePulse } from "./Pulse";
 import { ArtistLinks } from "@/components/ArtistLinks";
-import { SleepButton } from "@/components/SleepButton";
-import { SoundButton } from "@/components/SoundButton";
+import { NowPlayingMenuButton } from "../NowPlayingMenu";
 import { COVER_VT, withCoverTransition } from "@/lib/viewTransition";
 
 /** Dark scope with the cover blurred behind a scrim and the accent taken from the cover. */
@@ -162,7 +161,7 @@ export function MobileNowPlaying() {
       }}
     >
       <div role="dialog" aria-modal aria-label={t("player.np.title")} className="flex min-h-0 flex-1 flex-col">
-        {/* Equal side columns keep the title centred on the screen (1 button left, 3 right). */}
+        {/* Equal side columns keep the title centred on the screen. */}
         <header className="grid shrink-0 grid-cols-[1fr_auto_1fr] items-center gap-2 px-2 pt-2" {...gesture(true)}>
           <div className="flex justify-start">
             <IconButton icon="chevron-down" label={t("player.np.minimize")} onClick={close} className="!text-fg" />
@@ -172,9 +171,7 @@ export function MobileNowPlaying() {
             <div className="truncate text-label">{source?.name ? tsv(source.name) : t("common.nav.library")}</div>
           </div>
           <div className="flex justify-end">
-            <SoundButton size={22} className="!text-fg" />
-            <SleepButton size={22} className="!text-fg" />
-            <TrackMenuButton track={current.track} className="!text-fg" />
+            <NowPlayingMenuButton track={current.track} />
           </div>
         </header>
 
@@ -199,10 +196,10 @@ export function MobileNowPlaying() {
         >
           {tab === "cover" && <CoverStage onLyrics={() => setNp(true, "lyrics")} />}
           {tab === "lyrics" && <LyricsView className="pt-2" />}
-          {tab === "queue" && <QueueView />}
+          {tab === "queue" && <QueueView className="pb-8 [mask-image:linear-gradient(to_bottom,black_calc(100%-24px),transparent)]" />}
         </div>
 
-        <div className="shrink-0 px-6 pb-4">
+        <div className="mt-3 shrink-0 px-6 pb-4">
           <div className="mb-2 flex items-center gap-2">
             <TrackTitle big />
             <LikeCurrent np size={28} />

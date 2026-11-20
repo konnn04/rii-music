@@ -1,5 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { useIsFollowing, useToggleFollow, type FollowedArtist } from "@/lib/follows";
+import { useIsMobile } from "@/lib/useMedia";
 import { Button } from "./ui/Button";
 import { Cover } from "./ui/Cover";
 import { Icon } from "./ui/Icon";
@@ -9,9 +10,11 @@ import { t, tn } from "@/i18n";
 export function FollowButton({ name, image }: { name: string; image?: string }) {
   const following = useIsFollowing(name);
   const toggle = useToggleFollow();
+  const mobile = useIsMobile();
   return (
     <Button
       variant={following ? "secondary" : "primary"}
+      size={mobile ? "sm" : "md"}
       icon={following ? "check" : "plus"}
       aria-pressed={following}
       disabled={toggle.isPending}

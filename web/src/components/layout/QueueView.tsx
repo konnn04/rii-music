@@ -17,7 +17,7 @@ import { ArtistLinks } from "@/components/ArtistLinks";
 const LIMIT = 150;
 
 /** Queue: now playing, manual queue ("thêm tay"), the rest of the source, then autoplay suggestions. Drag to reorder. */
-export function QueueView({ compact }: { compact?: boolean }) {
+export function QueueView({ compact, className = "" }: { compact?: boolean; className?: string }) {
   const current = usePlayer((s) => s.current);
   const manual = usePlayer((s) => s.manual);
   const context = usePlayer((s) => s.context);
@@ -51,7 +51,7 @@ export function QueueView({ compact }: { compact?: boolean }) {
   if (!current) return <div className="flex h-full items-center justify-center p-6 text-center text-body text-np-fg-muted">{t("player.queue.empty")}</div>;
 
   return (
-    <div className={`h-full overflow-y-auto px-2 ${compact ? "pb-2" : "pb-6"}`}>
+    <div className={`h-full overflow-y-auto px-2 ${compact ? "pb-2" : "pb-6"} ${className}`}>
       {!compact && (
         <Group title={t("player.queue.nowPlaying")} action={<AutoplayButton np />}>
           <div className="flex items-center gap-3 rounded-control px-2 py-2">

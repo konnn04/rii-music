@@ -85,7 +85,8 @@
     "closePanel": "Close panel",
     "album": "Album: {album}",
     "expand": "Expand",
-    "closeLyrics": "Close full-screen lyrics"
+    "closeLyrics": "Close full-screen lyrics",
+    "more": "More options"
   },
   "sleep": {
     "title": "Sleep timer",

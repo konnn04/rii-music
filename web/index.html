@@ -12,6 +12,7 @@
     <script>
       try { var t = JSON.parse(localStorage.getItem("rii-theme") || '"dark"'); if (t === "system") t = matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark"; document.documentElement.dataset.theme = t; } catch (e) {}
       try { var a = JSON.parse(localStorage.getItem("rii-accent") || "null"); if (a) { var d = document.documentElement; d.dataset.accent = ""; d.style.setProperty("--ah", a.h); d.style.setProperty("--as", a.s + "%"); d.style.setProperty("--al", a.light + "%"); } } catch (e) {}
+      try { var s = Number(localStorage.getItem("rii-ui-scale")); if (s >= 0.75 && s <= 1.5 && s !== 1) document.documentElement.style.fontSize = Math.round(s * 100) + "%"; } catch (e) {}
     </script>
   </head>
   <body>

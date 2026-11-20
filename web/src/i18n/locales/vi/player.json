@@ -85,7 +85,8 @@
     "closePanel": "Đóng panel",
     "album": "Album: {album}",
     "expand": "Mở rộng",
-    "closeLyrics": "Đóng lời toàn màn hình"
+    "closeLyrics": "Đóng lời toàn màn hình",
+    "more": "Thêm tuỳ chọn"
   },
   "sleep": {
     "title": "Hẹn giờ ngủ",

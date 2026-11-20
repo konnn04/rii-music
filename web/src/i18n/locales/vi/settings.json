@@ -47,7 +47,9 @@
     },
     "visualizer": "Hiệu ứng nhạc",
     "visualizerHint": "Nền Đang phát và Lời bài hát đập theo nhịp bass: nhạc càng lớn màu loang càng mạnh, đoạn nhỏ thì dịu lại.",
-    "visualizerSimple": "Cần tắt Chế độ đơn giản (ở mục Phát nhạc) để đọc được âm thanh."
+    "visualizerSimple": "Cần tắt Chế độ đơn giản (ở mục Phát nhạc) để đọc được âm thanh.",
+    "uiScale": "Cỡ giao diện",
+    "uiScaleHint": "Phóng to hoặc thu nhỏ chữ và khoảng cách trên thiết bị này."
   },
   "shortcuts": {
     "title": "Phím tắt (PC)",

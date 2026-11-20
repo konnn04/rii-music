@@ -18,11 +18,15 @@ import { ACCENTS, swatch } from "@/lib/theme";
 import { AboutCard } from "@/components/AboutCard";
 import { SoundButton } from "@/components/SoundButton";
 import { clearStored, setOffline, useOffline } from "@/lib/offline";
+import { useIsMobile } from "@/lib/useMedia";
+import { UI_SCALES, getUiScale, setUiScale } from "@/lib/uiScale";
 
 export function SettingsPage() {
   const { data } = useSettings();
   const save = useSaveSettings();
   const [cf, setCf] = useState<number | null>(null);
+  const [uiScale, setScaleState] = useState(getUiScale);
+  const mobile = useIsMobile();
   const isAdmin = useMe().data?.user.role === "admin";
   if (!data) return <Spinner />;
   const set = (p: Partial<Settings>) => save.mutate(p);
@@ -97,6 +101,19 @@ export function SettingsPage() {
             />
           </Row>
           <AccentPicker value={data.accent} onChange={(accent) => set({ accent })} />
+          {mobile && (
+            <Row label={t("settings.appearance.uiScale")} hint={t("settings.appearance.uiScaleHint")}>
+              <Segmented
+                value={String(uiScale)}
+                options={UI_SCALES.map((s): [string, string] => [String(s), `${Math.round(s * 100)}%`])}
+                onChange={(v) => {
+                  const n = Number(v);
+                  setUiScale(n);
+                  setScaleState(n);
+                }}
+              />
+            </Row>
+          )}
           <Toggle
             label={t("settings.appearance.visualizer")}
             hint={t(engine.simpleMode ? "settings.appearance.visualizerSimple" : "settings.appearance.visualizerHint")}

@@ -60,5 +60,14 @@
   "offline": {
     "onlyStored": "Đang offline · chỉ phát được bài đã lưu trên máy",
     "noConnection": "Mất kết nối tới máy chủ"
+  },
+  "follow": {
+    "follow": "Theo dõi",
+    "following": "Đang theo dõi",
+    "followed": "Đã theo dõi {name}",
+    "unfollowed": "Đã bỏ theo dõi {name}",
+    "sidebar": "Nghệ sĩ theo dõi",
+    "sidebarEmpty": "Bấm “Theo dõi” ở trang nghệ sĩ để thêm vào đây.",
+    "artist": "Nghệ sĩ"
   }
 }

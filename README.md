@@ -25,6 +25,7 @@ Một file chạy duy nhất (Go) phục vụ cả giao diện lẫn API. Dữ l
 - Tìm bài, album, playlist, video trên YouTube Music. Bấm Phát: bài đã có phát ngay, bài chưa có tải xong tự phát.
 - Xem album / playlist, lưu cả album thành playlist.
 - Trang nghệ sĩ: bài trong thư viện (kể cả góp giọng), bài hát và album trên YouTube Music.
+- Theo dõi nghệ sĩ: danh sách hiện ở sidebar (PC) và Thư viện → Nghệ sĩ, bấm vào để xem; nghệ sĩ đang theo dõi được ưu tiên trong gợi ý.
 - Thư viện lọc theo điều kiện (chữ, ngôn ngữ, thể loại, nghệ sĩ, album, đã thích, lượt nghe, ngày thêm, thời lượng); kéo bài thả vào playlist ở sidebar (PC).
 - Chạy ngầm sau khi tải: nhúng lời vào file nhạc, gắn thể loại (Deezer, Last.fm), kiểm tra tên bài trên MusicBrainz cho video không chính thức.
 - File nhạc dùng chung giữa mọi người: bài đã có trên máy chủ không tải lại.

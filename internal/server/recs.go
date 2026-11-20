@@ -111,6 +111,16 @@ func (s *Server) buildTaste(uid string, all []Track) (*taste, error) {
 			}
 		}
 	}
+	// Followed artists count like several likes, even with few songs saved.
+	for k, name := range s.followedKeys(uid) {
+		if looseName(name) != k {
+			continue // other scripts: the taste profile can't key them
+		}
+		t.artist[k] += followWeight
+		if _, ok := t.display[k]; !ok {
+			t.display[k] = name
+		}
+	}
 	rows, err = s.db.Query(`SELECT kind, key, value FROM feedback WHERE user_id = ?`, uid)
 	if err == nil {
 		for rows.Next() {

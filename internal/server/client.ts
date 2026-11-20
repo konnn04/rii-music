@@ -84,6 +84,14 @@ export class RiiMusic {
   like(id: string, liked = true) {
     return this.request(liked ? "PUT" : "DELETE", `/api/likes/${id}`);
   }
+  follows() {
+    return this.request("GET", "/api/follows");
+  }
+  follow(name: string, following = true) {
+    return following
+      ? this.request("PUT", "/api/follows", { name })
+      : this.request("DELETE", `/api/follows?name=${encodeURIComponent(name)}`);
+  }
   removeTrack(id: string) {
     return this.request("DELETE", `/api/tracks/${id}`);
   }

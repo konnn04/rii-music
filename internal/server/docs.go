@@ -56,6 +56,9 @@ var apiDocs = []apiDoc{
 	{"GET", "/api/album/full", "Thư viện", "Đủ bài của album (từ YouTube Music), đánh dấu bài đã có", "", []string{"name", "artist"}, ``, ``},
 	{"PUT", "/api/likes/{id}", "Thư viện", "Thích bài", "", nil, ``, `{"liked":true}`},
 	{"DELETE", "/api/likes/{id}", "Thư viện", "Bỏ thích", "", nil, ``, `{"liked":false}`},
+	{"GET", "/api/follows", "Thư viện", "Nghệ sĩ đang theo dõi (kèm số bài trong thư viện)", "", nil, ``, `[{"name":"Đen","trackCount":12,"followedAt":0}]`},
+	{"PUT", "/api/follows", "Thư viện", "Theo dõi nghệ sĩ (image: ảnh https, tuỳ chọn)", "", nil, `{"name":"Đen"}`, `{"following":true}`},
+	{"DELETE", "/api/follows", "Thư viện", "Bỏ theo dõi nghệ sĩ", "", []string{"name"}, ``, `{"following":false}`},
 	{"GET", "/api/search", "Tìm kiếm", "Tìm trên YouTube Music (scope=web) hoặc trong thư viện", "", []string{"q", "scope: web | library", "kind: songs | albums | playlists | videos"}, ``, `{"results":[{"id":"videoId","title":"…","artist":"…","inLibrary":"","onServer":true}]}`},
 
 	// playlists

@@ -60,5 +60,14 @@
   "offline": {
     "onlyStored": "Offline · only songs stored on this device play",
     "noConnection": "Can't reach the server"
+  },
+  "follow": {
+    "follow": "Follow",
+    "following": "Following",
+    "followed": "Following {name}",
+    "unfollowed": "Unfollowed {name}",
+    "sidebar": "Followed artists",
+    "sidebarEmpty": "Press “Follow” on an artist page to add them here.",
+    "artist": "Artist"
   }
 }

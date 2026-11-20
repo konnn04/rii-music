@@ -23,6 +23,8 @@ import { useBranding } from "@/lib/branding";
 import { Onboarding } from "@/pages/Onboarding";
 import { RemoteBanner } from "@/components/RemoteBanner";
 import { clearStored, initOffline, useOffline } from "@/lib/offline";
+import { useFollows } from "@/lib/follows";
+import { FollowedRow } from "@/components/Follow";
 
 // `header`: shown as an icon in the top bar (desktop) and the mobile header
 // instead of the sidebar / tab bar; tablets (no top bar) keep it in the sidebar.
@@ -137,6 +139,14 @@ function TabBar() {
   );
 }
 
+function samePath(pathname: string, path: string): boolean {
+  try {
+    return decodeURIComponent(pathname) === path;
+  } catch {
+    return false;
+  }
+}
+
 function hasTrackDrag(dt: DataTransfer | null): boolean {
   return !!dt && Array.from(dt.types).includes(TRACK_DRAG_MIME);
 }
@@ -150,6 +160,7 @@ function Sidebar() {
   const isAdmin = useMe().data?.user.role === "admin";
   const brand = useBranding();
   const toggleLike = useToggleLike();
+  const follows = useFollows();
   const [draggingTracks, setDraggingTracks] = useState(false);
   const [dropTargetId, setDropTargetId] = useState<string | null>(null);
 
@@ -294,6 +305,14 @@ function Sidebar() {
               </button>
             );
           })}
+          <div className="mt-2 flex h-11 items-center px-3">
+            <span className="text-overline uppercase text-fg-subtle">{t("ui.follow.sidebar")}</span>
+          </div>
+          {follows.data?.length ? (
+            follows.data.map((a) => <FollowedRow key={a.key} a={a} active={samePath(pathname, `/artist/${a.name}`)} />)
+          ) : (
+            <p className="px-3 pb-2 text-caption text-fg-subtle">{t("ui.follow.sidebarEmpty")}</p>
+          )}
         </div>
       </section>
     </aside>

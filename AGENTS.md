@@ -43,6 +43,7 @@ internal/server/            HTTP API (net/http 1.22 routing), one file per area:
   auth.go tokens.go mail.go   accounts, sessions, OTP, API/agent tokens, SMTP
   admin.go logbuf.go          admin endpoints, in-memory log buffer (secrets masked)
   library.go playlists.go     tracks, artists, albums, playlists (per user)
+  follows.go                  followed artists (sidebar list, taste boost)
   downloader.go               job queue, yt-dlp download, ffmpeg remux/tag/cover, ingest
   ytmusic.go collections.go   YouTube Music InnerTube search / next / browse, album & playlist views
   lyrics.go                   LRCLIB lookup, per-user choices, community picks
@@ -79,6 +80,8 @@ web/src/
 **Autoplay** (`web/src/player/autofill.ts` + `/api/radio`, `/api/recs/autoplay`). Modes: off / lib / free. When fewer than 5 upcoming tracks remain it tops the queue up to 10 from radio; free mode also downloads up to 6 new songs and slots them in when ready. Skipped entries do not come back. Home shelves pass `oneLang` so a mixed shelf only queues songs in the picked song's language.
 
 **Auto-download.** Opt-in per user; every 6 h pre-downloads up to 8 songs within the user's storage limit. Over the limit, it evicts the least likely to be played, never liked, playlisted, added in the last 3 days, or played in the last 14 days. Removed songs are not fetched again for 90 days.
+
+**Followed artists** (`follows.go`, migration 0003). `artist_follows` is keyed by `followKey` (the loose name; names in other scripts fall back to the lower-cased name), mirrored in `web/src/lib/follows.ts`. The list counts the user's library songs per artist (featured credits too). Each follow adds `followWeight` to the artist in the taste profile. The `follows` SSE event refreshes other tabs.
 
 **Lyrics.** Shared LRCLIB result per track plus per-user choices; resolution order is mine > community (≥ 2 users picked the same LRCLIB id) > automatic.
 

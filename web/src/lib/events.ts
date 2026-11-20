@@ -51,6 +51,7 @@ export function connectEvents() {
     queryClient.invalidateQueries({ queryKey: ["playlist"] });
   });
   es.addEventListener("settings", (e) => queryClient.setQueryData(["settings"], JSON.parse((e as MessageEvent).data) as Settings));
+  es.addEventListener("follows", () => queryClient.invalidateQueries({ queryKey: ["follows"] }));
   es.addEventListener("autodl", () => queryClient.invalidateQueries({ queryKey: ["autodl"] }));
   es.addEventListener("recs", () => {
     queryClient.invalidateQueries({ queryKey: ["home"] });

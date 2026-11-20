@@ -107,6 +107,9 @@ func (s *Server) Handler() http.Handler {
 
 	api("PUT /api/likes/{id}", s.handleLike)
 	api("DELETE /api/likes/{id}", s.handleUnlike)
+	api("GET /api/follows", s.handleListFollows)
+	api("PUT /api/follows", s.handleFollow)
+	api("DELETE /api/follows", s.handleUnfollow)
 
 	api("GET /api/playlists", s.handleListPlaylists)
 	api("POST /api/playlists", s.handleCreatePlaylist)

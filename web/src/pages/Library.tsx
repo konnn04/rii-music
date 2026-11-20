@@ -13,6 +13,8 @@ import { PageHeader } from "@/components/layout/AppShell";
 import { openDialog } from "@/components/dialogs";
 import { useIsMobile } from "@/lib/useMedia";
 import { locale, t, tn } from "@/i18n";
+import { useFollows } from "@/lib/follows";
+import { FollowedCard } from "@/components/Follow";
 
 export type LibTab = "songs" | "artists" | "albums" | "playlists";
 const tabs: [LibTab, string][] = [
@@ -137,14 +139,30 @@ function Songs({ sort, onSort }: { sort: TrackSort; onSort: (s: TrackSort) => vo
 
 function Artists() {
   const { data, isLoading, error, refetch } = useArtists();
+  const follows = useFollows();
   if (isLoading) return <Spinner />;
   if (error) return <ErrorState error={error} onRetry={refetch} />;
-  if (!data?.length) return <Empty icon="artist" title={t("library.empty.artistsTitle")} />;
+  const followed = follows.data ?? [];
+  if (!data?.length && !followed.length) return <Empty icon="artist" title={t("library.empty.artistsTitle")} />;
   return (
-    <div className={grid}>
-      {data.map((a) => (
-        <ArtistCard key={a.name} artist={a} />
-      ))}
+    <div className="flex flex-col gap-6">
+      {followed.length > 0 && (
+        <section>
+          <h2 className="mb-2 px-4 text-title-3 md:px-6">{t("ui.follow.sidebar")}</h2>
+          <div className="no-scrollbar flex gap-2 overflow-x-auto px-3 md:px-5">
+            {followed.map((a) => (
+              <FollowedCard key={a.key} a={a} />
+            ))}
+          </div>
+        </section>
+      )}
+      {!!data?.length && (
+        <div className={grid}>
+          {data.map((a) => (
+            <ArtistCard key={a.name} artist={a} />
+          ))}
+        </div>
+      )}
     </div>
   );
 }

@@ -19,6 +19,7 @@ import { Field, openDialog } from "@/components/dialogs";
 import { toast } from "@/components/ui/Toast";
 import { DropdownMenu } from "radix-ui";
 import { t, tn, tsv } from "@/i18n";
+import { FollowButton } from "@/components/Follow";
 
 /** Header for playlist / album / artist: big art + title + actions. */
 function DetailHeader({ art, kicker, title, meta, actions }: { art: ReactNode; kicker: string; title: string; meta: string; actions: ReactNode }) {
@@ -317,10 +318,11 @@ export function ArtistPage() {
             : t("detail.artist.notInLibrary")
         }
         actions={
-          data.tracks.length > 0 && <PlayActions
+          data.tracks.length > 0 ? <PlayActions
             tracks={data.tracks}
             source={source}
             extra={
+              <>
               <IconButton
                 icon="radio"
                 label={t("detail.artist.radio")}
@@ -330,8 +332,10 @@ export function ArtistPage() {
                   usePlayer.getState().playList(r.tracks, 0, { type: "radio", id: name, name: t("detail.artist.radioName", { name }) }, { shuffle: false });
                 }}
               />
+              <FollowButton name={name} image={webPic} />
+              </>
             }
-          />
+          /> : <FollowButton name={name} image={webPic} />
         }
       />
       {data.tracks.length > 0 && (

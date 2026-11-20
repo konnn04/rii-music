@@ -4,6 +4,7 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { api, type AdminUser, type HistoryItem, type Job, type Role, type ServerSettings, type Stats, type Track } from "@/lib/api";
 import { queryClient, useMe } from "@/lib/queries";
 import { fmtAgo, fmtBytes, fmtMs } from "@/lib/format";
+import { locale, t, tn, tsv } from "@/i18n";
 import { Avatar, PageHeader } from "@/components/layout/AppShell";
 import { Button } from "@/components/ui/Button";
 import { Dialog } from "@/components/ui/Dialog";
@@ -30,7 +31,7 @@ type System = {
 };
 
 const LIMITS_GB = [0.5, 1, 2, 5, 10, 20, 50, 100];
-const gb = (mb: number) => `${(mb / 1024).toLocaleString("vi-VN", { maximumFractionDigits: 1 })} GB`;
+const gb = (mb: number) => `${(mb / 1024).toLocaleString(locale(), { maximumFractionDigits: 1 })} GB`;
 
 const useUsers = () => useQuery({ queryKey: ["admin", "users"], queryFn: () => api<UsersResp>("/api/admin/users"), refetchInterval: 30_000 });
 
@@ -49,16 +50,16 @@ export function AdminPage() {
   const me = useMe();
   const { tab = "users", user } = useSearch({ from: "/admin" });
   const navigate = useNavigate({ from: "/admin" });
-  if (me.data && me.data.user.role !== "admin") return <Empty icon="lock" title="Chỉ admin mới vào được trang này" />;
+  if (me.data && me.data.user.role !== "admin") return <Empty icon="lock" title={t("admin.accessDenied")} />;
   const setTab = (t: "users" | "system") => navigate({ search: { tab: t === "users" ? undefined : t }, replace: true });
   return (
     <div>
-      <PageHeader title="Quản trị">
+      <PageHeader title={t("common.nav.admin")}>
         <div role="tablist" className="mt-4 flex gap-2">
           {(
             [
-              ["users", "Người dùng", "users"],
-              ["system", "Hệ thống", "settings"],
+              ["users", t("admin.tabs.users"), "users"],
+              ["system", t("admin.tabs.system"), "settings"],
             ] as const
           ).map(([k, label, icon]) => (
             <button
@@ -91,10 +92,10 @@ function UsersTab() {
     <div className="flex flex-col gap-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <p className="text-body-sm text-fg-muted">
-          {data.users.length} tài khoản · {data.users.filter((u) => u.online).length} đang mở app
+          {tn("admin.users.accounts", data.users.length)} · {t("admin.users.onlineCount", { n: data.users.filter((u) => u.online).length })}
         </p>
         <Button variant="primary" icon="plus" onClick={() => setAdding(true)}>
-          Thêm người dùng
+          {t("admin.users.add")}
         </Button>
       </div>
       <ul className="flex flex-col gap-2">
@@ -106,18 +107,19 @@ function UsersTab() {
             >
               <span className="relative">
                 <Avatar name={u.name || u.email} size={44} />
-                {u.online && <span className="absolute -bottom-0.5 -right-0.5 size-3.5 rounded-full border-2 border-surface-1 bg-success" title="Đang mở app" />}
+                {u.online && <span className="absolute -bottom-0.5 -right-0.5 size-3.5 rounded-full border-2 border-surface-1 bg-success" title={t("admin.users.online")} />}
               </span>
               <span className="min-w-0 flex-1">
                 <span className="flex items-center gap-2">
                   <span className="truncate text-body">{u.name || u.email}</span>
-                  {u.role === "admin" && <Badge tone="accent">Admin</Badge>}
-                  {u.disabled && <Badge tone="danger">Đã khoá</Badge>}
+                  {u.role === "admin" && <Badge tone="accent">{t("admin.role.admin")}</Badge>}
+                  {u.disabled && <Badge tone="danger">{t("admin.users.disabled")}</Badge>}
                 </span>
                 <span className="block truncate text-caption text-fg-muted">
                   {u.name ? u.email + " · " : ""}
-                  {u.tracks} bài · {u.plays30d} lượt nghe 30 ngày · {u.lastListenAt ? `nghe ${fmtAgo(u.lastListenAt)}` : "chưa nghe"}
-                  {u.autoDownload ? " · tự động tải" : ""}
+                  {tn("common.songs", u.tracks)} · {tn("admin.users.plays30d", u.plays30d)} ·{" "}
+                  {u.lastListenAt ? t("admin.users.lastListened", { ago: fmtAgo(u.lastListenAt) }) : t("admin.users.neverListened")}
+                  {u.autoDownload ? ` · ${t("admin.users.autoDownloadTag")}` : ""}
                 </span>
               </span>
               <Usage used={u.usedBytes} limitMb={u.storageLimitMb} className="hidden w-40 md:flex" />
@@ -154,7 +156,7 @@ function Usage({ used, limitMb, className = "" }: { used: number; limitMb: numbe
 function LimitSelect({ mb, onChange }: { mb: number; onChange: (mb: number) => void }) {
   const opts = [...new Set([...LIMITS_GB.map((g) => Math.round(g * 1024)), mb])].sort((a, b) => a - b);
   return (
-    <select className="input h-11" value={mb} onChange={(e) => onChange(+e.target.value)} aria-label="Giới hạn dung lượng">
+    <select className="input h-11" value={mb} onChange={(e) => onChange(+e.target.value)} aria-label={t("admin.users.storageLimit")}>
       {opts.map((m) => (
         <option key={m} value={m}>
           {gb(m)}
@@ -169,7 +171,7 @@ function AddUserDialog({ defaultMb, mail, onClose }: { defaultMb: number; mail: 
   const create = useMutation({
     mutationFn: () => api<AdminUser>("/api/admin/users", { method: "POST", json: f }),
     onSuccess: (u) => {
-      toast(u.note ?? `Đã tạo tài khoản ${u.email}${f.sendInvite ? ", đã gửi email mời" : ""}`, u.note ? "error" : "success");
+      toast(u.note ? tsv(u.note) : t(f.sendInvite ? "admin.addUser.createdInvited" : "admin.addUser.created", { email: u.email }), u.note ? "error" : "success");
       queryClient.invalidateQueries({ queryKey: ["admin"] });
       onClose();
     },
@@ -179,26 +181,26 @@ function AddUserDialog({ defaultMb, mail, onClose }: { defaultMb: number; mail: 
     <Dialog
       open
       onOpenChange={(o) => !o && onClose()}
-      title="Thêm người dùng"
-      description={mail ? "Để trống mật khẩu thì người đó đăng nhập bằng mã gửi qua email." : "Máy chủ chưa cấu hình email, cần đặt mật khẩu ban đầu."}
+      title={t("admin.users.add")}
+      description={t(mail ? "admin.addUser.descMail" : "admin.addUser.descNoMail")}
       footer={
         <>
           <Button variant="ghost" onClick={onClose}>
-            Huỷ
+            {t("common.cancel")}
           </Button>
           <Button variant="primary" loading={create.isPending} disabled={!f.email || (needPw && f.password.length < 8)} onClick={() => create.mutate()}>
-            Tạo tài khoản
+            {t("admin.addUser.submit")}
           </Button>
         </>
       }
     >
       <div className="flex flex-col gap-3">
-        <input className="input h-11" type="email" placeholder="Email" value={f.email} onChange={(e) => setF({ ...f, email: e.target.value })} autoFocus />
-        <input className="input h-11" placeholder="Tên (không bắt buộc)" value={f.name} onChange={(e) => setF({ ...f, name: e.target.value })} />
+        <input className="input h-11" type="email" placeholder={t("admin.addUser.emailPlaceholder")} value={f.email} onChange={(e) => setF({ ...f, email: e.target.value })} autoFocus />
+        <input className="input h-11" placeholder={t("admin.addUser.namePlaceholder")} value={f.name} onChange={(e) => setF({ ...f, name: e.target.value })} />
         <div className="grid grid-cols-2 gap-3">
-          <select className="input h-11" value={f.role} onChange={(e) => setF({ ...f, role: e.target.value as Role })} aria-label="Vai trò">
-            <option value="listener">Người nghe</option>
-            <option value="admin">Admin</option>
+          <select className="input h-11" value={f.role} onChange={(e) => setF({ ...f, role: e.target.value as Role })} aria-label={t("admin.users.role")}>
+            <option value="listener">{t("admin.role.listener")}</option>
+            <option value="admin">{t("admin.role.admin")}</option>
           </select>
           <LimitSelect mb={f.storageLimitMb} onChange={(mb) => setF({ ...f, storageLimitMb: mb })} />
         </div>
@@ -206,14 +208,14 @@ function AddUserDialog({ defaultMb, mail, onClose }: { defaultMb: number; mail: 
           className="input h-11"
           type="password"
           autoComplete="new-password"
-          placeholder={needPw ? "Mật khẩu ban đầu (ít nhất 8 ký tự)" : "Mật khẩu ban đầu (không bắt buộc)"}
+          placeholder={t(needPw ? "admin.addUser.pwRequired" : "admin.addUser.pwOptional")}
           value={f.password}
           onChange={(e) => setF({ ...f, password: e.target.value })}
         />
         {mail && (
           <label className="flex items-center gap-2 text-body-sm">
             <input type="checkbox" className="size-4 accent-[var(--color-accent)]" checked={f.sendInvite} onChange={(e) => setF({ ...f, sendInvite: e.target.checked })} />
-            Gửi email mời (kèm ghi chú admin xem được thói quen nghe)
+            {t("admin.addUser.sendInvite")}
           </label>
         )}
         {create.error && (
@@ -252,7 +254,7 @@ function UserDetail({ id }: { id: string }) {
   return (
     <div className="flex flex-col gap-6 pb-8">
       <button onClick={back} className="focus-ring -ml-2 flex h-10 w-fit items-center gap-1 rounded-control px-2 text-label text-fg-muted hover:text-fg">
-        <Icon name="chevron-left" size={20} /> Tất cả người dùng
+        <Icon name="chevron-left" size={20} /> {t("admin.user.allUsers")}
       </button>
 
       <section className="flex flex-wrap items-center gap-4 rounded-card bg-surface-1 p-4">
@@ -260,12 +262,14 @@ function UserDetail({ id }: { id: string }) {
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
             <h2 className="truncate text-title-3">{u.name || u.email}</h2>
-            {u.role === "admin" && <Badge tone="accent">Admin</Badge>}
-            {u.disabled && <Badge tone="danger">Đã khoá</Badge>}
-            {u.online && <Badge tone="muted">Đang mở app</Badge>}
+            {u.role === "admin" && <Badge tone="accent">{t("admin.role.admin")}</Badge>}
+            {u.disabled && <Badge tone="danger">{t("admin.users.disabled")}</Badge>}
+            {u.online && <Badge tone="muted">{t("admin.users.online")}</Badge>}
           </div>
           <p className="truncate text-body-sm text-fg-muted">
-            {u.email} · tạo {fmtAgo(u.createdAt)} · {u.lastLoginAt ? `đăng nhập ${fmtAgo(u.lastLoginAt)}` : "chưa đăng nhập"} · {u.hasPassword ? "có mật khẩu" : "chỉ đăng nhập bằng mã"}
+            {u.email} · {t("admin.user.created", { ago: fmtAgo(u.createdAt) })} ·{" "}
+            {u.lastLoginAt ? t("admin.user.lastLogin", { ago: fmtAgo(u.lastLoginAt) }) : t("admin.user.neverLoggedIn")} ·{" "}
+            {t(u.hasPassword ? "admin.user.hasPassword" : "admin.user.codeOnly")}
           </p>
         </div>
         <Usage used={u.usedBytes} limitMb={u.storageLimitMb} className="flex w-full md:w-56" />
@@ -274,23 +278,23 @@ function UserDetail({ id }: { id: string }) {
       {/* habits */}
       <section className="flex flex-col gap-3">
         <div className="flex items-center justify-between gap-2">
-          <h3 className="text-title-3">Thói quen nghe</h3>
-          <select className="input h-9 w-auto" value={days} onChange={(e) => setDays(+e.target.value)} aria-label="Khoảng thời gian">
-            <option value={7}>7 ngày</option>
-            <option value={30}>30 ngày</option>
-            <option value={365}>1 năm</option>
+          <h3 className="text-title-3">{t("admin.user.habits")}</h3>
+          <select className="input h-9 w-auto" value={days} onChange={(e) => setDays(+e.target.value)} aria-label={t("admin.user.timeRange")}>
+            <option value={7}>{t("admin.user.days7")}</option>
+            <option value={30}>{t("admin.user.days30")}</option>
+            <option value={365}>{t("admin.user.year1")}</option>
           </select>
         </div>
         <div className="grid grid-cols-2 gap-2 md:grid-cols-4">
-          <Stat label="Phút nghe" value={s.totalMinutes.toLocaleString("vi-VN")} />
-          <Stat label="Lượt nghe" value={s.plays.toLocaleString("vi-VN")} />
-          <Stat label="Bỏ qua" value={s.skips.toLocaleString("vi-VN")} />
-          <Stat label="Bài trong thư viện" value={s.libraryCount.toLocaleString("vi-VN")} />
+          <Stat label={t("admin.user.minutes")} value={s.totalMinutes.toLocaleString(locale())} />
+          <Stat label={t("admin.user.plays")} value={s.plays.toLocaleString(locale())} />
+          <Stat label={t("admin.user.skips")} value={s.skips.toLocaleString(locale())} />
+          <Stat label={t("admin.user.libraryCount")} value={s.libraryCount.toLocaleString(locale())} />
         </div>
         <HourBars hours={s.hours} />
         <div className="grid gap-4 md:grid-cols-2">
           <div className="rounded-card bg-surface-1 p-4">
-            <h4 className="mb-2 text-label text-fg-muted">Nghệ sĩ nghe nhiều</h4>
+            <h4 className="mb-2 text-label text-fg-muted">{t("admin.user.topArtists")}</h4>
             {s.topArtists.length ? (
               <ol className="flex flex-col gap-1.5">
                 {s.topArtists.map((a, i) => (
@@ -302,30 +306,30 @@ function UserDetail({ id }: { id: string }) {
                 ))}
               </ol>
             ) : (
-              <p className="text-body-sm text-fg-muted">Chưa có lượt nghe.</p>
+              <p className="text-body-sm text-fg-muted">{t("admin.user.noPlays")}</p>
             )}
           </div>
           <div className="rounded-card bg-surface-1 p-4">
-            <h4 className="mb-2 text-label text-fg-muted">Bài nghe nhiều</h4>
+            <h4 className="mb-2 text-label text-fg-muted">{t("admin.user.topTracks")}</h4>
             {s.topTracks.length ? (
               <ol className="flex flex-col gap-1.5">
-                {s.topTracks.slice(0, 10).map((t) => (
-                  <li key={t.id} className="flex items-center gap-2 text-body-sm">
-                    <Cover trackId={t.id} hasCover={t.hasCover} size={28} />
+                {s.topTracks.slice(0, 10).map((tr) => (
+                  <li key={tr.id} className="flex items-center gap-2 text-body-sm">
+                    <Cover trackId={tr.id} hasCover={tr.hasCover} size={28} />
                     <span className="min-w-0 flex-1 truncate">
-                      {t.title} <span className="text-fg-muted">· {t.artist}</span>
+                      {tr.title} <span className="text-fg-muted">· {tr.artist}</span>
                     </span>
-                    <span className="text-fg-muted tabular">{t.plays}</span>
+                    <span className="text-fg-muted tabular">{tr.plays}</span>
                   </li>
                 ))}
               </ol>
             ) : (
-              <p className="text-body-sm text-fg-muted">Chưa có lượt nghe.</p>
+              <p className="text-body-sm text-fg-muted">{t("admin.user.noPlays")}</p>
             )}
           </div>
         </div>
         <div className="rounded-card bg-surface-1 p-4">
-          <h4 className="mb-2 text-label text-fg-muted">Nghe gần đây</h4>
+          <h4 className="mb-2 text-label text-fg-muted">{t("admin.user.recent")}</h4>
           {history.data?.length ? (
             <ul className="flex flex-col gap-1.5">
               {history.data.slice(0, 15).map((h, i) => (
@@ -334,43 +338,45 @@ function UserDetail({ id }: { id: string }) {
                   <span className="min-w-0 flex-1 truncate">
                     {h.track.title} <span className="text-fg-muted">· {h.track.artist}</span>
                   </span>
-                  <span className="text-caption text-fg-muted">{h.action === "skip" ? "bỏ qua" : h.action === "repeat" ? "nghe lại" : fmtMs(h.playedMs)}</span>
+                  <span className="text-caption text-fg-muted">
+                    {h.action === "skip" ? t("admin.user.actionSkip") : h.action === "repeat" ? t("admin.user.actionRepeat") : fmtMs(h.playedMs)}
+                  </span>
                 </li>
               ))}
             </ul>
           ) : (
-            <p className="text-body-sm text-fg-muted">Chưa có.</p>
+            <p className="text-body-sm text-fg-muted">{t("admin.user.none")}</p>
           )}
         </div>
       </section>
 
       {/* library */}
       <section className="flex flex-col gap-2">
-        <h3 className="text-title-3">Thư viện ({lib.length} bài)</h3>
+        <h3 className="text-title-3">{t("admin.user.libraryTitle", { count: tn("common.songs", lib.length) })}</h3>
         <ul className="flex flex-col rounded-card bg-surface-1 p-2">
-          {(showAll ? lib : lib.slice(0, 12)).map((t) => (
-            <li key={t.id} className="flex items-center gap-3 rounded-control px-2 py-1.5 hover:bg-surface-2">
-              <Cover trackId={t.id} hasCover={t.hasCover} size={36} />
+          {(showAll ? lib : lib.slice(0, 12)).map((tr) => (
+            <li key={tr.id} className="flex items-center gap-3 rounded-control px-2 py-1.5 hover:bg-surface-2">
+              <Cover trackId={tr.id} hasCover={tr.hasCover} size={36} />
               <span className="min-w-0 flex-1">
-                <span className="block truncate text-body-sm">{t.title}</span>
+                <span className="block truncate text-body-sm">{tr.title}</span>
                 <span className="block truncate text-caption text-fg-muted">
-                  {t.artist} · {t.playCount} lượt · thêm {fmtAgo(t.addedAt)}
+                  {tr.artist} · {tn("admin.user.trackPlays", tr.playCount)} · {t("admin.user.trackAdded", { ago: fmtAgo(tr.addedAt) })}
                 </span>
               </span>
               <Button
                 size="sm"
                 variant="ghost"
                 icon="trash"
-                aria-label={`Bỏ ${t.title} khỏi thư viện của ${u.email}`}
-                onClick={() => act(() => api(`/api/admin/users/${u.id}/tracks/${t.id}`, { method: "DELETE" }), "Đã bỏ bài khỏi thư viện của người này")}
+                aria-label={t("admin.user.removeTrackAria", { title: tr.title, email: u.email })}
+                onClick={() => act(() => api(`/api/admin/users/${u.id}/tracks/${tr.id}`, { method: "DELETE" }), t("admin.user.trackRemoved"))}
               />
             </li>
           ))}
-          {!lib.length && <li className="p-3 text-body-sm text-fg-muted">Thư viện trống.</li>}
+          {!lib.length && <li className="p-3 text-body-sm text-fg-muted">{t("admin.user.libraryEmpty")}</li>}
           {lib.length > 12 && !showAll && (
             <li>
               <button className="focus-ring state-layer h-10 w-full rounded-control text-label text-fg-muted" onClick={() => setShowAll(true)}>
-                Hiện cả {lib.length} bài
+                {tn("admin.user.showAllTracks", lib.length)}
               </button>
             </li>
           )}
@@ -379,44 +385,44 @@ function UserDetail({ id }: { id: string }) {
 
       {/* manage */}
       <section className="flex flex-col gap-3 rounded-card bg-surface-1 p-4">
-        <h3 className="text-title-3">Quản lý</h3>
-        <Line label="Vai trò" hint={self ? "Không tự đổi vai trò của chính mình." : "Admin có mọi quyền của người nghe, cộng trang Quản trị."}>
-          <select className="input h-11" value={u.role} disabled={self} onChange={(e) => patch({ role: e.target.value }, "Đã đổi vai trò")} aria-label="Vai trò">
-            <option value="listener">Người nghe</option>
-            <option value="admin">Admin</option>
+        <h3 className="text-title-3">{t("admin.user.manage")}</h3>
+        <Line label={t("admin.users.role")} hint={t(self ? "admin.user.roleHintSelf" : "admin.user.roleHint")}>
+          <select className="input h-11" value={u.role} disabled={self} onChange={(e) => patch({ role: e.target.value }, t("admin.user.roleChanged"))} aria-label={t("admin.users.role")}>
+            <option value="listener">{t("admin.role.listener")}</option>
+            <option value="admin">{t("admin.role.admin")}</option>
           </select>
         </Line>
-        <Line label="Giới hạn dung lượng" hint="Hạ thấp hơn mức đang dùng: người này không tải thêm được (hoặc tự dọn nếu bật Tự động tải nhạc).">
-          <LimitSelect mb={u.storageLimitMb} onChange={(mb) => patch({ storageLimitMb: mb }, "Đã đổi giới hạn")} />
+        <Line label={t("admin.users.storageLimit")} hint={t("admin.user.storageLimitHint")}>
+          <LimitSelect mb={u.storageLimitMb} onChange={(mb) => patch({ storageLimitMb: mb }, t("admin.user.limitChanged"))} />
         </Line>
-        <Line label="Đặt mật khẩu mới" hint="Người này bị đăng xuất khỏi mọi thiết bị.">
+        <Line label={t("admin.user.setPassword")} hint={t("admin.user.setPasswordHint")}>
           <div className="flex gap-2">
-            <input className="input h-11 min-w-0 flex-1" type="password" autoComplete="new-password" placeholder="Ít nhất 8 ký tự" value={pw} onChange={(e) => setPw(e.target.value)} />
-            <Button disabled={pw.length < 8} onClick={() => patch({ password: pw }, "Đã đặt mật khẩu mới").then(() => setPw(""))}>
-              Đặt
+            <input className="input h-11 min-w-0 flex-1" type="password" autoComplete="new-password" placeholder={t("admin.user.pwPlaceholder")} value={pw} onChange={(e) => setPw(e.target.value)} />
+            <Button disabled={pw.length < 8} onClick={() => patch({ password: pw }, t("admin.user.pwSet")).then(() => setPw(""))}>
+              {t("admin.user.setBtn")}
             </Button>
           </div>
         </Line>
         {!self && (
           <div className="flex flex-wrap gap-2 pt-2">
-            <Button icon="logout" onClick={() => patch({ signOut: true }, "Đã đăng xuất người này khỏi mọi thiết bị")}>
-              Đăng xuất mọi thiết bị
+            <Button icon="logout" onClick={() => patch({ signOut: true }, t("admin.user.signedOutAll"))}>
+              {t("admin.user.signOutAll")}
             </Button>
-            <Button variant={u.disabled ? "secondary" : "danger"} icon="lock" onClick={() => patch({ disabled: !u.disabled }, u.disabled ? "Đã mở khoá" : "Đã khoá tài khoản")}>
-              {u.disabled ? "Mở khoá" : "Khoá tài khoản"}
+            <Button variant={u.disabled ? "secondary" : "danger"} icon="lock" onClick={() => patch({ disabled: !u.disabled }, t(u.disabled ? "admin.user.unlocked" : "admin.user.locked"))}>
+              {t(u.disabled ? "admin.user.unlock" : "admin.user.lock")}
             </Button>
           </div>
         )}
         <div className="flex flex-wrap gap-2">
           <Button variant="danger" onClick={() => setConfirm("history")}>
-            Xoá lịch sử nghe
+            {t("admin.user.clearHistory")}
           </Button>
           <Button variant="danger" onClick={() => setConfirm("all")}>
-            Xoá toàn bộ dữ liệu
+            {t("admin.user.clearAll")}
           </Button>
           {!self && (
             <Button variant="danger" icon="trash" onClick={() => setConfirm("delete")}>
-              Xoá tài khoản
+              {t("admin.user.deleteAccount")}
             </Button>
           )}
         </div>
@@ -426,18 +432,16 @@ function UserDetail({ id }: { id: string }) {
         <Dialog
           open
           onOpenChange={(o) => !o && setConfirm(null)}
-          title={confirm === "delete" ? `Xoá tài khoản ${u.email}?` : confirm === "all" ? "Xoá toàn bộ dữ liệu của người này?" : "Xoá lịch sử nghe của người này?"}
-          description={
+          title={
             confirm === "delete"
-              ? "Xoá tài khoản cùng thư viện, playlist, lịch sử. File nhạc chỉ bị xoá nếu không còn ai khác có."
-              : confirm === "all"
-                ? "Thư viện, playlist, lượt thích, lịch sử và danh sách tải của người này bị xoá. Tài khoản vẫn còn."
-                : "Thống kê và dữ liệu gợi ý của người này về trống. Nhạc và playlist giữ nguyên."
+              ? t("admin.user.confirmDeleteTitle", { email: u.email })
+              : t(confirm === "all" ? "admin.user.confirmAllTitle" : "admin.user.confirmHistoryTitle")
           }
+          description={t(confirm === "delete" ? "admin.user.confirmDeleteDesc" : confirm === "all" ? "admin.user.confirmAllDesc" : "admin.user.confirmHistoryDesc")}
           footer={
             <>
               <Button variant="ghost" onClick={() => setConfirm(null)}>
-                Huỷ
+                {t("common.cancel")}
               </Button>
               <Button
                 variant="danger"
@@ -448,15 +452,15 @@ function UserDetail({ id }: { id: string }) {
                   if (c === "delete") {
                     const r = await act(() => api<{ filesFreed: number }>(`/api/admin/users/${u.id}`, { method: "DELETE" }));
                     if (r) {
-                      toast(`Đã xoá tài khoản, giải phóng ${r.filesFreed} file`, "success");
+                      toast(tn("admin.user.accountDeleted", r.filesFreed), "success");
                       back();
                     }
                   } else {
-                    await act(() => api(`/api/admin/users/${u.id}/reset`, { method: "POST", json: { scope: c } }), "Đã xoá");
+                    await act(() => api(`/api/admin/users/${u.id}/reset`, { method: "POST", json: { scope: c } }), t("admin.user.deleted"));
                   }
                 }}
               >
-                Xoá
+                {t("common.delete")}
               </Button>
             </>
           }
@@ -480,10 +484,10 @@ function HourBars({ hours }: { hours: number[] }) {
   const max = Math.max(1, ...hours);
   return (
     <div className="rounded-card bg-surface-1 p-4">
-      <h4 className="mb-2 text-label text-fg-muted">Giờ hay nghe</h4>
-      <div className="flex h-20 items-end gap-0.5" role="img" aria-label={`Lượt nghe theo giờ, nhiều nhất lúc ${hours.indexOf(Math.max(...hours))} giờ`}>
+      <h4 className="mb-2 text-label text-fg-muted">{t("admin.hours.title")}</h4>
+      <div className="flex h-20 items-end gap-0.5" role="img" aria-label={t("admin.hours.aria", { hour: hours.indexOf(Math.max(...hours)) })}>
         {hours.map((n, h) => (
-          <div key={h} className="flex flex-1 flex-col items-center justify-end gap-1" title={`${h} giờ: ${n} lượt`}>
+          <div key={h} className="flex flex-1 flex-col items-center justify-end gap-1" title={tn("admin.hours.barTitle", n, { hour: h })}>
             <div className="w-full rounded-t-xs bg-accent" style={{ height: `${(n / max) * 100}%`, minHeight: n ? 2 : 0 }} />
           </div>
         ))}
@@ -533,67 +537,72 @@ function SystemTab() {
   return (
     <div className="grid gap-4 pb-8 md:grid-cols-2">
       <Card title="yt-dlp" icon="download" status={d.ytdlp.ready ? "ok" : "bad"}>
-        <KV k="Phiên bản" v={d.ytdlp.version || (d.ytdlp.ready ? "?" : "chưa sẵn sàng")} />
-        <KV k="Quản lý" v={d.ytdlp.managed ? "Vang tự cập nhật hằng ngày" : "bản cài sẵn / YTDLP_PATH"} />
-        <KV k="JS runtime" v={d.ytdlp.jsRuntime || "không có"} />
+        <KV k={t("admin.sys.ytdlp.version")} v={d.ytdlp.version || (d.ytdlp.ready ? "?" : t("admin.sys.ytdlp.notReady"))} />
+        <KV k={t("admin.sys.ytdlp.managed")} v={t(d.ytdlp.managed ? "admin.sys.ytdlp.autoUpdate" : "admin.sys.ytdlp.external")} />
+        <KV k="JS runtime" v={d.ytdlp.jsRuntime || t("admin.sys.ytdlp.none")} />
         <KV k="ffmpeg" v={d.ffmpeg} mono />
-        {d.ytdlp.error && <p className="text-body-sm text-danger">{d.ytdlp.error}</p>}
+        {d.ytdlp.error && <p className="text-body-sm text-danger">{tsv(d.ytdlp.error)}</p>}
         <Button
           icon="retry"
           loading={busy === "yt"}
           disabled={!d.ytdlp.managed}
-          onClick={() => run("yt", () => act(() => api<{ version: string }>("/api/admin/system/ytdlp-update", { method: "POST" }), "Đã cập nhật yt-dlp"))}
+          onClick={() => run("yt", () => act(() => api<{ version: string }>("/api/admin/system/ytdlp-update", { method: "POST" }), t("admin.sys.ytdlp.updated")))}
         >
-          Cập nhật ngay
+          {t("admin.sys.ytdlp.updateNow")}
         </Button>
       </Card>
 
-      <Card title="Lưu trữ" icon="library">
-        <KV k="Nhạc" v={`${fmtBytes(d.storage.musicBytes)} · ${d.storage.musicFiles} file`} />
-        <KV k="Ảnh bìa" v={fmtBytes(d.storage.coverBytes)} />
-        <KV k="Cơ sở dữ liệu" v={fmtBytes(d.storage.dbBytes)} />
-        <KV k="Bài trên máy chủ" v={`${d.storage.tracks} (dùng chung giữa các tài khoản)`} />
-        <KV k="Bài không ai có" v={String(d.storage.orphanTracks)} />
-        <KV k="Thư mục dữ liệu" v={d.dataDir} mono />
+      <Card title={t("admin.sys.storage.title")} icon="library">
+        <KV k={t("admin.sys.storage.music")} v={tn("admin.sys.storage.musicVal", d.storage.musicFiles, { size: fmtBytes(d.storage.musicBytes) })} />
+        <KV k={t("admin.sys.storage.covers")} v={fmtBytes(d.storage.coverBytes)} />
+        <KV k={t("admin.sys.storage.db")} v={fmtBytes(d.storage.dbBytes)} />
+        <KV k={t("admin.sys.storage.tracks")} v={t("admin.sys.storage.tracksVal", { n: d.storage.tracks.toLocaleString(locale()) })} />
+        <KV k={t("admin.sys.storage.orphans")} v={d.storage.orphanTracks.toLocaleString(locale())} />
+        <KV k={t("admin.sys.storage.dataDir")} v={d.dataDir} mono />
         <Button
           icon="trash"
           loading={busy === "clean"}
           onClick={() =>
             run("clean", async () => {
               const r = await act(() => api<{ orphanTracks: number; strayFiles: number; strayBytes: number; oldJobs: number }>("/api/admin/system/cleanup", { method: "POST" }));
-              if (r) toast(`Đã dọn ${r.orphanTracks} bài không ai có, ${r.strayFiles} file thừa (${fmtBytes(r.strayBytes)}), ${r.oldJobs} job cũ`, "success");
+              if (r) {
+                toast(t("admin.sys.storage.cleaned", { orphans: r.orphanTracks, files: r.strayFiles, size: fmtBytes(r.strayBytes), jobs: r.oldJobs }), "success");
+              }
             })
           }
         >
-          Dọn dẹp
+          {t("admin.sys.storage.cleanup")}
         </Button>
       </Card>
 
-      <Card title="Phân tích nền" icon="stats">
-        <KV k="Đo âm lượng còn chờ" v={String(d.analysis.loudnessPending)} />
-        <KV k="Đặc trưng âm thanh" v={`${d.analysis.featuresReady} xong · còn ${d.analysis.featuresPending}`} />
-        <KV k="Nguồn nghệ sĩ tương tự" v={d.recs.provider === "lastfm" ? "Last.fm" : "Deezer"} />
-        <KV k="Tự động tải lần tới" v={d.autoNext ? new Date(d.autoNext).toLocaleString("vi-VN") : "—"} />
+      <Card title={t("admin.sys.analysis.title")} icon="stats">
+        <KV k={t("admin.sys.analysis.loudness")} v={d.analysis.loudnessPending.toLocaleString(locale())} />
+        <KV
+          k={t("admin.sys.analysis.features")}
+          v={t("admin.sys.analysis.featuresVal", { ready: d.analysis.featuresReady.toLocaleString(locale()), pending: d.analysis.featuresPending.toLocaleString(locale()) })}
+        />
+        <KV k={t("admin.sys.analysis.similarSource")} v={d.recs.provider === "lastfm" ? "Last.fm" : "Deezer"} />
+        <KV k={t("admin.sys.analysis.autoNext")} v={d.autoNext ? new Date(d.autoNext).toLocaleString(locale()) : "—"} />
         <Button
           icon="retry"
           loading={busy === "cache"}
           onClick={() =>
             run("cache", async () => {
               const r = await act(() => api<{ removed: number }>("/api/admin/system/clear-cache", { method: "POST" }));
-              if (r) toast(`Đã xoá ${r.removed} mục cache Deezer / Last.fm`, "success");
+              if (r) toast(tn("admin.sys.analysis.cacheCleared", r.removed), "success");
             })
           }
         >
-          Xoá cache gợi ý
+          {t("admin.sys.analysis.clearCache")}
         </Button>
       </Card>
 
-      <Card title="Email" icon="mail" status={d.mail.configured ? "ok" : "warn"}>
-        <KV k="Trạng thái" v={d.mail.configured ? "Đã cấu hình" : "Chưa cấu hình (OTP, quên mật khẩu tắt)"} />
-        <KV k="Máy chủ SMTP" v={d.mail.host} />
-        <KV k="Gửi từ" v={d.mail.from || "—"} />
-        <KV k="Địa chỉ công khai" v={d.publicUrl || "chưa đặt PUBLIC_URL"} />
-        <p className="text-caption text-fg-muted">Cấu hình trong file .env (SMTP_USERNAME, SMTP_PASSWORD) rồi khởi động lại máy chủ.</p>
+      <Card title={t("admin.sys.mail.title")} icon="mail" status={d.mail.configured ? "ok" : "warn"}>
+        <KV k={t("admin.sys.mail.status")} v={t(d.mail.configured ? "admin.sys.mail.configured" : "admin.sys.mail.notConfigured")} />
+        <KV k={t("admin.sys.mail.smtpHost")} v={d.mail.host} />
+        <KV k={t("admin.sys.mail.from")} v={d.mail.from || "—"} />
+        <KV k={t("admin.sys.mail.publicUrl")} v={d.publicUrl || t("admin.sys.mail.noPublicUrl")} />
+        <p className="text-caption text-fg-muted">{t("admin.sys.mail.envNote")}</p>
         <Button
           icon="mail"
           loading={busy === "mail"}
@@ -601,23 +610,23 @@ function SystemTab() {
           onClick={() =>
             run("mail", async () => {
               const r = await act(() => api<{ to: string }>("/api/admin/system/test-mail", { method: "POST" }));
-              if (r) toast(`Đã gửi email thử tới ${r.to}`, "success");
+              if (r) toast(t("admin.sys.mail.testSent", { to: r.to }), "success");
             })
           }
         >
-          Gửi email thử
+          {t("admin.sys.mail.sendTest")}
         </Button>
       </Card>
 
-      <Card title="Định dạng tải về" icon="music-note">
-        <p className="text-body-sm text-fg-muted">Áp dụng cho mọi bài tải mới (file dùng chung). m4a (AAC) chạy mọi nơi kể cả iPhone; Opus nhỏ hơn ở cùng chất lượng.</p>
+      <Card title={t("admin.sys.format.title")} icon="music-note">
+        <p className="text-body-sm text-fg-muted">{t("admin.sys.format.note")}</p>
         {srv.data && (
           <div className="grid grid-cols-2 gap-3">
             <select
               className="input h-11"
               value={srv.data.audioFormat}
-              aria-label="Định dạng"
-              onChange={(e) => act(() => api("/api/admin/settings", { method: "PUT", json: { ...srv.data, audioFormat: e.target.value } }), "Đã lưu")}
+              aria-label={t("admin.sys.format.formatAria")}
+              onChange={(e) => act(() => api("/api/admin/settings", { method: "PUT", json: { ...srv.data, audioFormat: e.target.value } }), t("common.saved"))}
             >
               <option value="m4a">m4a</option>
               <option value="opus">opus</option>
@@ -625,8 +634,8 @@ function SystemTab() {
             <select
               className="input h-11"
               value={srv.data.bitrate}
-              aria-label="Chất lượng khi chuyển mã"
-              onChange={(e) => act(() => api("/api/admin/settings", { method: "PUT", json: { ...srv.data, bitrate: +e.target.value } }), "Đã lưu")}
+              aria-label={t("admin.sys.format.bitrateAria")}
+              onChange={(e) => act(() => api("/api/admin/settings", { method: "PUT", json: { ...srv.data, bitrate: +e.target.value } }), t("common.saved"))}
             >
               {[128, 160, 192, 256, 320].map((b) => (
                 <option key={b} value={b}>
@@ -638,9 +647,9 @@ function SystemTab() {
         )}
       </Card>
 
-      <Card title="Người dùng" icon="users">
-        <KV k="Tài khoản" v={`${d.users.total} (${d.users.admins} admin)`} />
-        <KV k="Đang mở app" v={String(d.users.online)} />
+      <Card title={t("admin.tabs.users")} icon="users">
+        <KV k={t("admin.sys.users.accounts")} v={tn("admin.sys.users.accountsVal", d.users.admins, { total: d.users.total.toLocaleString(locale()) })} />
+        <KV k={t("admin.users.online")} v={d.users.online.toLocaleString(locale())} />
         <KV k="Go" v={d.go} />
       </Card>
 
@@ -651,31 +660,29 @@ function SystemTab() {
       <section className="rounded-card bg-surface-1 p-4 md:col-span-2">
         <h3 className="mb-2 flex items-center gap-2 text-title-3">
           <Icon name="download" size={20} className="text-accent" />
-          Hàng chờ tải của mọi người
-          <span className="text-body-sm font-normal text-fg-muted">
-            · {active} đang chạy · {d.jobs.error ?? 0} lỗi
-          </span>
+          {t("admin.sys.jobs.title")}
+          <span className="text-body-sm font-normal text-fg-muted">· {t("admin.sys.jobs.summary", { active, failed: d.jobs.error ?? 0 })}</span>
         </h3>
         {jobs.data?.jobs.length ? (
           <ul className="flex flex-col">
             {jobs.data.jobs.map((j) => (
               <li key={j.id} className="flex items-center gap-3 border-t border-line py-2 first:border-0">
                 <span className="min-w-0 flex-1">
-                  <span className="block truncate text-body-sm">{j.title || j.url}</span>
+                  <span className="block truncate text-body-sm">{j.title ? tsv(j.title) : j.url}</span>
                   <span className={`block truncate text-caption ${j.status === "error" ? "text-danger" : "text-fg-muted"}`}>
-                    {j.email} · {j.status === "error" ? j.error : j.stage || j.status}
+                    {j.email} · {j.status === "error" ? tsv(j.error) : tsv(j.stage || j.status)}
                     {j.status === "downloading" && j.progress > 0 ? ` ${Math.round(j.progress * 100)}%` : ""}
                   </span>
                 </span>
                 {j.status === "error" && (
-                  <Button size="sm" icon="retry" aria-label="Thử lại" onClick={() => act(() => api(`/api/downloads/${j.id}/retry`, { method: "POST" }))} />
+                  <Button size="sm" icon="retry" aria-label={t("common.retry")} onClick={() => act(() => api(`/api/downloads/${j.id}/retry`, { method: "POST" }))} />
                 )}
-                <Button size="sm" variant="ghost" icon="close" aria-label="Huỷ / xoá job" onClick={() => act(() => api(`/api/downloads/${j.id}`, { method: "DELETE" }))} />
+                <Button size="sm" variant="ghost" icon="close" aria-label={t("admin.sys.jobs.cancelAria")} onClick={() => act(() => api(`/api/downloads/${j.id}`, { method: "DELETE" }))} />
               </li>
             ))}
           </ul>
         ) : (
-          <p className="text-body-sm text-fg-muted">Không có job nào đang chạy hay lỗi.</p>
+          <p className="text-body-sm text-fg-muted">{t("admin.sys.jobs.empty")}</p>
         )}
       </section>
     </div>
@@ -689,7 +696,10 @@ function Card({ title, icon, status, children }: { title: string; icon: IconName
         <Icon name={icon} size={20} className="text-accent" />
         <span className="flex-1">{title}</span>
         {status && (
-          <span className={`size-2.5 rounded-full ${status === "ok" ? "bg-success" : status === "warn" ? "bg-warning" : "bg-danger"}`} aria-label={status === "ok" ? "Ổn" : "Cần xem"} />
+          <span
+            className={`size-2.5 rounded-full ${status === "ok" ? "bg-success" : status === "warn" ? "bg-warning" : "bg-danger"}`}
+            aria-label={t(status === "ok" ? "admin.sys.statusOk" : "admin.sys.statusCheck")}
+          />
         )}
       </h3>
       {children}

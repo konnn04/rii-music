@@ -5,6 +5,7 @@ import { api, type AutoDLStatus, type Me, type Settings } from "@/lib/api";
 import { useQuery } from "@tanstack/react-query";
 import { fmtAgo, fmtBytes } from "@/lib/format";
 import { queryClient, useMe, useSaveSettings, useSettings } from "@/lib/queries";
+import { t, tn, tsv } from "@/i18n";
 import { Button } from "@/components/ui/Button";
 import { Dialog } from "@/components/ui/Dialog";
 import { toast } from "@/components/ui/Toast";
@@ -25,12 +26,12 @@ export function SettingsPage() {
   return (
     <div>
       <PageHeader
-        title="Cài đặt"
+        title={t("common.nav.settings")}
         actions={
           <div className="flex items-center gap-1 lg:hidden">
             {isAdmin && (
               <Link to="/admin" className="focus-ring state-layer flex h-10 items-center gap-1.5 rounded-full bg-surface-1 px-3 text-label">
-                <Icon name="shield" size={18} className="text-accent" /> Quản trị
+                <Icon name="shield" size={18} className="text-accent" /> {t("common.nav.admin")}
               </Link>
             )}
             <LogoutButton />
@@ -41,11 +42,14 @@ export function SettingsPage() {
         <AccountSettings />
         <LanguageSettings />
 
-        <Group title="Phát nhạc" icon="play">
-          <Row label="Chuyển tiếp (crossfade)" hint={data.crossfadeSec === 0 ? "Tắt — chuyển bài ngay" : `Hai bài chồng nhau ${cf ?? data.crossfadeSec} giây`}>
+        <Group title={t("settings.playback.title")} icon="play">
+          <Row
+            label={t("settings.playback.crossfade")}
+            hint={data.crossfadeSec === 0 ? t("settings.playback.crossfadeOff") : tn("settings.playback.crossfadeOn", cf ?? data.crossfadeSec)}
+          >
             <div className="flex w-full items-center gap-3 md:w-56">
               <Slider
-                label="Thời lượng crossfade"
+                label={t("settings.playback.crossfadeDuration")}
                 value={cf ?? data.crossfadeSec}
                 max={12}
                 step={1}
@@ -55,16 +59,16 @@ export function SettingsPage() {
                   setCf(null);
                 }}
                 className="flex-1"
-                valueText={`${cf ?? data.crossfadeSec} giây`}
+                valueText={tn("settings.playback.seconds", cf ?? data.crossfadeSec)}
               />
               <span className="w-8 text-right text-label tabular">{cf ?? data.crossfadeSec}s</span>
             </div>
           </Row>
-          <Toggle label="Liền mạch trong album (gapless)" hint="Không crossfade khi hai bài liền nhau cùng album — hợp với album live, album liền mạch." on={data.gaplessAlbum} set={(v) => set({ gaplessAlbum: v })} />
-          <Toggle label="Chuẩn hoá âm lượng" hint="Đưa mọi bài về cùng độ to (−14 LUFS, đo ngầm ngay sau khi tải về)." on={data.normalize} set={(v) => set({ normalize: v })} />
+          <Toggle label={t("settings.playback.gapless")} hint={t("settings.playback.gaplessHint")} on={data.gaplessAlbum} set={(v) => set({ gaplessAlbum: v })} />
+          <Toggle label={t("settings.playback.normalize")} hint={t("settings.playback.normalizeHint")} on={data.normalize} set={(v) => set({ normalize: v })} />
           <Toggle
-            label="Chế độ âm thanh đơn giản"
-            hint={`Không dùng Web Audio. Bật nếu nhạc tắt khi khoá màn hình (hay gặp trên iPhone). ${isIOS ? "Trên iPhone, chế độ này không có crossfade. " : ""}Áp dụng cho thiết bị này, trang sẽ tải lại.`}
+            label={t("settings.playback.simpleMode")}
+            hint={t(isIOS ? "settings.playback.simpleModeHintIos" : "settings.playback.simpleModeHint")}
             on={engine.simpleMode}
             set={(v) => engine.setSimpleMode(v)}
           />
@@ -72,14 +76,14 @@ export function SettingsPage() {
 
         <AutoDownloadSettings data={data} set={set} />
 
-        <Group title="Giao diện" icon="sun">
-          <Row label="Chủ đề">
+        <Group title={t("settings.appearance.title")} icon="sun">
+          <Row label={t("settings.appearance.theme")}>
             <Segmented
               value={data.theme}
               options={[
-                ["dark", "Tối"],
-                ["light", "Sáng"],
-                ["system", "Theo máy"],
+                ["dark", t("settings.appearance.dark")],
+                ["light", t("settings.appearance.light")],
+                ["system", t("settings.appearance.system")],
               ]}
               onChange={(v) => set({ theme: v as Settings["theme"] })}
             />
@@ -90,16 +94,16 @@ export function SettingsPage() {
         <ApiTokens />
         <DataSettings />
 
-        <Group title="Phím tắt (PC)" icon="keyboard">
+        <Group title={t("settings.shortcuts.title")} icon="keyboard">
           <dl className="grid grid-cols-[auto_1fr] gap-x-6 gap-y-2 py-2 text-body-sm">
             {[
-              ["Space", "Phát / tạm dừng"],
-              ["← / →", "Tua 5 giây"],
-              ["Shift + ← / →", "Bài trước / bài sau"],
-              ["M", "Tắt / bật tiếng"],
-              ["L", "Lời bài hát toàn màn hình"],
-              ["Q", "Hàng đợi"],
-              ["/", "Tìm kiếm"],
+              ["Space", t("settings.shortcuts.playPause")],
+              ["← / →", t("settings.shortcuts.seek")],
+              ["Shift + ← / →", t("settings.shortcuts.prevNext")],
+              ["M", t("settings.shortcuts.mute")],
+              ["L", t("settings.shortcuts.lyrics")],
+              ["Q", t("settings.shortcuts.queue")],
+              ["/", t("common.nav.search")],
             ].map(([k, v]) => (
               <div key={k} className="contents">
                 <dt>
@@ -122,39 +126,36 @@ function AutoDownloadSettings({ data, set }: { data: Settings; set: (p: Partial<
   const s = st.data;
   const pct = s ? Math.min(100, (s.usedBytes / s.limitBytes) * 100) : 0;
   return (
-    <Group title="Tự động tải nhạc" icon="radio">
+    <Group title={t("settings.autoDl.title")} icon="radio">
       <Toggle
-        label="Tự động tải nhạc"
-        hint="Cứ 6 giờ xem lại thói quen nghe và tải trước bài của nghệ sĩ bạn hay nghe và nghệ sĩ tương tự, tối đa 8 bài mỗi lần."
+        label={t("settings.autoDl.title")}
+        hint={t("settings.autoDl.hint")}
         on={data.autoDownload}
         set={(v) => set({ autoDownload: v })}
       />
-      <p className="py-3 text-body-sm text-fg-muted">
-        Khi thư viện vượt giới hạn dung lượng (admin đặt cho tài khoản của bạn), Vang tự bỏ bài ít khả năng nghe nhất. Không bao giờ bỏ bài đã thích, bài trong
-        playlist, bài thêm trong 3 ngày qua hoặc nghe trong 14 ngày qua.
-      </p>
+      <p className="py-3 text-body-sm text-fg-muted">{t("settings.autoDl.evictionNote")}</p>
       {s && (
         <div className="flex flex-col gap-3 py-4">
           <div className="flex items-baseline justify-between text-body-sm">
-            <span>
-              Đang dùng {fmtBytes(s.usedBytes)} / {fmtBytes(s.limitBytes)}
-            </span>
+            <span>{t("settings.autoDl.used", { used: fmtBytes(s.usedBytes), limit: fmtBytes(s.limitBytes) })}</span>
             <span className="text-fg-muted">
-              {s.tracks} bài · {s.autoTracks} bài tự tải
+              {tn("common.songs", s.tracks)} · {tn("settings.autoDl.autoCount", s.autoTracks)}
             </span>
           </div>
-          <div className="h-2 overflow-hidden rounded-full bg-surface-3" role="meter" aria-label="Dung lượng nhạc đã dùng" aria-valuenow={Math.round(pct)} aria-valuemin={0} aria-valuemax={100}>
+          <div className="h-2 overflow-hidden rounded-full bg-surface-3" role="meter" aria-label={t("settings.storageMeter")} aria-valuenow={Math.round(pct)} aria-valuemin={0} aria-valuemax={100}>
             <div className={`h-full rounded-full ${pct >= 100 ? "bg-danger" : "bg-accent"}`} style={{ width: `${pct}%` }} />
           </div>
           {data.autoDownload && (
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div className="min-w-0 text-body-sm text-fg-muted">
                 {s.running
-                  ? "Đang xem lại thói quen nghe…"
+                  ? t("settings.autoDl.running")
                   : s.lastRun
-                    ? `Lần chạy gần nhất ${fmtAgo(s.lastRun)}: ${s.lastMessage}${s.lastEvicted ? `, đã xoá ${s.lastEvicted} bài ít nghe` : ""}.`
-                    : "Chưa chạy lần nào."}
-                {s.pending > 0 && ` Đang tải ${s.pending} bài.`}
+                    ? s.lastEvicted
+                      ? tn("settings.autoDl.lastRunEvicted", s.lastEvicted, { ago: fmtAgo(s.lastRun), msg: tsv(s.lastMessage) })
+                      : t("settings.autoDl.lastRun", { ago: fmtAgo(s.lastRun), msg: tsv(s.lastMessage) })
+                    : t("settings.autoDl.neverRun")}
+                {s.pending > 0 && ` ${tn("settings.autoDl.pending", s.pending)}`}
               </div>
               <Button
                 size="sm"
@@ -164,13 +165,13 @@ function AutoDownloadSettings({ data, set }: { data: Settings; set: (p: Partial<
                   setRunning(true);
                   try {
                     await api("/api/autodl/run", { method: "POST" });
-                    toast("Đang xem lại thói quen nghe và chọn bài để tải", "success");
+                    toast(t("settings.autoDl.startedToast"), "success");
                   } finally {
                     setRunning(false);
                   }
                 }}
               >
-                Chạy ngay
+                {t("settings.autoDl.runNow")}
               </Button>
             </div>
           )}
@@ -193,13 +194,13 @@ function AccountSettings() {
     const d = await api<Me>("/api/me", { method: "PATCH", json: { name: (name ?? "").trim() } });
     queryClient.setQueryData(["me"], d);
     setName(null);
-    toast("Đã lưu tên", "success");
+    toast(t("settings.account.nameSaved"), "success");
   };
   const changePw = async (e: React.FormEvent) => {
     e.preventDefault();
     setErr("");
     if (pw.next !== pw.confirm) {
-      setErr("Hai lần nhập mật khẩu mới không khớp");
+      setErr(t("settings.account.pwMismatch"));
       return;
     }
     setBusy(true);
@@ -207,7 +208,7 @@ function AccountSettings() {
       const d = await api<Me>("/api/me/password", { method: "POST", json: { current: pw.current, password: pw.next, confirm: pw.confirm } });
       queryClient.setQueryData(["me"], d);
       setPw({ current: "", next: "", confirm: "" });
-      toast(u.hasPassword ? "Đã đổi mật khẩu. Các thiết bị khác đã bị đăng xuất." : "Đã đặt mật khẩu", "success");
+      toast(t(u.hasPassword ? "settings.account.pwChanged" : "settings.account.pwSet"), "success");
     } catch (e) {
       setErr((e as Error).message);
     } finally {
@@ -215,58 +216,58 @@ function AccountSettings() {
     }
   };
   return (
-    <Group title="Tài khoản" icon="users">
+    <Group title={t("common.nav.account")} icon="users">
       <div className="flex items-center gap-3 py-4">
         <Avatar name={u.name || u.email} size={48} />
         <div className="min-w-0 flex-1">
-          <div className="truncate text-body">{u.name || "Chưa đặt tên"}</div>
+          <div className="truncate text-body">{u.name || t("settings.account.unnamed")}</div>
           <div className="truncate text-body-sm text-fg-muted">
-            {u.email} · {u.role === "admin" ? "Admin" : "Người nghe"}
+            {u.email} · {t(u.role === "admin" ? "settings.account.roleAdmin" : "settings.account.roleListener")}
           </div>
         </div>
       </div>
-      <Row label="Tên hiển thị">
+      <Row label={t("settings.account.displayName")}>
         <div className="flex w-full gap-2 md:w-72">
-          <input className="input h-11 min-w-0 flex-1" value={name ?? u.name} onChange={(e) => setName(e.target.value)} maxLength={80} placeholder="Tên của bạn" />
+          <input className="input h-11 min-w-0 flex-1" value={name ?? u.name} onChange={(e) => setName(e.target.value)} maxLength={80} placeholder={t("settings.account.namePlaceholder")} />
           <Button disabled={name === null || name.trim() === u.name} onClick={saveName}>
-            Lưu
+            {t("common.save")}
           </Button>
         </div>
       </Row>
       <div className="flex flex-col gap-2 py-4">
         <div className="flex items-baseline justify-between text-body-sm">
-          <span>Dung lượng nhạc</span>
+          <span>{t("settings.account.storage")}</span>
           <span className="text-fg-muted">
-            {fmtBytes(me.data.usedBytes)} / {fmtBytes(me.data.limitBytes)} · {me.data.tracks} bài
+            {fmtBytes(me.data.usedBytes)} / {fmtBytes(me.data.limitBytes)} · {tn("common.songs", me.data.tracks)}
           </span>
         </div>
-        <div className="h-2 overflow-hidden rounded-full bg-surface-3" role="meter" aria-label="Dung lượng nhạc đã dùng" aria-valuenow={Math.round(pct)} aria-valuemin={0} aria-valuemax={100}>
+        <div className="h-2 overflow-hidden rounded-full bg-surface-3" role="meter" aria-label={t("settings.storageMeter")} aria-valuenow={Math.round(pct)} aria-valuemin={0} aria-valuemax={100}>
           <div className={`h-full rounded-full ${pct >= 100 ? "bg-danger" : "bg-accent"}`} style={{ width: `${pct}%` }} />
         </div>
-        <p className="text-caption text-fg-muted">Giới hạn do admin đặt. Bài có sẵn trên máy chủ cũng tính vào thư viện của bạn.</p>
+        <p className="text-caption text-fg-muted">{t("settings.account.storageNote")}</p>
       </div>
       <form onSubmit={changePw} className="flex flex-col gap-3 py-4">
-        <div className="text-body">{u.hasPassword ? "Đổi mật khẩu" : "Đặt mật khẩu"}</div>
-        {!u.hasPassword && <p className="-mt-2 text-body-sm text-fg-muted">Bạn đang đăng nhập bằng mã qua email. Đặt mật khẩu để đăng nhập nhanh hơn.</p>}
+        <div className="text-body">{t(u.hasPassword ? "settings.account.changePw" : "settings.account.setPw")}</div>
+        {!u.hasPassword && <p className="-mt-2 text-body-sm text-fg-muted">{t("settings.account.setPwHint")}</p>}
         <input type="text" autoComplete="username" value={u.email} readOnly hidden />
         {u.hasPassword && (
-          <input className="input h-11" type="password" autoComplete="current-password" placeholder="Mật khẩu hiện tại" value={pw.current} onChange={(e) => setPw({ ...pw, current: e.target.value })} />
+          <input className="input h-11" type="password" autoComplete="current-password" placeholder={t("settings.account.currentPw")} value={pw.current} onChange={(e) => setPw({ ...pw, current: e.target.value })} />
         )}
-        <input className="input h-11" type="password" autoComplete="new-password" placeholder="Mật khẩu mới (ít nhất 8 ký tự)" value={pw.next} onChange={(e) => setPw({ ...pw, next: e.target.value })} />
-        <input className="input h-11" type="password" autoComplete="new-password" placeholder="Nhập lại mật khẩu mới" value={pw.confirm} onChange={(e) => setPw({ ...pw, confirm: e.target.value })} />
+        <input className="input h-11" type="password" autoComplete="new-password" placeholder={t("settings.account.newPw")} value={pw.next} onChange={(e) => setPw({ ...pw, next: e.target.value })} />
+        <input className="input h-11" type="password" autoComplete="new-password" placeholder={t("settings.account.confirmPw")} value={pw.confirm} onChange={(e) => setPw({ ...pw, confirm: e.target.value })} />
         {err && (
           <p role="alert" className="text-body-sm text-danger">
             {err}
           </p>
         )}
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <span className="text-caption text-fg-muted">Quên mật khẩu? Đăng xuất rồi chọn “Quên mật khẩu?” để nhận mã qua email.</span>
+          <span className="text-caption text-fg-muted">{t("settings.account.forgotPwHint")}</span>
           <Button type="submit" variant="primary" loading={busy} disabled={(u.hasPassword && !pw.current) || pw.next.length < 8 || !pw.confirm}>
-            {u.hasPassword ? "Đổi mật khẩu" : "Đặt mật khẩu"}
+            {t(u.hasPassword ? "settings.account.changePw" : "settings.account.setPw")}
           </Button>
         </div>
       </form>
-      <p className="py-3 text-caption text-fg-subtle">Admin của máy chủ xem được thói quen nghe nhạc của bạn (bài hay nghe, thời gian nghe) để quản lý và gợi ý.</p>
+      <p className="py-3 text-caption text-fg-subtle">{t("settings.account.privacyNote")}</p>
     </Group>
   );
 }
@@ -339,7 +340,7 @@ function DataSettings() {
   const [scope, setScope] = useState<"history" | "all" | null>(null);
   const [typed, setTyped] = useState("");
   const [busy, setBusy] = useState(false);
-  const phrase = scope === "all" ? "XOÁ HẾT" : "XOÁ LỊCH SỬ";
+  const phrase = scope === "all" ? t("settings.data.phraseAll") : t("settings.data.phraseHistory");
   const close = () => {
     setScope(null);
     setTyped("");
@@ -356,7 +357,7 @@ function DataSettings() {
         return;
       }
       queryClient.invalidateQueries();
-      toast("Đã xoá lịch sử nghe", "success");
+      toast(t("settings.data.historyCleared"), "success");
       close();
     } catch (e) {
       toast((e as Error).message, "error");
@@ -365,44 +366,39 @@ function DataSettings() {
     }
   };
   return (
-    <Group title="Dữ liệu" icon="trash">
-      <Row label="Xoá lịch sử nghe" hint="Xoá lượt nghe, thống kê và phản hồi “ít gợi ý”. Giữ nguyên nhạc, playlist, lời bài hát.">
+    <Group title={t("settings.data.title")} icon="trash">
+      <Row label={t("settings.data.clearHistory")} hint={t("settings.data.clearHistoryHint")}>
         <Button variant="danger" onClick={() => setScope("history")}>
-          Xoá lịch sử
+          {t("settings.data.clearHistoryBtn")}
         </Button>
       </Row>
-      <Row
-        label="Xoá toàn bộ dữ liệu của tôi"
-        hint="Xoá thư viện, playlist, lượt thích, lịch sử và danh sách tải của tài khoản này. Giữ tài khoản và cài đặt. Người khác không bị ảnh hưởng."
-      >
+      <Row label={t("settings.data.clearAll")} hint={t("settings.data.clearAllHint")}>
         <Button variant="danger" icon="trash" onClick={() => setScope("all")}>
-          Xoá toàn bộ
+          {t("settings.data.clearAllBtn")}
         </Button>
       </Row>
       {scope && (
         <Dialog
           open
           onOpenChange={(o) => !o && close()}
-          title={scope === "all" ? "Xoá toàn bộ dữ liệu của bạn?" : "Xoá lịch sử nghe?"}
-          description={
-            scope === "all"
-              ? "Thư viện, playlist, lượt thích và lịch sử của bạn sẽ bị xoá, không hoàn tác được. Các lượt tải dở cũng bị huỷ."
-              : "Thống kê, Tiếp tục nghe và dữ liệu cho đề xuất sẽ trở về trống."
-          }
+          title={t(scope === "all" ? "settings.data.confirmAllTitle" : "settings.data.confirmHistoryTitle")}
+          description={t(scope === "all" ? "settings.data.confirmAllDesc" : "settings.data.confirmHistoryDesc")}
           footer={
             <>
               <Button variant="ghost" onClick={close}>
-                Huỷ
+                {t("common.cancel")}
               </Button>
               <Button variant="danger" icon="trash" loading={busy} disabled={typed.trim().toUpperCase() !== phrase} onClick={run}>
-                Xoá
+                {t("common.delete")}
               </Button>
             </>
           }
         >
           <label className="flex flex-col gap-1.5">
             <span className="text-body-sm text-fg-muted">
-              Gõ <strong className="text-fg">{phrase}</strong> để xác nhận
+              {t("settings.data.typeToConfirmBefore")}
+              <strong className="text-fg">{phrase}</strong>
+              {t("settings.data.typeToConfirmAfter")}
             </span>
             <input className="input" value={typed} onChange={(e) => setTyped(e.target.value)} autoFocus autoComplete="off" />
           </label>

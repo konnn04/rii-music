@@ -20,15 +20,17 @@ import { t, tn, syncLang } from "@/i18n";
 import { useBranding } from "@/lib/branding";
 import { Onboarding } from "@/pages/Onboarding";
 
-const nav: { to: string; key: string; icon: IconName; mobile?: boolean; admin?: boolean }[] = [
+// `header`: shown as an icon in the top bar (desktop) and the mobile header
+// instead of the sidebar / tab bar; tablets (no top bar) keep it in the sidebar.
+const nav: { to: string; key: string; icon: IconName; mobile?: boolean; admin?: boolean; header?: boolean }[] = [
   { to: "/", key: "home", icon: "home", mobile: true },
   { to: "/search", key: "search", icon: "search", mobile: true },
   { to: "/library", key: "library", icon: "library", mobile: true },
   { to: "/discover", key: "discover", icon: "radio" },
-  { to: "/downloads", key: "downloads", icon: "download", mobile: true },
+  { to: "/downloads", key: "downloads", icon: "download", header: true },
   { to: "/history", key: "history", icon: "stats" },
-  { to: "/settings", key: "settings", icon: "settings" },
-  { to: "/admin", key: "admin", icon: "shield", admin: true },
+  { to: "/settings", key: "settings", icon: "settings", mobile: true },
+  { to: "/admin", key: "admin", icon: "shield", admin: true, header: true },
 ];
 const label = (k: string) => t(`common.nav.${k}`);
 
@@ -154,7 +156,7 @@ function Sidebar() {
               aria-label={label(n.key)}
               className={`focus-ring state-layer relative flex h-11 items-center justify-center gap-3 rounded-control px-3 text-label lg:justify-start ${
                 on ? "bg-accent-soft text-fg" : "text-fg-muted hover:text-fg"
-              }`}
+              } ${n.header ? "lg:hidden" : ""}`}
             >
               <Icon name={n.icon} className={on ? "text-accent" : ""} />
               <span className="hidden truncate lg:inline">{label(n.key)}</span>
@@ -244,10 +246,42 @@ function TopBar() {
         />
       </form>
       <div className="ml-auto flex items-center gap-1">
+        <HeaderLinks />
         <AccountChip />
         <LogoutButton />
       </div>
     </div>
+  );
+}
+
+/** Tải về (with the number of active downloads) and Quản trị as header icons. */
+function HeaderLinks() {
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const jobs = useActiveJobs();
+  const isAdmin = useMe().data?.user.role === "admin";
+  return (
+    <>
+      {nav
+        .filter((n) => n.header && (!n.admin || isAdmin))
+        .map((n) => {
+          const on = isActive(pathname, n.to);
+          return (
+            <Tooltip key={n.to} content={label(n.key)}>
+              <Link
+                to={n.to}
+                aria-label={label(n.key)}
+                aria-current={on ? "page" : undefined}
+                className={`focus-ring state-layer relative flex size-10 items-center justify-center rounded-full ${on ? "text-accent" : "text-fg-muted hover:text-fg"}`}
+              >
+                <Icon name={n.icon} size={22} />
+                {n.to === "/downloads" && jobs > 0 && (
+                  <span className="absolute -right-0.5 top-0.5 min-w-4 rounded-full bg-accent px-1 text-center text-[10px] font-semibold leading-4 text-fg-on-accent">{jobs}</span>
+                )}
+              </Link>
+            </Tooltip>
+          );
+        })}
+    </>
   );
 }
 
@@ -308,6 +342,7 @@ function MobileHeader() {
         <Link to="/discover" className="focus-ring flex size-10 items-center justify-center rounded-full text-fg-muted" aria-label={label("discover")}>
           <Icon name="radio" size={22} />
         </Link>
+        <HeaderLinks />
         {me && (
           <Link to="/settings" className="focus-ring rounded-full" aria-label={label("settings")}>
             <Avatar name={me.name || me.email} size={32} />

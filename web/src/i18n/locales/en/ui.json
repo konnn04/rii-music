@@ -47,5 +47,10 @@
     "downloadError": "Download failed: {target}",
     "addedToPlaylist": "Added to playlist",
     "addedManyToPlaylist": "Added {count} songs to playlist"
+  },
+  "remote": {
+    "playingOn": "Playing on {device}",
+    "pausedOn": "Last played on {device}",
+    "playHere": "Play here"
   }
 }

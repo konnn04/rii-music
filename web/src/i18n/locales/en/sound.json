@@ -1,0 +1,33 @@
+{
+  "title": "Sound",
+  "enable": "Enable sound effects",
+  "presetsLabel": "Presets",
+  "presets": {
+    "flat": "Default",
+    "bass": "Bass boost",
+    "treble": "Treble boost",
+    "vocal": "Vocal",
+    "pop": "Pop",
+    "rock": "Rock",
+    "acoustic": "Acoustic",
+    "electronic": "Electronic",
+    "night": "Night",
+    "custom": "Custom"
+  },
+  "eq": "Equalizer",
+  "eqUnit": "dB",
+  "bass": "Bass boost",
+  "bassHint": "Boosts low frequencies for a fuller, warmer sound.",
+  "exciter": "High-frequency brightener (exciter)",
+  "exciterHint": "Regenerates upper harmonics, similar to high-frequency restoration on music players. Does not turn compressed audio into lossless.",
+  "crossfeed": "Crossfeed (headphones)",
+  "crossfeedHint": "Subtly blends both channels like speakers to reduce listening fatigue.",
+  "width": "Stereo width",
+  "widthHint": "Narrows or widens the left/right stereo stage.",
+  "widthOriginal": "Original",
+  "limiter": "Anti-clipping (limiter)",
+  "limiterHint": "Keeps peaks in check to prevent distortion when boosting EQ or bass.",
+  "reset": "Reset",
+  "note": "Applies to this device only. Requires Simple mode to be off (Settings → Playback).",
+  "settingsHint": "Equalizer, bass boost, exciter, headphone crossfeed. Saved for this device."
+}

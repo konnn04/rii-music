@@ -16,6 +16,7 @@ import { Icon, type IconName } from "@/components/ui/Icon";
 import { Avatar, PageHeader, LogoutButton } from "@/components/layout/AppShell";
 import { ACCENTS, swatch } from "@/lib/theme";
 import { AboutCard } from "@/components/AboutCard";
+import { SoundButton } from "@/components/SoundButton";
 
 export function SettingsPage() {
   const { data } = useSettings();
@@ -74,6 +75,9 @@ export function SettingsPage() {
             on={engine.simpleMode}
             set={(v) => engine.setSimpleMode(v)}
           />
+          <Row label={t("sound.title")} hint={t("sound.settingsHint")}>
+            <SoundButton variant="button" />
+          </Row>
         </Group>
 
         <AutoDownloadSettings data={data} set={set} />

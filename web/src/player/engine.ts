@@ -11,6 +11,7 @@ import { usePlayback, usePlayer, type QueueEntry } from "./store";
 import { notifyQueueEnded } from "./autofill";
 import { notifyPlaylistQueueEnded } from "./playlistFill";
 import { consumeEndOfTrack, onSleepFade, useSleep } from "./sleep";
+import { FxChain } from "./fx";
 import { t } from "@/i18n";
 
 const PRELOAD_BEFORE = 15; // seconds before the end to load the next track
@@ -48,7 +49,6 @@ class Engine {
   private wave: Float32Array<ArrayBuffer> | null = null;
   private simple = getSimpleMode();
   private settings: Pick<Settings, "crossfadeSec" | "gaplessAlbum" | "normalize" | "discordPresence"> = { crossfadeSec: 4, gaplessAlbum: true, normalize: true, discordPresence: false };
-  private npHeartbeat: number | null = null;
   private crossfading = false;
   private pendingFade = 0;
   private pauseToken = 0;
@@ -152,7 +152,10 @@ class Engine {
     try {
       const ctx = new AudioContext({ latencyHint: "playback" });
       const master = ctx.createGain();
-      master.connect(ctx.destination);
+      // Sound settings (EQ, exciter, crossfeed…) sit between the volume and the speakers.
+      const fx = new FxChain(ctx);
+      master.connect(fx.input);
+      fx.output.connect(ctx.destination);
       // Music effect: tapped after loudness normalisation but before the
       // volume knob, so it follows the song's own dynamics, not the slider.
       const analyser = ctx.createAnalyser();
@@ -672,13 +675,8 @@ class Engine {
           detail: t ? { trackId: t.id, title: t.title, artist: t.artist, album: t.album, durationMs: t.durationMs, positionMs, playing: pb.isPlaying } : null,
         }),
       );
-      // Discord presence (Cài đặt → Trạng thái Discord): the server keeps it for the desktop agent.
-      if (this.settings.discordPresence) {
-        api("/api/nowplaying", { method: "POST", keepalive: true, json: { trackId: t?.id ?? "", positionMs, playing: pb.isPlaying } }).catch(() => {});
-      }
+      // Discord presence and other devices hear about it through player/sync.ts.
     }, 800);
-    if (this.npHeartbeat) clearInterval(this.npHeartbeat);
-    if (this.settings.discordPresence && usePlayback.getState().isPlaying) this.npHeartbeat = window.setInterval(() => this.reportNowPlaying(), 60_000);
   }
 
   private updatePositionState() {

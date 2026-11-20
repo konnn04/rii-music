@@ -8,6 +8,7 @@ import { LikeCurrent, SeekBar, Transport, VolumeControl } from "./controls";
 import { t } from "@/i18n";
 import { ArtistLinks } from "@/components/ArtistLinks";
 import { SleepButton } from "@/components/SleepButton";
+import { SoundButton } from "@/components/SoundButton";
 
 /** Fixed bottom player for tablet and desktop. */
 export function PlayerBar() {
@@ -40,6 +41,7 @@ export function PlayerBar() {
         <SeekBar />
       </div>
       <div className="flex flex-1 basis-0 items-center justify-end gap-1">
+        <SoundButton />
         <SleepButton />
         <IconButton icon="lyrics" label={t("ui.player.lyrics")} shortcut="L" active={panel === "lyrics"} onClick={() => openPanel("lyrics")} size={20} />
         <IconButton icon="queue" label={t("ui.player.queue")} shortcut="Q" active={panel === "queue"} onClick={() => openPanel("queue")} size={20} />

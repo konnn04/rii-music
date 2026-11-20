@@ -47,5 +47,10 @@
     "downloadError": "Tải lỗi: {target}",
     "addedToPlaylist": "Đã thêm vào playlist",
     "addedManyToPlaylist": "Đã thêm {count} bài vào playlist"
+  },
+  "remote": {
+    "playingOn": "Đang phát trên {device}",
+    "pausedOn": "Vừa nghe trên {device}",
+    "playHere": "Phát ở đây"
   }
 }

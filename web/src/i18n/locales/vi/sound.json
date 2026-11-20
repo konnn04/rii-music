@@ -1,0 +1,33 @@
+{
+  "title": "Âm thanh",
+  "enable": "Bật hiệu ứng âm thanh",
+  "presetsLabel": "Cấu hình có sẵn",
+  "presets": {
+    "flat": "Mặc định",
+    "bass": "Tăng bass",
+    "treble": "Tăng treble",
+    "vocal": "Giọng hát",
+    "pop": "Pop",
+    "rock": "Rock",
+    "acoustic": "Acoustic",
+    "electronic": "Điện tử",
+    "night": "Nghe đêm",
+    "custom": "Tuỳ chỉnh"
+  },
+  "eq": "Equalizer",
+  "eqUnit": "dB",
+  "bass": "Tăng bass",
+  "bassHint": "Tăng dải trầm cho âm thanh dày và ấm hơn.",
+  "exciter": "Làm sáng tiếng (exciter)",
+  "exciterHint": "Tái tạo hài âm dải cao, giống tính năng phục hồi âm cao trên máy nghe nhạc. Không biến nhạc nén thành lossless.",
+  "crossfeed": "Crossfeed (tai nghe)",
+  "crossfeedHint": "Trộn nhẹ hai kênh như nghe loa, đỡ mỏi tai.",
+  "width": "Độ rộng stereo",
+  "widthHint": "Thu hẹp hoặc mở rộng không gian âm thanh trái/phải.",
+  "widthOriginal": "Gốc",
+  "limiter": "Chống vỡ tiếng (limiter)",
+  "limiterHint": "Giữ mức âm lượng an toàn để tránh rè khi tăng EQ hoặc bass.",
+  "reset": "Đặt lại",
+  "note": "Áp dụng trên thiết bị này. Cần tắt Chế độ đơn giản (Cài đặt → Phát nhạc).",
+  "settingsHint": "Equalizer, tăng bass, làm sáng tiếng, crossfeed cho tai nghe. Lưu riêng cho thiết bị này."
+}

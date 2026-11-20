@@ -76,6 +76,8 @@ export type Settings = {
   gaplessAlbum: boolean;
   normalize: boolean;
   theme: "dark" | "light" | "system";
+  accent: string;
+  visualizer: boolean;
   autoDownload: boolean;
   autoplayMode: "off" | "lib" | "free";
   onboarded: boolean;

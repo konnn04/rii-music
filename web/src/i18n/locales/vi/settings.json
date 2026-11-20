@@ -4,9 +4,15 @@
     "title": "Phát nhạc",
     "crossfade": "Chuyển tiếp (crossfade)",
     "crossfadeOff": "Tắt — chuyển bài ngay",
-    "crossfadeOn": { "one": "Hai bài chồng nhau {n} giây", "other": "Hai bài chồng nhau {n} giây" },
+    "crossfadeOn": {
+      "one": "Hai bài chồng nhau {n} giây",
+      "other": "Hai bài chồng nhau {n} giây"
+    },
     "crossfadeDuration": "Thời lượng crossfade",
-    "seconds": { "one": "{n} giây", "other": "{n} giây" },
+    "seconds": {
+      "one": "{n} giây",
+      "other": "{n} giây"
+    },
     "gapless": "Liền mạch trong album (gapless)",
     "gaplessHint": "Không crossfade khi hai bài liền nhau cùng album — hợp với album live, album liền mạch.",
     "normalize": "Chuẩn hoá âm lượng",
@@ -20,7 +26,28 @@
     "theme": "Chủ đề",
     "dark": "Tối",
     "light": "Sáng",
-    "system": "Theo máy"
+    "system": "Theo máy",
+    "accent": "Màu nhấn",
+    "accentSong": "Theo bài hát",
+    "accentSongHint": "Màu lấy từ ảnh bìa bài đang phát, đổi theo từng bài.",
+    "accentDefaultHint": "Chàm (mặc định). Màn hình Đang phát vẫn theo màu ảnh bìa.",
+    "accents": {
+      "red": "Đỏ",
+      "orange": "Cam",
+      "amber": "Hổ phách",
+      "yellow": "Vàng",
+      "lime": "Vàng chanh",
+      "green": "Xanh lá",
+      "teal": "Xanh mòng két",
+      "cyan": "Xanh lơ",
+      "blue": "Xanh dương",
+      "indigo": "Chàm",
+      "violet": "Tím",
+      "pink": "Hồng"
+    },
+    "visualizer": "Hiệu ứng nhạc",
+    "visualizerHint": "Nền Đang phát và Lời bài hát đập theo nhịp bass: nhạc càng lớn màu loang càng mạnh, đoạn nhỏ thì dịu lại.",
+    "visualizerSimple": "Cần tắt Chế độ đơn giản (ở mục Phát nhạc) để đọc được âm thanh."
   },
   "shortcuts": {
     "title": "Phím tắt (PC)",
@@ -36,12 +63,21 @@
     "hint": "Cứ 6 giờ xem lại thói quen nghe và tải trước bài của nghệ sĩ bạn hay nghe và nghệ sĩ tương tự, tối đa 8 bài mỗi lần.",
     "evictionNote": "Khi thư viện vượt giới hạn dung lượng (admin đặt cho tài khoản của bạn), RiiMusic tự bỏ bài ít khả năng nghe nhất. Không bao giờ bỏ bài đã thích, bài trong playlist, bài thêm trong 3 ngày qua hoặc nghe trong 14 ngày qua.",
     "used": "Đang dùng {used} / {limit}",
-    "autoCount": { "one": "{n} bài tự tải", "other": "{n} bài tự tải" },
+    "autoCount": {
+      "one": "{n} bài tự tải",
+      "other": "{n} bài tự tải"
+    },
     "running": "Đang xem lại thói quen nghe…",
     "lastRun": "Lần chạy gần nhất {ago}: {msg}.",
-    "lastRunEvicted": { "one": "Lần chạy gần nhất {ago}: {msg}, đã xoá {n} bài ít nghe.", "other": "Lần chạy gần nhất {ago}: {msg}, đã xoá {n} bài ít nghe." },
+    "lastRunEvicted": {
+      "one": "Lần chạy gần nhất {ago}: {msg}, đã xoá {n} bài ít nghe.",
+      "other": "Lần chạy gần nhất {ago}: {msg}, đã xoá {n} bài ít nghe."
+    },
     "neverRun": "Chưa chạy lần nào.",
-    "pending": { "one": "Đang tải {n} bài.", "other": "Đang tải {n} bài." },
+    "pending": {
+      "one": "Đang tải {n} bài.",
+      "other": "Đang tải {n} bài."
+    },
     "startedToast": "Đang xem lại thói quen nghe và chọn bài để tải",
     "runNow": "Chạy ngay"
   },

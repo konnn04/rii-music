@@ -14,6 +14,7 @@ import { Slider } from "@/components/ui/Slider";
 import { Spinner } from "@/components/ui/misc";
 import { Icon, type IconName } from "@/components/ui/Icon";
 import { Avatar, PageHeader, LogoutButton } from "@/components/layout/AppShell";
+import { ACCENTS, swatch } from "@/lib/theme";
 
 export function SettingsPage() {
   const { data } = useSettings();
@@ -88,6 +89,13 @@ export function SettingsPage() {
               onChange={(v) => set({ theme: v as Settings["theme"] })}
             />
           </Row>
+          <AccentPicker value={data.accent} onChange={(accent) => set({ accent })} />
+          <Toggle
+            label={t("settings.appearance.visualizer")}
+            hint={t(engine.simpleMode ? "settings.appearance.visualizerSimple" : "settings.appearance.visualizerHint")}
+            on={data.visualizer}
+            set={(v) => set({ visualizer: v })}
+          />
         </Group>
 
         <DiscordPresence />
@@ -315,6 +323,55 @@ function Toggle({ label, hint, on, set }: { label: string; hint?: string; on: bo
         <span className={`absolute top-1 size-5 rounded-full bg-fg transition-[left] duration-fast ${on ? "left-6 !bg-fg-on-accent" : "left-1"}`} />
       </button>
     </div>
+  );
+}
+
+/** 12 rainbow accents plus "follow the song's cover". */
+function AccentPicker({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  const name = (id: string) => t(`settings.appearance.accents.${id}`);
+  return (
+    <div className="flex flex-col gap-3 py-4">
+      <div>
+        <div className="text-body" id="accent-label">
+          {t("settings.appearance.accent")}
+        </div>
+        <div className="text-body-sm text-fg-muted">
+          {value === "song" ? t("settings.appearance.accentSongHint") : value === "indigo" ? t("settings.appearance.accentDefaultHint") : name(value)}
+        </div>
+      </div>
+      <div role="radiogroup" aria-labelledby="accent-label" className="grid grid-cols-7 gap-2 sm:grid-cols-[repeat(13,minmax(0,1fr))]">
+        {ACCENTS.map((a) => (
+          <Swatch key={a.id} on={value === a.id} label={name(a.id)} onClick={() => onChange(a.id)} style={{ background: swatch(a) }} />
+        ))}
+        <Swatch
+          on={value === "song"}
+          label={t("settings.appearance.accentSong")}
+          onClick={() => onChange("song")}
+          style={{ background: "conic-gradient(from 90deg, hsl(0 85% 72%), hsl(60 90% 72%), hsl(140 60% 72%), hsl(200 80% 72%), hsl(262 85% 72%), hsl(325 80% 72%), hsl(0 85% 72%))" }}
+        >
+          <Icon name="music-note" size={18} className="text-[#0E0F12]" />
+        </Swatch>
+      </div>
+    </div>
+  );
+}
+
+function Swatch({ on, label, onClick, style, children }: { on: boolean; label: string; onClick: () => void; style: React.CSSProperties; children?: React.ReactNode }) {
+  return (
+    <button
+      role="radio"
+      aria-checked={on}
+      aria-label={label}
+      title={label}
+      onClick={onClick}
+      className={`focus-ring relative flex aspect-square w-full max-w-11 items-center justify-center rounded-full transition-transform duration-fast hover:scale-110 ${
+        on ? "ring-2 ring-fg ring-offset-2 ring-offset-surface-1" : ""
+      }`}
+      style={style}
+    >
+      {children}
+      {on && !children && <Icon name="check" size={18} className="text-[#0E0F12]" />}
+    </button>
   );
 }
 

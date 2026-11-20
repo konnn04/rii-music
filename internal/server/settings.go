@@ -14,6 +14,10 @@ type Settings struct {
 	GaplessAlbum bool    `json:"gaplessAlbum"` // no crossfade between consecutive tracks of one album
 	Normalize    bool    `json:"normalize"`    // apply per-track gain
 	Theme        string  `json:"theme"`        // dark | light | system
+	// Accent colour: one of 12 hues (accentNames) or "song" (taken from the cover).
+	Accent string `json:"accent"`
+	// Music effect: Now Playing / lyrics background pulses with the bass.
+	Visualizer bool `json:"visualizer"`
 	// Tự động tải nhạc: pre-download songs that fit the listening habits within
 	// the storage limit the admin set, removing the least likely to be played.
 	AutoDownload bool `json:"autoDownload"`
@@ -29,8 +33,13 @@ type Settings struct {
 	Language        string `json:"language"` // UI: vi | en
 }
 
+var accentNames = map[string]bool{
+	"red": true, "orange": true, "amber": true, "yellow": true, "lime": true, "green": true,
+	"teal": true, "cyan": true, "blue": true, "indigo": true, "violet": true, "pink": true, "song": true,
+}
+
 func defaultSettings() Settings {
-	return Settings{CrossfadeSec: 4, GaplessAlbum: true, Normalize: true, Theme: "dark", AutoplayMode: "lib", PrefLangs: []string{}, PrefGenres: []string{}, PrefArtists: []string{}}
+	return Settings{CrossfadeSec: 4, GaplessAlbum: true, Normalize: true, Theme: "dark", Accent: "indigo", Visualizer: true, AutoplayMode: "lib", PrefLangs: []string{}, PrefGenres: []string{}, PrefArtists: []string{}}
 }
 
 func (st *Settings) sanitize() {
@@ -39,6 +48,9 @@ func (st *Settings) sanitize() {
 	case "dark", "light", "system":
 	default:
 		st.Theme = "dark"
+	}
+	if !accentNames[st.Accent] {
+		st.Accent = "indigo"
 	}
 	switch st.AutoplayMode {
 	case "off", "lib", "free":

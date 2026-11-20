@@ -154,3 +154,29 @@
 @media (prefers-reduced-motion: reduce) {
   .vani-body, .vani-note, .vani-blink { animation: none !important; }
 }
+
+/* Accent colour picked in Settings (lib/theme.ts sets --ah / --as / --al and
+   data-accent on <html>; without it the design's indigo tokens apply). */
+html[data-accent] {
+  --vg-accent: hsl(var(--ah) var(--as) 72%);
+  --vg-accent-hover: hsl(var(--ah) var(--as) 79%);
+  --vg-accent-pressed: hsl(var(--ah) var(--as) 64%);
+  --vg-accent-soft: hsl(var(--ah) calc(var(--as) * 0.35) 20%);
+  --vg-focus: hsl(var(--ah) var(--as) 80%);
+}
+html[data-accent][data-theme=light] {
+  --vg-accent: hsl(var(--ah) var(--as) var(--al));
+  --vg-accent-hover: hsl(var(--ah) var(--as) calc(var(--al) - 5%));
+  --vg-accent-pressed: hsl(var(--ah) var(--as) calc(var(--al) - 10%));
+  --vg-accent-soft: hsl(var(--ah) calc(var(--as) * 0.6) 93%);
+  --vg-focus: hsl(var(--ah) var(--as) var(--al));
+}
+html[data-accent] [data-now-playing] {
+  --np-accent: hsl(var(--ah) var(--as) 72%);
+  --np-accent-soft: hsl(var(--ah) var(--as) 72% / 0.16);
+  --vg-accent: hsl(var(--ah) var(--as) 72%);
+  --vg-accent-hover: hsl(var(--ah) var(--as) 79%);
+  --vg-accent-pressed: hsl(var(--ah) var(--as) 64%);
+  --vg-accent-soft: hsl(var(--ah) calc(var(--as) * 0.35) 20%);
+  --vg-focus: hsl(var(--ah) var(--as) 80%);
+}

@@ -4,9 +4,15 @@
     "title": "Playback",
     "crossfade": "Crossfade",
     "crossfadeOff": "Off — switch tracks immediately",
-    "crossfadeOn": { "one": "Overlap tracks by {n} second", "other": "Overlap tracks by {n} seconds" },
+    "crossfadeOn": {
+      "one": "Overlap tracks by {n} second",
+      "other": "Overlap tracks by {n} seconds"
+    },
     "crossfadeDuration": "Crossfade duration",
-    "seconds": { "one": "{n} second", "other": "{n} seconds" },
+    "seconds": {
+      "one": "{n} second",
+      "other": "{n} seconds"
+    },
     "gapless": "Gapless album playback",
     "gaplessHint": "Skip crossfade between consecutive tracks from the same album — ideal for live and continuous albums.",
     "normalize": "Volume normalization",
@@ -20,7 +26,28 @@
     "theme": "Theme",
     "dark": "Dark",
     "light": "Light",
-    "system": "System"
+    "system": "System",
+    "accent": "Accent colour",
+    "accentSong": "Match the song",
+    "accentSongHint": "Taken from the cover of the song playing, changes with every song.",
+    "accentDefaultHint": "Indigo (default). Now Playing still follows the cover colour.",
+    "accents": {
+      "red": "Red",
+      "orange": "Orange",
+      "amber": "Amber",
+      "yellow": "Yellow",
+      "lime": "Lime",
+      "green": "Green",
+      "teal": "Teal",
+      "cyan": "Cyan",
+      "blue": "Blue",
+      "indigo": "Indigo",
+      "violet": "Violet",
+      "pink": "Pink"
+    },
+    "visualizer": "Music effect",
+    "visualizerHint": "Now Playing and lyrics backgrounds pulse with the bass: the louder the music, the more the colour spreads; quiet parts stay calm.",
+    "visualizerSimple": "Turn off Simple mode (under Playback) so the sound can be read."
   },
   "shortcuts": {
     "title": "Keyboard shortcuts (PC)",
@@ -36,12 +63,21 @@
     "hint": "Every 6 hours, reviews your listening habits and pre-downloads up to 8 tracks from your favorite and similar artists.",
     "evictionNote": "When your library exceeds the storage limit set by your admin, RiiMusic automatically removes the tracks you're least likely to play. Liked songs, playlist tracks, songs added in the last 3 days, and songs played in the last 14 days are never removed.",
     "used": "Using {used} / {limit}",
-    "autoCount": { "one": "{n} auto-downloaded", "other": "{n} auto-downloaded" },
+    "autoCount": {
+      "one": "{n} auto-downloaded",
+      "other": "{n} auto-downloaded"
+    },
     "running": "Reviewing listening habits…",
     "lastRun": "Last run {ago}: {msg}.",
-    "lastRunEvicted": { "one": "Last run {ago}: {msg}, removed {n} rarely played song.", "other": "Last run {ago}: {msg}, removed {n} rarely played songs." },
+    "lastRunEvicted": {
+      "one": "Last run {ago}: {msg}, removed {n} rarely played song.",
+      "other": "Last run {ago}: {msg}, removed {n} rarely played songs."
+    },
     "neverRun": "Never run yet.",
-    "pending": { "one": "Downloading {n} song.", "other": "Downloading {n} songs." },
+    "pending": {
+      "one": "Downloading {n} song.",
+      "other": "Downloading {n} songs."
+    },
     "startedToast": "Reviewing listening habits and picking tracks to download",
     "runNow": "Run now"
   },

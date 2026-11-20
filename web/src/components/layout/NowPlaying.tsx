@@ -9,26 +9,60 @@ import { LikeCurrent, SeekBar, Transport } from "./controls";
 import { LyricsView, useLyricLine } from "./LyricsView";
 import { QueueView } from "./QueueView";
 import { TrackMenuButton } from "../TrackMenu";
+import { useSettings } from "@/lib/queries";
+import { usePulse } from "./Pulse";
 
 /** Dark scope with the cover blurred behind a scrim and the accent taken from the cover. */
 export function NowPlayingSurface({ children, className = "", style }: { children: ReactNode; className?: string; style?: CSSProperties }) {
   const track = usePlayer((s) => s.current?.track);
   const accent = usePlayback((s) => s.accent);
-  const vars = accent ? ({ "--np-accent": accent, "--np-accent-soft": `color-mix(in srgb, ${accent} 16%, transparent)` } as CSSProperties) : {};
+  const settings = useSettings().data;
+  // A fixed accent chosen in Settings wins; "song" follows the cover.
+  const followCover = (settings?.accent ?? "song") === "song" || settings?.accent === "indigo";
+  const vars = accent && followCover ? ({ "--np-accent": accent, "--np-accent-soft": `color-mix(in srgb, ${accent} 16%, transparent)` } as CSSProperties) : {};
   const positioned = className.split(/\s+/).some((c) => c === "fixed" || c === "absolute");
+  const root = useRef<HTMLDivElement>(null);
+  const fx = settings?.visualizer ?? true;
+  usePulse(root, fx);
   return (
-    <div data-now-playing className={`isolate overflow-hidden bg-[#0E0F12] text-fg ${positioned ? "" : "relative"} ${className}`} style={{ ...vars, ...style }}>
+    <div ref={root} data-now-playing className={`isolate overflow-hidden bg-[#0E0F12] text-fg ${positioned ? "" : "relative"} ${className}`} style={{ ...vars, ...style }}>
       {track?.hasCover && (
         <img
           key={track.id}
           src={coverUrl(track.id)}
           alt=""
           aria-hidden
-          className="pointer-events-none absolute inset-0 -z-10 size-full scale-125 object-cover opacity-90 animate-[fade-in_400ms_ease-out]"
-          style={{ filter: "blur(var(--np-blur)) saturate(1.2)" }}
+          data-beat
+          className="pointer-events-none absolute inset-0 -z-10 size-full object-cover opacity-90 animate-[fade-in_400ms_ease-out] will-change-transform"
+          style={
+            fx
+              ? {
+                  transform: "scale(calc(1.25 + var(--beat, 0) * 0.12))",
+                  filter: "blur(var(--np-blur)) saturate(calc(1.15 + var(--energy, 0) * 0.75)) brightness(calc(0.92 + var(--energy, 0) * 0.4))",
+                }
+              : { transform: "scale(1.25)", filter: "blur(var(--np-blur)) saturate(1.2)" }
+          }
         />
       )}
-      <div className="pointer-events-none absolute inset-0 -z-10" style={{ background: "var(--np-scrim)" }} />
+      <div
+        data-beat
+        className="pointer-events-none absolute inset-0 -z-10"
+        style={{ background: "var(--np-scrim)", opacity: fx ? "calc(1 - var(--energy, 0) * 0.28 - var(--beat, 0) * 0.12)" : undefined }}
+      />
+      {fx && (
+        // Colour that spreads from the middle with the music.
+        <div
+          data-beat
+          aria-hidden
+          className="pointer-events-none absolute inset-0 -z-10 mix-blend-screen"
+          style={{
+            background:
+              "radial-gradient(60% 45% at 50% 38%, color-mix(in srgb, var(--np-accent) 70%, transparent), transparent 70%), radial-gradient(80% 40% at 50% 105%, color-mix(in srgb, var(--np-accent) 45%, transparent), transparent 70%)",
+            opacity: "calc(var(--beat, 0) * 0.5 + var(--energy, 0) * 0.22)",
+            transform: "scale(calc(0.9 + var(--energy, 0) * 0.25 + var(--beat, 0) * 0.08))",
+          }}
+        />
+      )}
       {children}
     </div>
   );
@@ -198,7 +232,16 @@ function CoverStage({ onLyrics }: { onLyrics: () => void }) {
   return (
     <div ref={box} className="flex h-full flex-col items-center justify-center px-6 py-4">
       {size > 0 && (
-        <Cover trackId={current.track.id} hasCover={current.track.hasCover} size={size} rounded="rounded-card" className="aspect-square shrink-0 shadow-sheet" eager />
+        <div
+          data-beat
+          className="shrink-0 rounded-card will-change-transform"
+          style={{
+            transform: "scale(calc(1 + var(--beat, 0) * 0.025))",
+            boxShadow: "0 0 calc(var(--beat, 0) * 56px + var(--energy, 0) * 28px) color-mix(in srgb, var(--np-accent) 45%, transparent)",
+          }}
+        >
+          <Cover trackId={current.track.id} hasCover={current.track.hasCover} size={size} rounded="rounded-card" className="aspect-square shrink-0 shadow-sheet" eager />
+        </div>
       )}
       {roomForLine && (
         <button

@@ -6,7 +6,7 @@ import { api } from "@/lib/api";
 import { engine } from "@/player/engine";
 import { usePlayer } from "@/player/store";
 import { useShortcuts } from "@/player/shortcuts";
-import { applyTheme } from "@/lib/theme";
+import { applyAccent, applyTheme } from "@/lib/theme";
 import { connectEvents } from "@/lib/events";
 import { Icon, type IconName } from "../ui/Icon";
 import { IconButton } from "../ui/Button";
@@ -47,6 +47,7 @@ export function AppShell() {
     if (!settings.data) return;
     engine.configure(settings.data);
     applyTheme(settings.data.theme);
+    applyAccent(settings.data.accent);
     syncLang(settings.data.language);
   }, [settings.data]);
   useEffect(() => {

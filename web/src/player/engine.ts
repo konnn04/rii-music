@@ -41,6 +41,9 @@ class Engine {
   private active = 0;
   private ctx: AudioContext | null = null;
   private master: GainNode | null = null;
+  private analyser: AnalyserNode | null = null;
+  private freq: Uint8Array<ArrayBuffer> | null = null;
+  private wave: Float32Array<ArrayBuffer> | null = null;
   private simple = getSimpleMode();
   private settings: Pick<Settings, "crossfadeSec" | "gaplessAlbum" | "normalize" | "discordPresence"> = { crossfadeSec: 4, gaplessAlbum: true, normalize: true, discordPresence: false };
   private npHeartbeat: number | null = null;
@@ -109,6 +112,24 @@ class Engine {
     // MediaElementSource cannot be detached.
     location.reload();
   }
+  /**
+   * Current sound level for the music effect: bass (≈20–150 Hz, 0–1) and
+   * overall loudness (RMS). Null in simple mode (no Web Audio).
+   */
+  levels(): { bass: number; rms: number } | null {
+    const a = this.analyser;
+    if (!a || !this.freq || !this.wave || !this.ctx) return null;
+    a.getByteFrequencyData(this.freq);
+    a.getFloatTimeDomainData(this.wave);
+    const binHz = this.ctx.sampleRate / a.fftSize;
+    const lo = Math.max(1, Math.floor(20 / binHz)), hi = Math.max(lo + 1, Math.ceil(150 / binHz));
+    let b = 0;
+    for (let i = lo; i < hi; i++) b += this.freq[i];
+    let sq = 0;
+    for (let i = 0; i < this.wave.length; i++) sq += this.wave[i] * this.wave[i];
+    return { bass: b / (hi - lo) / 255, rms: Math.sqrt(sq / this.wave.length) };
+  }
+
   get simpleMode() {
     return this.simple;
   }
@@ -122,11 +143,20 @@ class Engine {
       const ctx = new AudioContext({ latencyHint: "playback" });
       const master = ctx.createGain();
       master.connect(ctx.destination);
+      // Music effect: tapped after loudness normalisation but before the
+      // volume knob, so it follows the song's own dynamics, not the slider.
+      const analyser = ctx.createAnalyser();
+      analyser.fftSize = 2048;
+      analyser.smoothingTimeConstant = 0.55;
+      this.analyser = analyser;
+      this.freq = new Uint8Array(analyser.frequencyBinCount);
+      this.wave = new Float32Array(analyser.fftSize);
       for (const s of this.slots) {
         const src = ctx.createMediaElementSource(s.el);
         s.fade = ctx.createGain();
         s.norm = ctx.createGain();
         src.connect(s.fade).connect(s.norm).connect(master);
+        s.norm.connect(analyser);
         s.fade.gain.value = s.fadeVal;
       }
       this.ctx = ctx;

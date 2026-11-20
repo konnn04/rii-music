@@ -14,7 +14,6 @@ const LOW_WATER = 5; // refill when fewer upcoming tracks than this
 const TARGET = 10; // each refill tops the queue up to at least this many
 const EXT_MIN = 2;
 const EXT_MAX = 6; // new songs downloaded when the library has too few matches
-const RECENT = 80; // don't suggest anything among the last N queue entries
 
 let inflight = false;
 let lastSeed = ""; // one refill per seed entry, so an empty answer isn't retried in a loop
@@ -52,7 +51,9 @@ async function refill() {
     const radio = await api<{ tracks: Track[] }>(`/api/radio?seed=${encodeURIComponent(cur.track.id)}`).catch(() => ({ tracks: [] as Track[] }));
     const now = usePlayer.getState();
     if (now.autoplayMode === "off") return;
-    const skip = new Set([...now.context.slice(-RECENT), ...now.manual].map((e) => e.track.id));
+    // Nothing already in the queue, played or upcoming (the server also leaves
+    // out songs finished in the last 3 hours).
+    const skip = new Set([...now.context, ...now.manual].map((e) => e.track.id));
     skip.add(cur.track.id);
     const want = Math.max(TARGET - upcomingCount(), LOW_WATER);
     const pick = radio.tracks.filter((t) => !skip.has(t.id)).slice(0, want);
@@ -89,7 +90,7 @@ async function refill() {
 async function insertDownloaded(trackId: string) {
   const s = usePlayer.getState();
   if (s.autoplayMode === "off" || !s.current) return;
-  if (s.context.some((e, i) => i > s.pos && e.track.id === trackId) || s.manual.some((e) => e.track.id === trackId)) return;
+  if (s.context.some((e) => e.track.id === trackId) || s.manual.some((e) => e.track.id === trackId)) return;
   let t: Track;
   try {
     t = await api<Track>(`/api/tracks/${trackId}`);

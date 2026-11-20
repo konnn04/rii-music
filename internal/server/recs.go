@@ -30,6 +30,42 @@ type taste struct {
 	dislikedArt map[string]bool
 	dislikedTrk map[string]bool
 	recent      map[string]int64 // track id → last played (ms)
+	finished    map[string]int64 // track id → last played to the end (ms)
+}
+
+// noRepeatWindow: a song played to the end is not suggested again (radio,
+// autoplay, mixes) for this long, unless nothing else is left.
+const noRepeatWindow = 3 * time.Hour
+
+func (t *taste) playedRecently(id string) bool {
+	at, ok := t.finished[id]
+	return ok && time.Since(time.UnixMilli(at)) < noRepeatWindow
+}
+
+// dropRecent removes songs finished in the last 3 hours from a generated
+// list; when that leaves fewer than keep, the ones heard longest ago come back
+// at the end.
+func (t *taste) dropRecent(list []Track, keep int) []Track {
+	fresh := make([]Track, 0, len(list))
+	var stale []Track
+	for _, tr := range list {
+		if t.playedRecently(tr.ID) {
+			stale = append(stale, tr)
+		} else {
+			fresh = append(fresh, tr)
+		}
+	}
+	if len(fresh) >= keep || len(stale) == 0 {
+		return fresh
+	}
+	sort.SliceStable(stale, func(i, j int) bool { return t.finished[stale[i].ID] < t.finished[stale[j].ID] })
+	for _, tr := range stale {
+		if len(fresh) >= keep {
+			break
+		}
+		fresh = append(fresh, tr)
+	}
+	return fresh
 }
 
 const halfLife = 30 * 24 * time.Hour
@@ -40,7 +76,7 @@ func decay(at int64) float64 {
 
 func (s *Server) buildTaste(uid string, all []Track) (*taste, error) {
 	t := &taste{artist: map[string]float64{}, display: map[string]string{}, track: map[string]float64{},
-		dislikedArt: map[string]bool{}, dislikedTrk: map[string]bool{}, recent: map[string]int64{}}
+		dislikedArt: map[string]bool{}, dislikedTrk: map[string]bool{}, recent: map[string]int64{}, finished: map[string]int64{}}
 	byID := map[string]Track{}
 	for _, tr := range all {
 		byID[tr.ID] = tr
@@ -83,6 +119,9 @@ func (s *Server) buildTaste(uid string, all []Track) (*taste, error) {
 		}
 		if e.at > t.recent[e.id] {
 			t.recent[e.id] = e.at
+		}
+		if (e.action == "finish" || e.action == "repeat") && e.at > t.finished[e.id] {
+			t.finished[e.id] = e.at
 		}
 		d := decay(e.at)
 		switch {
@@ -746,6 +785,7 @@ func (s *Server) dailyMixes(rc *recCtx, n int) []Mix {
 			}
 		}
 		used[seed] = true
+		tracks = t.dropRecent(tracks, 10)
 		mixes = append(mixes, Mix{ID: seed, Name: "Mix " + strconv.Itoa(len(mixes)+1), Reason: "Vì bạn hay nghe " + t.name(seed), Tracks: tracks})
 	}
 	return mixes

@@ -5,6 +5,7 @@ import (
 	"math"
 	"math/rand/v2"
 	"net/http"
+	"slices"
 	"sort"
 	"strconv"
 	"time"
@@ -351,7 +352,8 @@ func (s *Server) handleHome(w http.ResponseWriter, r *http.Request) {
 	mixes := []Mix{}
 	forYou := []RecTrack{}
 	var similar map[string]any
-	if rc, err := s.newRecCtx(r.Context(), uid, false); err == nil {
+	rc, rcErr := s.newRecCtx(r.Context(), uid, false)
+	if rcErr == nil {
 		mixes = s.dailyMixes(rc, 4)
 		forYou = s.forYou(rc, 20)
 		for i := range forYou {
@@ -387,6 +389,10 @@ func (s *Server) handleHome(w http.ResponseWriter, r *http.Request) {
 		}
 		rng := rand.New(rand.NewPCG(hashSeed(day, a.Name), uint64(i)))
 		tracks := buildMix(all, a.Name, rng, 30)
+		if rcErr == nil {
+			tracks = slices.DeleteFunc(tracks, rc.taste.trackDisliked)
+			tracks = rc.taste.dropRecent(tracks, 10)
+		}
 		if len(tracks) < 4 {
 			continue
 		}
@@ -578,5 +584,7 @@ func (s *Server) handleRadio(w http.ResponseWriter, r *http.Request) {
 			out = append(out, t)
 		}
 	}
+	// Nothing played to the end in the last 3 hours (the seed stays first).
+	out = append([]Track{out[0]}, rc.taste.dropRecent(out[1:], 10)...)
 	writeJSON(w, http.StatusOK, map[string]any{"name": "Radio: " + seed.Title, "tracks": out})
 }

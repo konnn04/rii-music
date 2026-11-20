@@ -92,9 +92,14 @@ func (s *Server) handleMood(w http.ResponseWriter, r *http.Request) {
 	}
 	sort.Slice(list, func(i, j int) bool { return list[i].v > list[j].v })
 	n := min(25, max(len(list)/2, min(len(list), 8)))
-	tracks := make([]Track, 0, n)
-	for _, x := range list[:min(n, len(list))] {
+	tracks := make([]Track, 0, len(list))
+	for _, x := range list {
 		tracks = append(tracks, x.t)
+	}
+	// Songs finished in the last 3 hours go only if the list would be too short.
+	tracks = rc.taste.dropRecent(tracks, n)
+	if len(tracks) > n {
+		tracks = tracks[:n]
 	}
 	writeJSON(w, http.StatusOK, map[string]any{
 		"mood": body.Mood, "name": m.Name, "reason": m.Reason, "tracks": tracks,

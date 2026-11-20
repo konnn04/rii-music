@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"strings"
 	"testing"
+	"time"
 )
 
 // seedTrack puts a shared track straight into the store and a user's library.
@@ -302,6 +303,39 @@ func TestRadioOnlyOwnTracks(t *testing.T) {
 	for _, tr := range body.Tracks {
 		if tr.ID == "" || tr.Title == "" {
 			t.Fatalf("radio returned an empty track: %+v", tr)
+		}
+	}
+}
+
+func TestRadioSkipsRecentlyFinished(t *testing.T) {
+	s, ts := newTestServer(t)
+	admin, uid := loginAdmin(t, ts.URL)
+	for i := 0; i < 30; i++ {
+		seedTrack(t, s, uid, hexID(i), "Bài Việt", "Ca Sĩ Việt", "vi")
+	}
+	// Songs 1–5 were played to the end an hour ago, song 6 four hours ago.
+	for i := 1; i <= 5; i++ {
+		s.db.Exec(`INSERT INTO listen_events(user_id, track_id, started_at, played_ms, action, hour, source) VALUES (?,?,?,?,?,?,?)`,
+			uid, hexID(i), time.Now().Add(-time.Hour).UnixMilli(), 200000, "finish", 10, "")
+	}
+	s.db.Exec(`INSERT INTO listen_events(user_id, track_id, started_at, played_ms, action, hour, source) VALUES (?,?,?,?,?,?,?)`,
+		uid, hexID(6), time.Now().Add(-4*time.Hour).UnixMilli(), 200000, "finish", 10, "")
+	req, _ := http.NewRequest("GET", ts.URL+"/api/radio?seed="+hexID(0), nil)
+	res, err := admin.hc.Do(req)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var body struct{ Tracks []Track }
+	json.NewDecoder(res.Body).Decode(&body)
+	res.Body.Close()
+	if len(body.Tracks) < 10 {
+		t.Fatalf("radio has %d tracks", len(body.Tracks))
+	}
+	for _, tr := range body.Tracks[1:] {
+		for i := 1; i <= 5; i++ {
+			if tr.ID == hexID(i) {
+				t.Errorf("song %d was finished an hour ago but is in the radio", i)
+			}
 		}
 	}
 }

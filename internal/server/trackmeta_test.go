@@ -21,7 +21,7 @@ func TestTrackMetaFromYTM(t *testing.T) {
 		// "Nghệ sĩ x Nghệ sĩ | Bài".
 		{"KGyPe6h4BIE", "Hà Anh Tuấn, Bùi Anh Tuấn", "Hoang Mang", textutil.Meta{Title: "[FRAGILE+ IN SAIGON] Hoang Mang | Hà Anh Tuấn - Bùi Anh Tuấn"}},
 		// Official song (ATV): clean fields as they are.
-		{"PnGk00MuNM4", "Hngle", "Tìm Em (cùng với Bảo Anh)", textutil.Meta{Title: "Tìm Em"}},
+		{"PnGk00MuNM4", "Hngle", "Tìm Em (feat. Bảo Anh)", textutil.Meta{Title: "Tìm Em"}},
 	}
 	for _, c := range cases {
 		b, err := os.ReadFile("testdata/ytm_next_" + c.vid + ".json")

@@ -8,6 +8,8 @@ import (
 	"mime"
 	"net/http"
 	"strings"
+
+	"rii_music/internal/db"
 )
 
 const likedID = "liked"
@@ -263,7 +265,7 @@ func (s *Server) handleCreatePlaylist(w http.ResponseWriter, r *http.Request) {
 
 // addItems appends tracks from the user's library that are not yet in the
 // playlist, keeping order.
-func addItems(tx *sql.Tx, uid, playlistID string, ids []string) error {
+func addItems(tx *db.Tx, uid, playlistID string, ids []string) error {
 	if len(ids) > 5000 {
 		return errors.New("too many items")
 	}

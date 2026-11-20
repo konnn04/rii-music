@@ -1,286 +1,322 @@
-// Package db opens the SQLite database and applies schema migrations.
+// Package db connects to PostgreSQL and applies schema migrations.
+//
+// Queries in this code base are written with `?` placeholders; DB rewrites
+// them to PostgreSQL's `$1, $2…` and stores Go bools as 0/1 (flag columns are
+// integers), so call sites stay short.
 package db
 
 import (
+	"context"
 	"database/sql"
+	"embed"
 	"errors"
 	"fmt"
+	"io/fs"
+	"sort"
+	"strconv"
+	"strings"
+	"time"
+	"unicode/utf8"
 
-	_ "modernc.org/sqlite"
+	"github.com/jackc/pgx/v5/pgconn"
+	_ "github.com/jackc/pgx/v5/stdlib"
 )
 
-// Open opens (or creates) the database at path and migrates it to the latest schema.
-//
-// One connection only: SQLite serialises writes anyway, and a single connection
-// rules out SQLITE_BUSY between our own goroutines. Callers must therefore never
-// run a query while iterating another query's rows.
-func Open(path string) (*sql.DB, error) {
-	dsn := "file:" + path + "?_pragma=journal_mode(WAL)&_pragma=busy_timeout(5000)&_pragma=foreign_keys(1)&_pragma=synchronous(NORMAL)"
-	d, err := sql.Open("sqlite", dsn)
+// DB wraps *sql.DB with placeholder rewriting. Use it like *sql.DB.
+type DB struct {
+	*sql.DB
+}
+
+// Tx wraps *sql.Tx the same way.
+type Tx struct {
+	*sql.Tx
+}
+
+// Open connects to the database at dsn (postgres://user:pass@host:5432/db?sslmode=disable)
+// and migrates it to the latest schema.
+func Open(ctx context.Context, dsn string) (*DB, error) {
+	d, err := Connect(ctx, dsn)
 	if err != nil {
 		return nil, err
 	}
-	d.SetMaxOpenConns(1)
-	if err := d.Ping(); err != nil {
-		return nil, fmt.Errorf("open database: %w", err)
-	}
-	if err := migrate(d); err != nil {
+	if _, err := Migrate(ctx, d); err != nil {
 		d.Close()
 		return nil, fmt.Errorf("migrate: %w", err)
 	}
 	return d, nil
 }
 
-// Schema history restarts at the multi-user version: the single-user
-// databases before it (user_version 1–6, no users table) are not migrated.
-var migrations = []string{
-	// 1: multi-user schema
-	`
--- ── accounts ──────────────────────────────────────────────────────────
-CREATE TABLE users (
-  id               TEXT PRIMARY KEY,
-  email            TEXT NOT NULL UNIQUE COLLATE NOCASE,
-  name             TEXT NOT NULL DEFAULT '',
-  pass_hash        TEXT NOT NULL DEFAULT '',      -- empty: OTP login only
-  role             TEXT NOT NULL CHECK (role IN ('admin', 'listener')),
-  storage_limit_mb INTEGER NOT NULL CHECK (storage_limit_mb > 0),
-  disabled         INTEGER NOT NULL DEFAULT 0,
-  session_version  INTEGER NOT NULL DEFAULT 1,    -- bump to sign out every session
-  settings_json    TEXT NOT NULL DEFAULT '{}',
-  created_at       INTEGER NOT NULL,
-  last_login_at    INTEGER
-);
-
--- One-time codes for OTP login and password reset (hashed, short-lived).
-CREATE TABLE otp_codes (
-  email      TEXT NOT NULL COLLATE NOCASE,
-  purpose    TEXT NOT NULL CHECK (purpose IN ('login', 'reset')),
-  code_hash  TEXT NOT NULL,
-  expires_at INTEGER NOT NULL,
-  attempts   INTEGER NOT NULL DEFAULT 0,
-  sent_at    INTEGER NOT NULL,
-  PRIMARY KEY (email, purpose)
-);
-
--- ── shared music store: one row and one file per song, whoever downloaded it
-CREATE TABLE tracks (
-  id             TEXT PRIMARY KEY,
-  source         TEXT NOT NULL DEFAULT 'youtube',
-  source_id      TEXT UNIQUE,
-  source_url     TEXT NOT NULL DEFAULT '',
-  title          TEXT NOT NULL,
-  artist         TEXT NOT NULL DEFAULT '',
-  album          TEXT NOT NULL DEFAULT '',
-  duration_ms    INTEGER NOT NULL DEFAULT 0 CHECK (duration_ms >= 0),
-  file_path      TEXT NOT NULL,
-  mime           TEXT NOT NULL,
-  size_bytes     INTEGER NOT NULL DEFAULT 0,
-  has_cover      INTEGER NOT NULL DEFAULT 0,
-  loudness_lufs  REAL,
-  gain_db        REAL NOT NULL DEFAULT 0,
-  loudness_done  INTEGER NOT NULL DEFAULT 0,      -- measured in the background
-  search         TEXT NOT NULL DEFAULT '',
-  added_at       INTEGER NOT NULL
-);
-CREATE INDEX tracks_artist ON tracks(artist);
-
-CREATE TABLE lyrics (
-  track_id   TEXT PRIMARY KEY REFERENCES tracks(id) ON DELETE CASCADE,
-  plain      TEXT NOT NULL DEFAULT '',
-  synced     TEXT NOT NULL DEFAULT '',
-  source     TEXT NOT NULL CHECK (source IN ('lrclib', 'manual', 'none')),
-  offset_ms  INTEGER NOT NULL DEFAULT 0,
-  updated_at INTEGER NOT NULL
-);
-
--- Hand-crafted audio feature vector per track (spectral stats, energy, tempo).
-CREATE TABLE track_features (
-  track_id    TEXT PRIMARY KEY REFERENCES tracks(id) ON DELETE CASCADE,
-  version     INTEGER NOT NULL,
-  vec         TEXT NOT NULL,          -- JSON array of floats; empty array = extraction failed
-  computed_at INTEGER NOT NULL
-);
-
--- Cached responses from Deezer / Last.fm (similar artists, top tracks).
-CREATE TABLE ext_cache (
-  key        TEXT PRIMARY KEY,
-  json       TEXT NOT NULL,
-  fetched_at INTEGER NOT NULL
-);
-
--- Server-wide settings (audio format…), edited by admins.
-CREATE TABLE settings (
-  key        TEXT PRIMARY KEY,
-  value_json TEXT NOT NULL
-);
-
--- ── per user ──────────────────────────────────────────────────────────
--- A user's library: which shared tracks they have, and their play counts.
-CREATE TABLE user_tracks (
-  user_id        TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  track_id       TEXT NOT NULL REFERENCES tracks(id) ON DELETE CASCADE,
-  origin         TEXT NOT NULL DEFAULT 'user' CHECK (origin IN ('user', 'autoplay', 'auto')),
-  added_at       INTEGER NOT NULL,
-  play_count     INTEGER NOT NULL DEFAULT 0,
-  last_played_at INTEGER,
-  PRIMARY KEY (user_id, track_id)
-);
-CREATE INDEX user_tracks_track ON user_tracks(track_id);
-CREATE INDEX user_tracks_added ON user_tracks(user_id, added_at);
-
-CREATE TABLE likes (
-  user_id    TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  track_id   TEXT NOT NULL REFERENCES tracks(id) ON DELETE CASCADE,
-  created_at INTEGER NOT NULL,
-  PRIMARY KEY (user_id, track_id)
-);
-
-CREATE TABLE playlists (
-  id         TEXT PRIMARY KEY,
-  user_id    TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  name       TEXT NOT NULL CHECK (length(name) BETWEEN 1 AND 200),
-  kind       TEXT NOT NULL CHECK (kind IN ('manual', 'smart')),
-  rule_json  TEXT,
-  created_at INTEGER NOT NULL,
-  updated_at INTEGER NOT NULL
-);
-CREATE INDEX playlists_user ON playlists(user_id, updated_at);
-
-CREATE TABLE playlist_items (
-  playlist_id TEXT NOT NULL REFERENCES playlists(id) ON DELETE CASCADE,
-  track_id    TEXT NOT NULL REFERENCES tracks(id) ON DELETE CASCADE,
-  position    INTEGER NOT NULL,
-  added_at    INTEGER NOT NULL,
-  PRIMARY KEY (playlist_id, track_id)
-);
-CREATE INDEX playlist_items_pos ON playlist_items(playlist_id, position);
-CREATE INDEX playlist_items_track ON playlist_items(track_id);
-
-CREATE TABLE listen_events (
-  id         INTEGER PRIMARY KEY AUTOINCREMENT,
-  user_id    TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  track_id   TEXT NOT NULL REFERENCES tracks(id) ON DELETE CASCADE,
-  started_at INTEGER NOT NULL,
-  played_ms  INTEGER NOT NULL DEFAULT 0 CHECK (played_ms >= 0),
-  action     TEXT NOT NULL CHECK (action IN ('finish', 'skip', 'repeat')),
-  hour       INTEGER NOT NULL CHECK (hour BETWEEN 0 AND 23),
-  source     TEXT NOT NULL DEFAULT ''
-);
-CREATE INDEX listen_events_user_time ON listen_events(user_id, started_at);
-CREATE INDEX listen_events_track ON listen_events(track_id);
-
-CREATE TABLE feedback (
-  user_id    TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  kind       TEXT NOT NULL CHECK (kind IN ('artist', 'track')),
-  key        TEXT NOT NULL,          -- folded artist name, or track id
-  value      INTEGER NOT NULL CHECK (value IN (-1, 1)),
-  created_at INTEGER NOT NULL,
-  PRIMARY KEY (user_id, kind, key)
-);
-
-CREATE TABLE download_jobs (
-  id         TEXT PRIMARY KEY,
-  user_id    TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  url        TEXT NOT NULL,
-  source_id  TEXT,
-  title      TEXT NOT NULL DEFAULT '',
-  status     TEXT NOT NULL CHECK (status IN ('queued', 'downloading', 'processing', 'done', 'error', 'skipped')),
-  progress   REAL NOT NULL DEFAULT 0,
-  stage      TEXT NOT NULL DEFAULT '',
-  error      TEXT NOT NULL DEFAULT '',
-  track_id   TEXT,
-  origin     TEXT NOT NULL DEFAULT 'user' CHECK (origin IN ('user', 'autoplay', 'auto')),
-  created_at INTEGER NOT NULL,
-  updated_at INTEGER NOT NULL
-);
-CREATE INDEX download_jobs_user ON download_jobs(user_id, created_at);
-CREATE INDEX download_jobs_status ON download_jobs(status);
-
--- Tracks a user removed (by hand or by the storage limit), so automatic
--- downloads don't bring them back.
-CREATE TABLE removed_tracks (
-  user_id    TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  source_id  TEXT NOT NULL,
-  artist     TEXT NOT NULL,
-  title      TEXT NOT NULL,
-  removed_at INTEGER NOT NULL,
-  PRIMARY KEY (user_id, source_id)
-);
-`,
-	// 2: song language, per-user lyrics choices, API / agent tokens
-	`
--- vi | en | ja | ko | zh | th | '' (unknown): keeps recommendations from mixing languages
-ALTER TABLE tracks ADD COLUMN lang TEXT NOT NULL DEFAULT '';
-ALTER TABLE lyrics ADD COLUMN lrclib_id INTEGER NOT NULL DEFAULT 0;
-
--- Lyrics a user picked for a track (from search, pasted, or just their offset
--- on the automatic ones). When several users pick the same LRCLIB entry,
--- it becomes the suggestion for everyone else.
-CREATE TABLE lyrics_choices (
-  user_id    TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  track_id   TEXT NOT NULL REFERENCES tracks(id) ON DELETE CASCADE,
-  source     TEXT NOT NULL CHECK (source IN ('auto', 'lrclib', 'manual')),
-  lrclib_id  INTEGER NOT NULL DEFAULT 0,
-  plain      TEXT NOT NULL DEFAULT '',
-  synced     TEXT NOT NULL DEFAULT '',
-  offset_ms  INTEGER NOT NULL DEFAULT 0,
-  updated_at INTEGER NOT NULL,
-  PRIMARY KEY (user_id, track_id)
-);
-CREATE INDEX lyrics_choices_track ON lyrics_choices(track_id, lrclib_id);
-
--- Personal tokens: 'api' for scripts using the API, 'agent' for the Discord agent.
-CREATE TABLE api_tokens (
-  id           TEXT PRIMARY KEY,
-  user_id      TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  kind         TEXT NOT NULL CHECK (kind IN ('api', 'agent')),
-  name         TEXT NOT NULL DEFAULT '',
-  token_hash   TEXT NOT NULL UNIQUE,
-  prefix       TEXT NOT NULL,
-  created_at   INTEGER NOT NULL,
-  last_used_at INTEGER
-);
-CREATE INDEX api_tokens_user ON api_tokens(user_id);
-`,
-	// 3: playlists saved from YouTube Music, filled as their songs download
-	`
-ALTER TABLE playlists ADD COLUMN source TEXT NOT NULL DEFAULT '';
-ALTER TABLE download_jobs ADD COLUMN playlist_id TEXT;
-ALTER TABLE download_jobs ADD COLUMN playlist_pos INTEGER NOT NULL DEFAULT 0;
-`,
+// Connect opens the pool without migrating (for `migrate status`).
+func Connect(ctx context.Context, dsn string) (*DB, error) {
+	if dsn == "" {
+		return nil, errors.New("thiếu DATABASE_URL (vd postgres://rii:mat-khau@localhost:5432/rii_music?sslmode=disable)")
+	}
+	sqldb, err := sql.Open("pgx", dsn)
+	if err != nil {
+		return nil, err
+	}
+	sqldb.SetMaxOpenConns(10)
+	sqldb.SetMaxIdleConns(5)
+	sqldb.SetConnMaxIdleTime(5 * time.Minute)
+	// The database may still be starting (docker compose): retry for a while.
+	var perr error
+	for i := 0; i < 30; i++ {
+		pctx, cancel := context.WithTimeout(ctx, 3*time.Second)
+		perr = sqldb.PingContext(pctx)
+		cancel()
+		if perr == nil {
+			return &DB{sqldb}, nil
+		}
+		select {
+		case <-ctx.Done():
+			sqldb.Close()
+			return nil, ctx.Err()
+		case <-time.After(time.Second):
+		}
+	}
+	sqldb.Close()
+	return nil, fmt.Errorf("kết nối PostgreSQL: %w", perr)
 }
 
-// ErrLegacyDB: a database from the single-user version.
-var ErrLegacyDB = errors.New("cơ sở dữ liệu thuộc bản một người dùng cũ: xoá (hoặc đổi tên) rii_music.db, thư mục music và covers trong DATA_DIR rồi chạy lại")
+// Rebind turns `?` placeholders into `$1, $2…` (outside quoted strings).
+func Rebind(q string) string {
+	if !strings.Contains(q, "?") {
+		return q
+	}
+	var b strings.Builder
+	b.Grow(len(q) + 16)
+	n := 0
+	inStr := false
+	for i := 0; i < len(q); i++ {
+		c := q[i]
+		switch {
+		case c == '\'':
+			inStr = !inStr
+			b.WriteByte(c)
+		case c == '?' && !inStr:
+			n++
+			b.WriteByte('$')
+			b.WriteString(strconv.Itoa(n))
+		default:
+			b.WriteByte(c)
+		}
+	}
+	return b.String()
+}
 
-func migrate(d *sql.DB) error {
-	var version int
-	if err := d.QueryRow(`PRAGMA user_version`).Scan(&version); err != nil {
-		return err
-	}
-	if version > 0 {
-		var n int
-		d.QueryRow(`SELECT COUNT(*) FROM sqlite_master WHERE type = 'table' AND name = 'users'`).Scan(&n)
-		if n == 0 {
-			return ErrLegacyDB
+// args stores bools as 0/1 (flag columns are integers) and repairs invalid
+// UTF-8 (PostgreSQL rejects it; tool output can carry it).
+func args(a []any) []any {
+	for i, v := range a {
+		switch x := v.(type) {
+		case string:
+			if !utf8.ValidString(x) {
+				a[i] = strings.ToValidUTF8(x, "�")
+			}
+		case bool:
+			if x {
+				a[i] = 1
+			} else {
+				a[i] = 0
+			}
 		}
 	}
-	for i := version; i < len(migrations); i++ {
-		tx, err := d.Begin()
+	return a
+}
+
+func (d *DB) Exec(q string, a ...any) (sql.Result, error) {
+	return d.DB.Exec(Rebind(q), args(a)...)
+}
+func (d *DB) Query(q string, a ...any) (*sql.Rows, error) {
+	return d.DB.Query(Rebind(q), args(a)...)
+}
+func (d *DB) QueryRow(q string, a ...any) *sql.Row {
+	return d.DB.QueryRow(Rebind(q), args(a)...)
+}
+func (d *DB) ExecContext(ctx context.Context, q string, a ...any) (sql.Result, error) {
+	return d.DB.ExecContext(ctx, Rebind(q), args(a)...)
+}
+func (d *DB) QueryContext(ctx context.Context, q string, a ...any) (*sql.Rows, error) {
+	return d.DB.QueryContext(ctx, Rebind(q), args(a)...)
+}
+func (d *DB) QueryRowContext(ctx context.Context, q string, a ...any) *sql.Row {
+	return d.DB.QueryRowContext(ctx, Rebind(q), args(a)...)
+}
+func (d *DB) Begin() (*Tx, error) {
+	tx, err := d.DB.Begin()
+	if err != nil {
+		return nil, err
+	}
+	return &Tx{tx}, nil
+}
+func (d *DB) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) {
+	tx, err := d.DB.BeginTx(ctx, opts)
+	if err != nil {
+		return nil, err
+	}
+	return &Tx{tx}, nil
+}
+
+func (t *Tx) Exec(q string, a ...any) (sql.Result, error) {
+	return t.Tx.Exec(Rebind(q), args(a)...)
+}
+func (t *Tx) Query(q string, a ...any) (*sql.Rows, error) {
+	return t.Tx.Query(Rebind(q), args(a)...)
+}
+func (t *Tx) QueryRow(q string, a ...any) *sql.Row {
+	return t.Tx.QueryRow(Rebind(q), args(a)...)
+}
+func (t *Tx) ExecContext(ctx context.Context, q string, a ...any) (sql.Result, error) {
+	return t.Tx.ExecContext(ctx, Rebind(q), args(a)...)
+}
+
+// ── migrations ──────────────────────────────────────────────────────────
+
+//go:embed migrations/*.sql
+var migrationFS embed.FS
+
+// Migration is one numbered schema change (migrations/NNNN_name.sql).
+type Migration struct {
+	Version int
+	Name    string
+	SQL     string
+}
+
+// Status of a migration in a database.
+type Status struct {
+	Migration
+	AppliedAt time.Time // zero: pending
+}
+
+// Migrations lists the embedded migrations in order.
+func Migrations() ([]Migration, error) {
+	entries, err := fs.ReadDir(migrationFS, "migrations")
+	if err != nil {
+		return nil, err
+	}
+	var out []Migration
+	for _, e := range entries {
+		name := e.Name()
+		num, rest, ok := strings.Cut(strings.TrimSuffix(name, ".sql"), "_")
+		v, err := strconv.Atoi(num)
+		if !ok || err != nil || v <= 0 {
+			return nil, fmt.Errorf("tên migration không hợp lệ: %s (cần NNNN_ten.sql)", name)
+		}
+		body, err := migrationFS.ReadFile("migrations/" + name)
 		if err != nil {
-			return err
+			return nil, err
 		}
-		if _, err := tx.Exec(migrations[i]); err != nil {
-			tx.Rollback()
-			return fmt.Errorf("migration %d: %w", i+1, err)
+		out = append(out, Migration{Version: v, Name: rest, SQL: string(body)})
+	}
+	sort.Slice(out, func(i, j int) bool { return out[i].Version < out[j].Version })
+	for i := range out {
+		if out[i].Version != i+1 {
+			return nil, fmt.Errorf("migration thiếu số %d", i+1)
 		}
-		if _, err := tx.Exec(fmt.Sprintf(`PRAGMA user_version = %d`, i+1)); err != nil {
+	}
+	return out, nil
+}
+
+// lockKey: pg_advisory_lock id so two server processes never migrate at once.
+const lockKey = 0x52_69_69_4d // "RiiM"
+
+const createTable = `CREATE TABLE IF NOT EXISTS schema_migrations (
+  version    INTEGER PRIMARY KEY,
+  name       TEXT NOT NULL,
+  applied_at TIMESTAMPTZ NOT NULL DEFAULT now()
+)`
+
+// Migrate applies the pending migrations, each in its own transaction, under
+// an advisory lock. It returns the versions applied.
+func Migrate(ctx context.Context, d *DB) ([]int, error) {
+	ms, err := Migrations()
+	if err != nil {
+		return nil, err
+	}
+	conn, err := d.DB.Conn(ctx) // the advisory lock belongs to one session
+	if err != nil {
+		return nil, err
+	}
+	defer conn.Close()
+	if _, err := conn.ExecContext(ctx, `SELECT pg_advisory_lock($1)`, lockKey); err != nil {
+		return nil, err
+	}
+	defer conn.ExecContext(context.Background(), `SELECT pg_advisory_unlock($1)`, lockKey)
+	if _, err := conn.ExecContext(ctx, createTable); err != nil {
+		return nil, err
+	}
+	applied := map[int]bool{}
+	rows, err := conn.QueryContext(ctx, `SELECT version FROM schema_migrations`)
+	if err != nil {
+		return nil, err
+	}
+	for rows.Next() {
+		var v int
+		if rows.Scan(&v) == nil {
+			applied[v] = true
+		}
+	}
+	rows.Close()
+	if len(applied) > len(ms) {
+		return nil, fmt.Errorf("cơ sở dữ liệu có %d migration, bản này chỉ biết %d: đang chạy bản cũ hơn cơ sở dữ liệu?", len(applied), len(ms))
+	}
+	var done []int
+	for _, m := range ms {
+		if applied[m.Version] {
+			continue
+		}
+		tx, err := conn.BeginTx(ctx, nil)
+		if err != nil {
+			return done, err
+		}
+		if _, err := tx.ExecContext(ctx, m.SQL); err != nil {
 			tx.Rollback()
-			return err
+			return done, fmt.Errorf("migration %04d_%s: %w", m.Version, m.Name, err)
+		}
+		if _, err := tx.ExecContext(ctx, `INSERT INTO schema_migrations(version, name) VALUES ($1, $2)`, m.Version, m.Name); err != nil {
+			tx.Rollback()
+			return done, err
 		}
 		if err := tx.Commit(); err != nil {
-			return err
+			return done, err
 		}
+		done = append(done, m.Version)
 	}
-	return nil
+	return done, nil
+}
+
+// MigrationStatus reports which migrations are applied (without changing anything).
+func MigrationStatus(ctx context.Context, d *DB) ([]Status, error) {
+	ms, err := Migrations()
+	if err != nil {
+		return nil, err
+	}
+	at := map[int]time.Time{}
+	var exists bool
+	d.DB.QueryRowContext(ctx, `SELECT to_regclass('schema_migrations') IS NOT NULL`).Scan(&exists)
+	if exists {
+		rows, err := d.DB.QueryContext(ctx, `SELECT version, applied_at FROM schema_migrations`)
+		if err != nil {
+			return nil, err
+		}
+		for rows.Next() {
+			var v int
+			var t time.Time
+			if rows.Scan(&v, &t) == nil {
+				at[v] = t
+			}
+		}
+		rows.Close()
+	}
+	out := make([]Status, len(ms))
+	for i, m := range ms {
+		out[i] = Status{Migration: m, AppliedAt: at[m.Version]}
+	}
+	return out, nil
+}
+
+// IsUniqueViolation: the error is a duplicate key (SQLSTATE 23505).
+func IsUniqueViolation(err error) bool {
+	var pe *pgconn.PgError
+	return errors.As(err, &pe) && pe.Code == "23505"
 }

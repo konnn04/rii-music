@@ -259,7 +259,8 @@ func (c *Client) Version(ctx context.Context) string {
 
 // BaseArgs are added to every invocation.
 func (c *Client) BaseArgs() []string {
-	args := []string{"--ignore-config", "--no-warnings", "--socket-timeout", "20"}
+	// UTF-8 output whatever the OS code page (Windows prints Vietnamese titles in cp1258 otherwise).
+	args := []string{"--ignore-config", "--no-warnings", "--socket-timeout", "20", "--encoding", "utf-8"}
 	if c.cfg.FFmpeg != "" {
 		args = append(args, "--ffmpeg-location", c.cfg.FFmpeg)
 	}

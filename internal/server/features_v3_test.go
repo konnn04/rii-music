@@ -12,12 +12,12 @@ import (
 // seedTrack puts a shared track straight into the store and a user's library.
 func seedTrack(t *testing.T, s *Server, uid, id, title, artist, lang string) {
 	t.Helper()
-	if _, err := s.db.Exec(`INSERT OR IGNORE INTO tracks(id, source_id, title, artist, file_path, mime, size_bytes, lang, added_at) VALUES (?,?,?,?,?,?,?,?,?)`,
+	if _, err := s.db.Exec(`INSERT INTO tracks(id, source_id, title, artist, file_path, mime, size_bytes, lang, added_at) VALUES (?,?,?,?,?,?,?,?,?) ON CONFLICT DO NOTHING`,
 		id, "v"+id, title, artist, "music/"+id+".m4a", "audio/mp4", 1000, lang, nowMs()); err != nil {
 		t.Fatal(err)
 	}
 	if uid != "" {
-		s.db.Exec(`INSERT OR IGNORE INTO user_tracks(user_id, track_id, added_at) VALUES (?,?,?)`, uid, id, nowMs())
+		s.db.Exec(`INSERT INTO user_tracks(user_id, track_id, added_at) VALUES (?,?,?) ON CONFLICT DO NOTHING`, uid, id, nowMs())
 	}
 }
 

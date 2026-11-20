@@ -4,7 +4,7 @@ Guide for coding agents and contributors working on RiiMusic. User-facing docs l
 
 ## What it is
 
-A self-hosted music web app for a small group. Songs come from YouTube / YouTube Music through yt-dlp. One Go binary serves the API and the embedded React app (PWA). All state lives in `DATA_DIR`: SQLite, audio files, covers, the yt-dlp binary, `secret.key`, `cookies.txt`.
+A self-hosted music web app for a small group. Songs come from YouTube / YouTube Music through yt-dlp. One Go binary serves the API and the embedded React app (PWA). Tables live in PostgreSQL (`DATABASE_URL`); files live in `DATA_DIR`: audio, covers, previews, the yt-dlp binary, `secret.key`, `cookies.txt`.
 
 ## Commands
 
@@ -17,7 +17,9 @@ pnpm dev              # Vite dev server, proxies /api to :8080
 
 # server (repo root)
 go build -o rii_music .        # Windows: rii_music.exe
-go vet ./... && go test ./...
+go vet ./...
+TEST_DATABASE_URL=postgres://rii@localhost:5432/rii_test?sslmode=disable go test ./...   # tests skip without it
+./rii_music migrate status     # or: migrate up
 ./rii_music                    # reads .env (ENV_FILE), serves :8080
 
 # Docker
@@ -31,8 +33,8 @@ Before finishing a change: `go vet ./...`, `go test ./...`, `pnpm typecheck`, an
 ## Layout
 
 ```
-main.go                     startup, .env loading, log ring buffer, DB rename (vang.db → rii_music.db), `discord-agent` subcommand
-internal/db                 SQLite (modernc, single connection) + migrations via PRAGMA user_version
+main.go                     startup, .env loading, log ring buffer, `migrate` and `discord-agent` subcommands
+internal/db                 PostgreSQL via pgx (database/sql), `?` → `$n` rewriting, numbered migrations in migrations/*.sql
 internal/ytdlp              manages the yt-dlp binary (nightly, SHA-256 checked, daily refresh), runs it as a child process
 internal/textutil           accent folding, YouTube title cleanup, language detection (DetectLang)
 internal/discordrpc         Discord IPC client + polling agent (exe fallback for the script agents)
@@ -62,7 +64,9 @@ web/src/
 
 **Multi-user data model.** `tracks` (files, covers, lyrics, audio features, language) are shared server-wide; `user_tracks` links a user to a track. Likes, playlists, listens, jobs, lyrics choices, feedback and settings are per user. Removing a song removes the user's link; the file is garbage-collected when no user owns it. Downloading a song already on the server just links it. Anything computed server-wide (sound-alikes from `track_features`, co-listening) must be filtered to the user's library before use (`rc.byID` lookups must check `ok`).
 
-**Migrations.** `internal/db/db.go`, numbered by `PRAGMA user_version`. Never edit a shipped migration; append a new one. A legacy single-user database is refused (`ErrLegacyDB`).
+**Database.** PostgreSQL. Queries keep `?` placeholders; `db.DB` rewrites them to `$1…`, stores Go bools as 0/1 (flag columns are SMALLINT) and repairs invalid UTF-8. Times are Unix ms in BIGINT. Emails are CITEXT. Write portable SQL: `ON CONFLICT … DO NOTHING/UPDATE`, `COUNT(*) FILTER (WHERE …)`, `lower(x)` for case-insensitive sorting, `GREATEST/LEAST`, full GROUP BY lists. Detect duplicates with `db.IsUniqueViolation`.
+
+**Migrations.** `internal/db/migrations/NNNN_name.sql`, embedded, applied in order at startup, each in a transaction, recorded in `schema_migrations`, under a `pg_advisory_lock` so two processes never migrate at once. Never edit a shipped migration; add the next number. `rii_music migrate status|up` inspects or applies them. Tests create one schema per test in `TEST_DATABASE_URL` (citext is installed in `public` once).
 
 **Auth.** PBKDF2-SHA256 (600k iterations). Session cookie `rii_session` is HMAC-signed `uid.ver.exp.sig`; bumping `session_version` revokes every session. Cookie-authenticated mutating requests must carry the `X-RiiMusic` header (CSRF guard). Bearer tokens (`rii_…`, kind `api` or `agent`) skip it; agent tokens only reach `/api/agent/nowplaying`. OTP codes are hashed, expire in 10 min, allow 5 tries, 60 s resend cooldown.
 
@@ -101,11 +105,11 @@ web/src/
 ## Working rules
 
 - Never read, print or commit `.env` (it holds the admin password and the Gmail app password). `.env`, `data/`, `*.exe`, `*.exe~` and `.prepare/` are not committed.
-- Test anything destructive (eviction, reset, cleanup) against a copy of `data/` on another port, e.g. `DATA_DIR=/tmp/copy PORT=8081 ENV_FILE=/nonexistent ./rii_music`. Copy `rii_music.db-wal` with the database or recent writes are missing.
+- Test anything destructive (eviction, reset, cleanup) against a separate database and data dir on another port, e.g. `DATABASE_URL=…/rii_scratch DATA_DIR=/tmp/copy PORT=8081 ENV_FILE=/nonexistent ./rii_music`.
 - The live server may be in use while you work: when cleaning up test data there, delete only the exact ids you created.
 - Files use LF line endings (`.gitattributes`). On Windows, write files in binary/`newline=""` mode when scripting, and run Python with `PYTHONUTF8=1`.
 - Commit in small steps with clear messages. Keep someone else's uncommitted edits out of your commits unless asked.
-- Renames: data and protocol names (`rii_music.db`, `X-RiiMusic`, `rii_` tokens, `RIIMUSIC_*` env vars, `rii-*` storage keys) are part of the contract with existing installs and clients; changing them logs everyone out and breaks tokens.
+- Renames: data and protocol names (`X-RiiMusic`, `rii_` tokens, `RIIMUSIC_*` env vars, `rii-*` storage keys) are part of the contract with existing installs and clients; changing them logs everyone out and breaks tokens.
 
 ## Extra environment variables
 

@@ -18,6 +18,7 @@ import (
 	"sync"
 	"time"
 
+	"rii_music/internal/db"
 	"rii_music/internal/textutil"
 	"rii_music/internal/ytdlp"
 )
@@ -774,7 +775,7 @@ func (d *Downloader) ingest(ctx context.Context, j *Job, tmp, src string, info *
 	if err != nil {
 		os.Remove(final)
 		os.Remove(coverOut)
-		if strings.Contains(err.Error(), "UNIQUE") {
+		if db.IsUniqueViolation(err) {
 			// Someone else downloaded the same song meanwhile: use theirs.
 			var existing string
 			s.db.QueryRow(`SELECT id FROM tracks WHERE source_id = ?`, info.ID).Scan(&existing)

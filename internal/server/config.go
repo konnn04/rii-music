@@ -9,8 +9,10 @@ import (
 )
 
 type Config struct {
-	Addr        string
-	DataDir     string
+	Addr    string
+	DataDir string
+	// DatabaseURL: PostgreSQL connection string (DATABASE_URL).
+	DatabaseURL string
 	TrustProxy  bool
 	FFmpeg      string
 	MaxJobs     int
@@ -41,6 +43,7 @@ func LoadConfig() Config {
 	c := Config{
 		Addr:        ":" + env("PORT", "8080"),
 		DataDir:     env("DATA_DIR", "./data"),
+		DatabaseURL: strings.TrimSpace(os.Getenv("DATABASE_URL")),
 		TrustProxy:  envBool("TRUST_PROXY", false),
 		FFmpeg:      env("FFMPEG_PATH", "ffmpeg"),
 		MaxJobs:     envInt("DOWNLOAD_CONCURRENCY", 2),

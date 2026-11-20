@@ -10,6 +10,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"rii_music/internal/db"
 )
 
 // ── users ───────────────────────────────────────────────────────────────
@@ -129,7 +131,7 @@ func (s *Server) handleAdminCreateUser(w http.ResponseWriter, r *http.Request) {
 	_, err := s.db.Exec(`INSERT INTO users(id, email, name, pass_hash, role, storage_limit_mb, created_at) VALUES (?,?,?,?,?,?,?)`,
 		id, email, name, hash, body.Role, body.StorageLimitMB, nowMs())
 	if err != nil {
-		if strings.Contains(err.Error(), "UNIQUE") {
+		if db.IsUniqueViolation(err) {
 			httpError(w, http.StatusConflict, "Email này đã có tài khoản")
 			return
 		}
@@ -223,7 +225,7 @@ func (s *Server) handleAdminPatchUser(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		if _, err := s.db.Exec(`UPDATE users SET email = ? WHERE id = ?`, e, u.ID); err != nil {
-			if strings.Contains(err.Error(), "UNIQUE") {
+			if db.IsUniqueViolation(err) {
 				httpError(w, http.StatusConflict, "Email này đã có tài khoản")
 				return
 			}
@@ -431,14 +433,15 @@ func (s *Server) handleAdminSystem(w http.ResponseWriter, r *http.Request) {
 	}
 	musicBytes, musicFiles := dirUsage(s.cfg.MusicDir())
 	coverBytes, _ := dirUsage(s.cfg.CoverDir())
-	dbPath := filepath.Join(s.cfg.DataDir, "rii_music.db")
+	var dbBytes int64
+	s.db.QueryRow(`SELECT pg_database_size(current_database())`).Scan(&dbBytes)
 
 	var tracks, orphans, loudPending, users, admins int
 	var storeBytes int64
 	s.db.QueryRow(`SELECT COUNT(*), COALESCE(SUM(size_bytes), 0) FROM tracks`).Scan(&tracks, &storeBytes)
 	s.db.QueryRow(`SELECT COUNT(*) FROM tracks t WHERE NOT EXISTS (SELECT 1 FROM user_tracks ut WHERE ut.track_id = t.id)`).Scan(&orphans)
 	s.db.QueryRow(`SELECT COUNT(*) FROM tracks WHERE loudness_done = 0`).Scan(&loudPending)
-	s.db.QueryRow(`SELECT COUNT(*), COALESCE(SUM(role = 'admin'), 0) FROM users`).Scan(&users, &admins)
+	s.db.QueryRow(`SELECT COUNT(*), COUNT(*) FILTER (WHERE role = 'admin') FROM users`).Scan(&users, &admins)
 	jobs := map[string]int{}
 	if rows, err := s.db.Query(`SELECT status, COUNT(*) FROM download_jobs GROUP BY status`); err == nil {
 		for rows.Next() {
@@ -459,7 +462,7 @@ func (s *Server) handleAdminSystem(w http.ResponseWriter, r *http.Request) {
 		"ffmpeg": s.cfg.FFmpeg,
 		"storage": map[string]any{
 			"musicBytes": musicBytes, "musicFiles": musicFiles, "coverBytes": coverBytes,
-			"dbBytes": fileSize(dbPath) + fileSize(dbPath+"-wal"), "tracks": tracks, "trackBytes": storeBytes, "orphanTracks": orphans,
+			"dbBytes": dbBytes, "tracks": tracks, "trackBytes": storeBytes, "orphanTracks": orphans,
 		},
 		"analysis":  map[string]any{"loudnessPending": loudPending, "featuresPending": f.pending, "featuresReady": len(f.ids)},
 		"jobs":      jobs,

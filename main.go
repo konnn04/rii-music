@@ -44,6 +44,14 @@ func main() {
 	log := slog.New(logBuf.Wrap(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{Level: level})))
 	slog.SetDefault(log)
 
+	if len(os.Args) > 1 && os.Args[1] == "migrate" {
+		if err := runMigrate(os.Args[2:]); err != nil {
+			log.Error("migrate", "err", err)
+			os.Exit(1)
+		}
+		return
+	}
+
 	if len(os.Args) > 1 && os.Args[1] == "discord-agent" {
 		if err := runDiscordAgent(os.Args[2:], log); err != nil {
 			log.Error("discord agent", "err", err)
@@ -66,19 +74,7 @@ func run(log *slog.Logger, logBuf *server.LogBuffer) error {
 		}
 	}
 
-	dbPath := filepath.Join(cfg.DataDir, "rii_music.db")
-	// The database was called vang.db before the rename: take it over once.
-	if old := filepath.Join(cfg.DataDir, "vang.db"); fileExists(old) && !fileExists(dbPath) {
-		for _, ext := range []string{"", "-wal", "-shm"} {
-			if fileExists(old + ext) {
-				if err := os.Rename(old+ext, dbPath+ext); err != nil {
-					return fmt.Errorf("đổi tên vang.db: %w", err)
-				}
-			}
-		}
-		log.Info("database renamed", "from", "vang.db", "to", "rii_music.db")
-	}
-	database, err := db.Open(dbPath)
+	database, err := db.Open(context.Background(), cfg.DatabaseURL)
 	if err != nil {
 		return err
 	}
@@ -182,7 +178,45 @@ func runDiscordAgent(args []string, log *slog.Logger) error {
 	return a.Run(ctx)
 }
 
-func fileExists(p string) bool {
-	_, err := os.Stat(p)
-	return err == nil
+// runMigrate: "rii_music migrate [status|up]". The server also migrates on
+// start; this shows where a database stands, or upgrades it ahead of a deploy.
+func runMigrate(args []string) error {
+	ctx := context.Background()
+	d, err := db.Connect(ctx, os.Getenv("DATABASE_URL"))
+	if err != nil {
+		return err
+	}
+	defer d.Close()
+	cmd := "status"
+	if len(args) > 0 {
+		cmd = args[0]
+	}
+	switch cmd {
+	case "up":
+		done, err := db.Migrate(ctx, d)
+		for _, v := range done {
+			fmt.Println(fmt.Sprintf("applied %04d", v))
+		}
+		if err != nil {
+			return err
+		}
+		if len(done) == 0 {
+			fmt.Println("up to date")
+		}
+	case "status":
+		st, err := db.MigrationStatus(ctx, d)
+		if err != nil {
+			return err
+		}
+		for _, m := range st {
+			at := "pending"
+			if !m.AppliedAt.IsZero() {
+				at = m.AppliedAt.Local().Format("2006-01-02 15:04")
+			}
+			fmt.Println(fmt.Sprintf("%04d  %-28s %s", m.Version, m.Name, at))
+		}
+	default:
+		return fmt.Errorf("lệnh không rõ %q: dùng status hoặc up", cmd)
+	}
+	return nil
 }

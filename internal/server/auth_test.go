@@ -2,9 +2,12 @@ package server
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
+	"fmt"
 	"io"
 	"log/slog"
+	"math/rand/v2"
 	"net/http"
 	"net/http/cookiejar"
 	"net/http/httptest"
@@ -25,11 +28,7 @@ func newTestServer(t *testing.T) (*Server, *httptest.Server) {
 	for _, d := range []string{"music", "covers", "tmp", "bin"} {
 		os.MkdirAll(filepath.Join(dir, d), 0o755)
 	}
-	database, err := db.Open(filepath.Join(dir, "rii_music.db"))
-	if err != nil {
-		t.Fatal(err)
-	}
-	t.Cleanup(func() { database.Close() })
+	database := testDB(t)
 	log := slog.New(slog.NewTextHandler(io.Discard, nil))
 	cfg := Config{DataDir: dir, AdminEmail: "Admin@Example.com", AdminPassword: "admin-pass-1", DefaultStorageMB: 2048, MaxJobs: 1, FFmpeg: "ffmpeg"}
 	s, err := New(cfg, database, ytdlp.New(ytdlp.Config{BinDir: filepath.Join(dir, "bin")}, log), fstest.MapFS{}, log)
@@ -42,6 +41,41 @@ func newTestServer(t *testing.T) (*Server, *httptest.Server) {
 	ts := httptest.NewServer(s.Handler())
 	t.Cleanup(ts.Close)
 	return s, ts
+}
+
+// testDB gives each test its own PostgreSQL schema in TEST_DATABASE_URL
+// (dropped afterwards). Without TEST_DATABASE_URL the test is skipped.
+func testDB(t *testing.T) *db.DB {
+	t.Helper()
+	base := os.Getenv("TEST_DATABASE_URL")
+	if base == "" {
+		t.Skip("TEST_DATABASE_URL not set (e.g. postgres://rii@localhost:5432/rii_test?sslmode=disable)")
+	}
+	ctx := context.Background()
+	admin, err := db.Connect(ctx, base)
+	if err != nil {
+		t.Fatal(err)
+	}
+	schema := fmt.Sprintf("t_%d_%d", time.Now().UnixNano(), rand.IntN(1e6))
+	// citext lives in public once per database; each schema migrates into itself.
+	admin.Exec(`CREATE EXTENSION IF NOT EXISTS citext SCHEMA public`)
+	if _, err := admin.Exec(`CREATE SCHEMA ` + schema); err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() {
+		admin.Exec(`DROP SCHEMA ` + schema + ` CASCADE`)
+		admin.Close()
+	})
+	sep := "?"
+	if strings.Contains(base, "?") {
+		sep = "&"
+	}
+	d, err := db.Open(ctx, base+sep+"search_path="+schema+",public")
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { d.Close() })
+	return d
 }
 
 type client struct {

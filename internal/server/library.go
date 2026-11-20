@@ -111,8 +111,8 @@ func (s *Server) tracksByIDs(uid string, ids []string) ([]Track, error) {
 
 var trackOrder = map[string]string{
 	"added":  "ut.added_at DESC",
-	"title":  "t.title COLLATE NOCASE ASC",
-	"artist": "t.artist COLLATE NOCASE ASC, t.album COLLATE NOCASE, t.title COLLATE NOCASE",
+	"title":  "lower(t.title) ASC",
+	"artist": "lower(t.artist) ASC, lower(t.album), lower(t.title)",
 	"plays":  "ut.play_count DESC, ut.last_played_at DESC",
 }
 

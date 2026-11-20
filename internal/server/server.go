@@ -3,7 +3,6 @@ package server
 import (
 	"context"
 	"crypto/rand"
-	"database/sql"
 	"encoding/hex"
 	"encoding/json"
 	"errors"
@@ -15,12 +14,13 @@ import (
 	"strings"
 	"time"
 
+	"rii_music/internal/db"
 	"rii_music/internal/ytdlp"
 )
 
 type Server struct {
 	cfg   Config
-	db    *sql.DB
+	db    *db.DB
 	yt    *ytdlp.Client
 	log   *slog.Logger
 	web   fs.FS
@@ -40,13 +40,13 @@ type Server struct {
 	logs     *LogBuffer
 }
 
-func New(cfg Config, db *sql.DB, yt *ytdlp.Client, web fs.FS, log *slog.Logger) (*Server, error) {
+func New(cfg Config, database *db.DB, yt *ytdlp.Client, web fs.FS, log *slog.Logger) (*Server, error) {
 	auth, err := NewAuth(cfg)
 	if err != nil {
 		return nil, err
 	}
 	s := &Server{
-		cfg: cfg, db: db, yt: yt, log: log, web: web, auth: auth,
+		cfg: cfg, db: database, yt: yt, log: log, web: web, auth: auth,
 		hub:   NewHub(),
 		lrc:   NewLRCLib(),
 		login: NewRateLimiter(10, time.Minute),

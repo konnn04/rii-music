@@ -1,6 +1,6 @@
 # docker compose up -d --build
 # Configuration: .env next to this file (copy .env.example). DATA_DIR / PORT inside
-# the container are fixed by the image; change the published port below instead.
+# the container are fixed by the image; publish the port or put a reverse proxy in front.
 services:
   rii_music:
     build: .
@@ -12,12 +12,35 @@ services:
       DATA_DIR: /data
       PORT: "8080"
       TRUST_PROXY: "true" # behind a reverse proxy (Caddy, Nginx, Traefik, Coolify)
+      DATABASE_URL: postgres://${POSTGRES_USER:-rii}:${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}@postgres:5432/${POSTGRES_DB:-rii_music}?sslmode=disable
+    depends_on:
+      postgres:
+        condition: service_healthy
     expose:
       - "8080"
     volumes:
-      - rii_music-data:/data # database, music, covers, yt-dlp, cookies.txt
+      - rii_music-data:/data # music, covers, previews, yt-dlp, cookies.txt
     # Optional: YouTube cookies when it asks to "confirm you're not a bot":
     #   docker cp cookies.txt rii_music:/data/cookies.txt
 
+  postgres:
+    image: postgres:17-alpine
+    container_name: rii_music-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-rii}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
+      POSTGRES_DB: ${POSTGRES_DB:-rii_music}
+    volumes:
+      - rii_music-pg:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+    # Not published: only the app container reaches it. Backups:
+    #   docker compose exec postgres pg_dump -U rii rii_music > backup.sql
+
 volumes:
   rii_music-data:
+  rii_music-pg:

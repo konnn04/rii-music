@@ -6,7 +6,7 @@
 
 Web nghe nhạc tự host cho bạn và nhóm bạn bè. Tìm và tải nhạc từ YouTube Music, mỗi người một thư viện riêng, nghe trên điện thoại và máy tính như một app.
 
-Một file chạy duy nhất (Go) phục vụ cả giao diện lẫn API. Toàn bộ dữ liệu nằm trong một thư mục.
+Một file chạy duy nhất (Go) phục vụ cả giao diện lẫn API. Dữ liệu bảng nằm trong PostgreSQL, nhạc và ảnh bìa nằm trong một thư mục.
 
 ## Tính năng
 
@@ -44,27 +44,27 @@ Cần Docker và Docker Compose.
 
 ```bash
 git clone <repo> rii_music && cd rii_music
-cp .env.example .env      # điền ít nhất ADMIN_EMAIL, ADMIN_PASSWORD, PUBLIC_URL
+cp .env.example .env      # điền ít nhất POSTGRES_PASSWORD, ADMIN_EMAIL, ADMIN_PASSWORD, PUBLIC_URL
 docker compose up -d --build
 ```
 
-Mở `http://<máy chủ>:8080` và đăng nhập bằng `ADMIN_EMAIL` / `ADMIN_PASSWORD`. Lần chạy đầu, máy chủ tự tải yt-dlp (xem tiến trình bằng `docker compose logs -f`).
+Compose chạy hai container: app và PostgreSQL (chỉ app truy cập được). Mở `http://<máy chủ>:8080` và đăng nhập bằng `ADMIN_EMAIL` / `ADMIN_PASSWORD`. Lần chạy đầu, máy chủ tự tạo bảng và tải yt-dlp (xem bằng `docker compose logs -f`).
 
 **Chạy thật trên Internet:**
 - Đặt sau reverse proxy có HTTPS, ví dụ Caddy: `nhac.example.com { reverse_proxy localhost:8080 }`.
 - Đặt `PUBLIC_URL=https://nhac.example.com` (dùng cho link trong email, link chia sẻ, ảnh bìa trên Discord).
 - Với Nginx, tắt đệm cho cập nhật trực tiếp: `proxy_buffering off;` ở `/api/events`.
 
-**Cập nhật:** `git pull && docker compose up -d --build`. Cơ sở dữ liệu tự nâng cấp.
+**Cập nhật:** `git pull && docker compose up -d --build`. Cơ sở dữ liệu tự nâng cấp (migration đánh số, chạy một lần, có khoá để không chạy chồng). Xem trạng thái: `docker compose exec rii_music rii_music migrate status`.
 
-**Sao lưu:** toàn bộ dữ liệu (DB, nhạc, ảnh bìa, cookies) nằm trong volume `rii_music-data`. Sao lưu volume này là đủ.
+**Sao lưu:** cơ sở dữ liệu bằng `docker compose exec postgres pg_dump -U rii rii_music > backup.sql`; nhạc, ảnh bìa, cookies nằm trong volume `rii_music-data`.
 
 ## Chạy trực tiếp trên máy
 
-Cần Go 1.27+, Node 22+ với pnpm, và ffmpeg trong PATH.
+Cần Go 1.27+, Node 22+ với pnpm, ffmpeg trong PATH, và một PostgreSQL (14 trở lên) với một database trống.
 
 ```bash
-cp .env.example .env
+cp .env.example .env         # đặt DATABASE_URL trỏ tới PostgreSQL của bạn
 cd web && pnpm install && pnpm build && cd ..
 go build -o rii_music .      # Windows: go build -o rii_music.exe .
 ./rii_music                  # Windows: .\rii_music.exe
@@ -79,13 +79,15 @@ Mở http://localhost:8080. Tắt bằng Ctrl+C. Sau mỗi lần cập nhật co
 | Biến | Mặc định | Ý nghĩa |
 | --- | --- | --- |
 | `ADMIN_EMAIL` / `ADMIN_PASSWORD` | `admin@riimusic.local` / ngẫu nhiên, in ra log | Tài khoản admin đầu tiên, chỉ tạo khi chưa có tài khoản nào |
+| `DATABASE_URL` | Compose tự đặt | Chuỗi kết nối PostgreSQL, vd `postgres://rii:mat-khau@localhost:5432/rii_music?sslmode=disable` |
+| `POSTGRES_PASSWORD` | | Mật khẩu PostgreSQL trong Docker Compose (chữ và số) |
 | `PUBLIC_URL` | | Địa chỉ công khai (https) của trang |
 | `SMTP_USERNAME` / `SMTP_PASSWORD` | | Gmail và app password. Thiếu thì đăng nhập bằng mã và quên mật khẩu bị tắt |
 | `SMTP_HOST` / `SMTP_PORT` | `smtp.gmail.com` / `587` | Máy chủ gửi mail (465 = TLS ngay) |
 | `SMTP_FROM` | `SMTP_USERNAME` | Người gửi, dạng `Tên <địa chỉ>` |
 | `DEFAULT_STORAGE_LIMIT_MB` | `2048` | Dung lượng nhạc cho tài khoản mới |
 | `LASTFM_API_KEY` | | Dùng Last.fm thay Deezer để tìm nghệ sĩ tương tự |
-| `DATA_DIR` | `./data` | Thư mục dữ liệu |
+| `DATA_DIR` | `./data` | Thư mục nhạc, ảnh bìa, yt-dlp |
 | `PORT` | `8080` | Cổng |
 | `TRUST_PROXY` | `false` (Docker: `true`) | Lấy IP thật từ reverse proxy |
 | `DOWNLOAD_CONCURRENCY` | `2` | Số bài tải cùng lúc |

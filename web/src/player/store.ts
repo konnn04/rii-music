@@ -336,6 +336,12 @@ export const usePlayer = create<State & Actions>()(
     {
       name: "rii-player",
       version: 1,
+      // Phones and tablets: the hardware buttons set the volume, so the page
+      // always opens at 100 %. Computers keep the last volume.
+      merge: (persisted, current) => {
+        const p = { ...current, ...(persisted as Partial<State>) };
+        return touchOnly() ? { ...p, volume: 1, muted: false } : p;
+      },
       partialize: (s) => ({
         context: s.context,
         original: s.original,
@@ -354,6 +360,12 @@ export const usePlayer = create<State & Actions>()(
     },
   ),
 );
+
+/** A device without a mouse or trackpad (phone, tablet). */
+function touchOnly(): boolean {
+  if (typeof window === "undefined" || !window.matchMedia) return false;
+  return window.matchMedia("(pointer: coarse)").matches && !window.matchMedia("(any-pointer: fine)").matches;
+}
 
 /** Upcoming entries as shown in the queue: manual first, then the rest of the context. */
 export function upcoming(s: Pick<State, "manual" | "context" | "pos">) {

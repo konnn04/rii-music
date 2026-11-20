@@ -157,7 +157,7 @@ func (s *Server) handleOpenAPI(w http.ResponseWriter, r *http.Request) {
 		"openapi": "3.1.0",
 		"info": map[string]any{
 			"title":       b.Name + " API",
-			"version":     "1",
+			"version":     Version,
 			"description": "API của máy chủ nhạc " + b.Name + ". Gọi bằng token cá nhân (Cài đặt → API): `Authorization: Bearer rii_…`. Mọi bài, playlist, lịch sử là của tài khoản sở hữu token.",
 		},
 		"servers":  []map[string]string{{"url": s.baseURL(r)}},

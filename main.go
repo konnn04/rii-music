@@ -29,6 +29,10 @@ func main() {
 	if err := server.LoadDotEnv(envOr("ENV_FILE", ".env")); err != nil {
 		slog.Error("đọc .env lỗi", "err", err)
 	}
+	if len(os.Args) > 1 && (os.Args[1] == "-version" || os.Args[1] == "version") {
+		fmt.Println("rii_music", server.Version)
+		return
+	}
 	if len(os.Args) > 1 && os.Args[1] == "-healthcheck" {
 		res, err := http.Get("http://127.0.0.1:" + envOr("PORT", "8080") + "/api/health")
 		if err != nil || res.StatusCode != http.StatusOK {
@@ -122,6 +126,7 @@ func run(log *slog.Logger, logBuf *server.LogBuffer) error {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
 
+	log.Info("RiiMusic", "version", server.Version)
 	go yt.Init(ctx)
 	srv.Start(ctx)
 

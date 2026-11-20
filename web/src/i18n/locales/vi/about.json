@@ -1,0 +1,25 @@
+{
+  "title": "Giới thiệu",
+  "version": "Phiên bản {version}",
+  "creditsTitle": "Nguồn & công nghệ sử dụng",
+  "madeBy": "Làm với ♥ bởi {name}",
+  "disclaimer": "Bản quyền âm nhạc thuộc về các nghệ sĩ và chủ sở hữu tương ứng. Ứng dụng này chỉ dành cho mục đích nghe nhạc cá nhân.",
+  "roles": {
+    "ytmusic": "Tìm kiếm & thông tin bài hát",
+    "ytdlp": "Tải nhạc",
+    "ffmpeg": "Xử lý âm thanh",
+    "lrclib": "Lời bài hát",
+    "similarArtists": "Nghệ sĩ tương tự",
+    "musicbrainz": "Siêu dữ liệu bài hát",
+    "postgresql": "Cơ sở dữ liệu",
+    "go": "Máy chủ & API",
+    "react": "Giao diện web",
+    "vite": "Công cụ đóng gói",
+    "tanstack": "Điều hướng & truy vấn dữ liệu",
+    "zustand": "Quản lý trạng thái",
+    "tailwind": "Hệ thống kiểu dáng CSS",
+    "radix": "Thành phần giao diện trợ năng",
+    "dndkit": "Kéo thả sắp xếp",
+    "font": "Phông chữ"
+  }
+}

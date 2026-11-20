@@ -1,0 +1,25 @@
+{
+  "title": "About",
+  "version": "Version {version}",
+  "creditsTitle": "Credits",
+  "madeBy": "Made with ♥ by {name}",
+  "disclaimer": "All music belongs to its respective artists and rights holders. This app is intended for personal use only.",
+  "roles": {
+    "ytmusic": "Search & song info",
+    "ytdlp": "Downloads",
+    "ffmpeg": "Audio processing",
+    "lrclib": "Lyrics",
+    "similarArtists": "Similar artists",
+    "musicbrainz": "Song metadata",
+    "postgresql": "Database",
+    "go": "Server & API",
+    "react": "Web UI",
+    "vite": "Build tool",
+    "tanstack": "Routing & data fetching",
+    "zustand": "State management",
+    "tailwind": "Styling",
+    "radix": "Accessible UI primitives",
+    "dndkit": "Drag and drop",
+    "font": "Font"
+  }
+}

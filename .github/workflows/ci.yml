@@ -1,0 +1,59 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    # Ephemeral PostgreSQL instance for Go integration tests.
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: rii
+          POSTGRES_PASSWORD: rii
+          POSTGRES_DB: rii_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U rii -d rii_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: web/pnpm-lock.yaml
+
+      # Build the web app first so Go can embed web/dist.
+      - name: Install web dependencies
+        working-directory: web
+        run: pnpm install --frozen-lockfile
+
+      - name: Build web app
+        working-directory: web
+        run: pnpm build
+
+      - name: Go vet
+        run: go vet ./...
+
+      - name: Go test
+        env:
+          TEST_DATABASE_URL: postgres://rii:rii@localhost:5432/rii_test?sslmode=disable
+        run: go test ./...

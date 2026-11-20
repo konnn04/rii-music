@@ -15,6 +15,7 @@ import { Spinner } from "@/components/ui/misc";
 import { Icon, type IconName } from "@/components/ui/Icon";
 import { Avatar, PageHeader, LogoutButton } from "@/components/layout/AppShell";
 import { ACCENTS, swatch } from "@/lib/theme";
+import { AboutCard } from "@/components/AboutCard";
 
 export function SettingsPage() {
   const { data } = useSettings();
@@ -351,6 +352,7 @@ function AccentPicker({ value, onChange }: { value: string; onChange: (v: string
         >
           <Icon name="music-note" size={18} className="text-[#0E0F12]" />
         </Swatch>
+        <AboutCard />
       </div>
     </div>
   );

@@ -19,6 +19,11 @@ Một file chạy duy nhất (Go) phục vụ cả giao diện lẫn API. Dữ l
 - Âm thanh trên chính thiết bị: EQ 10 băng có preset, tăng bass, làm sáng tiếng (exciter), crossfeed cho tai nghe, độ rộng stereo, chống vỡ tiếng.
 - Nghe offline (tự bật): lưu giao diện, thư viện và bài đã nghe trên máy (giữ 30/60/90 ngày), “Tải về máy” trong menu ⋯ của bài.
 - Một trình phát tại một thời điểm giữa các tab và thiết bị: thiết bị khác tự dừng, “Phát ở đây” để tiếp tục đúng bài, đúng chỗ.
+- Điều khiển từ xa: điện thoại thấy máy tính đang phát gì (bài, tiến độ, âm lượng, hàng chờ) và chỉnh từ xa: phát / dừng, tua, chuyển bài, âm lượng, sắp xếp hàng chờ.
+- Nghe chung: “Phát trạm” tạo phòng có mã 6 ký tự, bạn bè nhập mã để nghe cùng lúc. Chủ phòng chọn ai được điều hành, ai chỉ nghe; tự kết nối lại, phòng tự đóng khi không còn ai.
+- Không thích bài / nghệ sĩ: không bao giờ được gợi ý lại (quản lý trong Cài đặt); bài đã nghe trọn trong 3 giờ không bị lặp lại trong radio, mix, tự phát.
+- Tải file nhạc về máy (“Tải về máy”, tên `Nghệ sĩ - Tên bài`) hoặc “Lưu offline” để nghe khi mất mạng; khi offline, bài chưa lưu được bỏ qua.
+- Trên điện thoại: chỉnh cỡ giao diện trong Cài đặt.
 - Hiệu ứng nền đập theo bass, 12 màu nhấn hoặc màu theo ảnh bìa; ảnh bìa chuyển liền mạch từ mini-player lên Đang phát.
 
 **Tìm và tải**

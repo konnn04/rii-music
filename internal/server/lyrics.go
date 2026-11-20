@@ -262,14 +262,25 @@ func (s *Server) fetchShared(ctx context.Context, t *Track) (*Lyrics, error) {
 // decide in the end (resolveLangs), so English songs by V-pop artists remain
 // with V-pop.
 func (s *Server) refineLang(trackID, lyrics string) {
-	if len(lyrics) < 80 {
+	got := textutil.DetectLyricsLang(lyrics)
+	if got == "" {
 		return
 	}
-	got := textutil.DetectLang(lyrics, "")
-	if got == "" || got == textutil.LangEN {
+	if got != textutil.LangEN {
+		// Vietnamese, Japanese (also in romaji), Korean… lyrics settle it.
+		s.db.Exec(`UPDATE tracks SET lang = ? WHERE id = ? AND lang <> ?`, got, trackID, got)
 		return
 	}
-	s.db.Exec(`UPDATE tracks SET lang = ? WHERE id = ? AND lang IN ('', 'en', 'zh')`, got, trackID)
+	// English lyrics: correct a guess the title made on weak grounds, and a
+	// "Vietnamese" guess when the title itself has nothing Vietnamese in it
+	// (the artist's name did it); the artist's majority still applies later.
+	var title string
+	s.db.QueryRow(`SELECT title FROM tracks WHERE id = ?`, trackID).Scan(&title)
+	if textutil.DetectLang(title, "") == textutil.LangVI {
+		s.db.Exec(`UPDATE tracks SET lang = 'en' WHERE id = ? AND lang IN ('', 'zh')`, trackID)
+		return
+	}
+	s.db.Exec(`UPDATE tracks SET lang = 'en' WHERE id = ? AND lang IN ('', 'zh', 'vi')`, trackID)
 }
 
 // ── handlers ────────────────────────────────────────────────────────────

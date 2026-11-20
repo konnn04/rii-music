@@ -255,7 +255,7 @@ func parseYTMItem(it ytmItem, kind string) (WebResult, bool) {
 	}
 	artist := strings.Join(artists, ", ")
 	return WebResult{
-		ID: id, Title: title.String(), Channel: artist, Artist: artist, Album: album, Duration: duration,
+		ID: id, Title: unlocalizeTitle(title.String()), Channel: artist, Artist: artist, Album: album, Duration: duration,
 		Thumbnail: thumb, URL: "https://music.youtube.com/watch?v=" + id, Kind: kind,
 	}, true
 }
@@ -299,11 +299,19 @@ func parseYTMCollection(it ytmItem, kind string) (WebResult, bool) {
 		artist, meta = meta[1], append(meta[:1:1], meta[2:]...)
 	}
 	return WebResult{
-		ID: id, Title: joinRuns(it.FlexColumns[0].Col.Text.Runs), Channel: artist, Artist: artist,
+		ID: id, Title: unlocalizeTitle(joinRuns(it.FlexColumns[0].Col.Text.Runs)), Channel: artist, Artist: artist,
 		Album: strings.Join(meta, " · "), Thumbnail: thumb,
 		URL: "https://music.youtube.com/playlist?list=" + id, Kind: kind,
 	}, true
 }
+
+// unlocalizeTitle undoes YouTube Music's Vietnamese "(cùng với X)" for
+// "(feat. X)" (search still runs with hl=vi, which suits Vietnamese queries).
+func unlocalizeTitle(t string) string {
+	return withRe.ReplaceAllString(t, "${1}feat. ")
+}
+
+var withRe = regexp.MustCompile(`(?i)([(\[]\s*)cùng với\s+`)
 
 func joinRuns(rs []ytmRun) string {
 	var b strings.Builder
@@ -358,9 +366,11 @@ type YTMVideo struct {
 const ytmNextEndpoint = "https://music.youtube.com/youtubei/v1/next?prettyPrint=false"
 
 func ytmVideoMeta(ctx context.Context, hc *http.Client, videoID string) (*YTMVideo, error) {
+	// hl=en: with hl=vi YouTube Music rewrites "(feat. X)" as "(cùng với X)",
+	// which made English songs look Vietnamese. Names themselves are not translated.
 	body, _ := json.Marshal(map[string]any{
 		"context": map[string]any{"client": map[string]any{
-			"clientName": "WEB_REMIX", "clientVersion": ytmClientVersion, "hl": "vi", "gl": "VN",
+			"clientName": "WEB_REMIX", "clientVersion": ytmClientVersion, "hl": "en", "gl": "VN",
 		}},
 		"videoId": videoID,
 	})
@@ -437,7 +447,7 @@ func parseYTMNext(raw any, videoID string) (*YTMVideo, bool) {
 	if json.Unmarshal(b, &r) != nil {
 		return nil, false
 	}
-	v := &YTMVideo{Title: strings.TrimSpace(joinRuns(r.Title.Runs)), Type: r.Nav.Watch.Configs.Music.Type}
+	v := &YTMVideo{Title: unlocalizeTitle(strings.TrimSpace(joinRuns(r.Title.Runs))), Type: r.Nav.Watch.Configs.Music.Type}
 	for _, run := range r.Byline.Runs {
 		switch pageType(run) {
 		case "MUSIC_PAGE_TYPE_ARTIST", "MUSIC_PAGE_TYPE_USER_CHANNEL":
@@ -493,7 +503,7 @@ type YTMList struct {
 // (OLAK5uy_… for albums, PL… for playlists). First page only (~100 songs).
 func ytmBrowseList(ctx context.Context, hc *http.Client, listID string) (*YTMList, error) {
 	body, _ := json.Marshal(map[string]any{
-		"context":  map[string]any{"client": map[string]any{"clientName": "WEB_REMIX", "clientVersion": ytmClientVersion, "hl": "vi", "gl": "VN"}},
+		"context":  map[string]any{"client": map[string]any{"clientName": "WEB_REMIX", "clientVersion": ytmClientVersion, "hl": "en", "gl": "VN"}},
 		"browseId": "VL" + listID,
 	})
 	ctx, cancel := context.WithTimeout(ctx, 12*time.Second)
@@ -547,7 +557,7 @@ func parseYTMBrowse(raw any, listID string) *YTMList {
 		}
 		id := it.PlaylistItemData.VideoID
 		seen[id] = true
-		r := WebResult{ID: id, Title: strings.TrimSpace(joinRuns(it.FlexColumns[0].Col.Text.Runs)), Kind: "songs",
+		r := WebResult{ID: id, Title: unlocalizeTitle(strings.TrimSpace(joinRuns(it.FlexColumns[0].Col.Text.Runs))), Kind: "songs",
 			URL: "https://music.youtube.com/watch?v=" + id, Thumbnail: "https://i.ytimg.com/vi/" + id + "/mqdefault.jpg"}
 		if len(it.FlexColumns) > 1 {
 			var as []string

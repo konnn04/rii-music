@@ -15,17 +15,24 @@ Một file chạy duy nhất (Go) phục vụ cả giao diện lẫn API. Dữ l
 - Hàng đợi kéo thả, "Phát tiếp theo", lưu hàng đợi thành playlist.
 - Lời bài hát chạy theo nhạc (LRCLIB), chỉnh độ lệch, tự tìm hoặc dán lời.
 - Điều khiển từ màn hình khoá và thanh thông báo, cài thành app (PWA).
-- Hiệu ứng nền đập theo bass, 12 màu nhấn hoặc màu theo ảnh bìa.
+- Hẹn giờ ngủ (5–90 phút, nhạc nhỏ dần, hoặc hết bài này).
+- Âm thanh trên chính thiết bị: EQ 10 băng có preset, tăng bass, làm sáng tiếng (exciter), crossfeed cho tai nghe, độ rộng stereo, chống vỡ tiếng.
+- Nghe offline (tự bật): lưu giao diện, thư viện và bài đã nghe trên máy (giữ 30/60/90 ngày), “Tải về máy” trong menu ⋯ của bài.
+- Một trình phát tại một thời điểm giữa các tab và thiết bị: thiết bị khác tự dừng, “Phát ở đây” để tiếp tục đúng bài, đúng chỗ.
+- Hiệu ứng nền đập theo bass, 12 màu nhấn hoặc màu theo ảnh bìa; ảnh bìa chuyển liền mạch từ mini-player lên Đang phát.
 
 **Tìm và tải**
 - Tìm bài, album, playlist, video trên YouTube Music. Bấm Phát: bài đã có phát ngay, bài chưa có tải xong tự phát.
 - Xem album / playlist, lưu cả album thành playlist.
-- Trang nghệ sĩ: bài trong thư viện, bài hát và album trên YouTube Music.
+- Trang nghệ sĩ: bài trong thư viện (kể cả góp giọng), bài hát và album trên YouTube Music.
+- Thư viện lọc theo điều kiện (chữ, ngôn ngữ, thể loại, nghệ sĩ, album, đã thích, lượt nghe, ngày thêm, thời lượng); kéo bài thả vào playlist ở sidebar (PC).
+- Chạy ngầm sau khi tải: nhúng lời vào file nhạc, gắn thể loại (Deezer, Last.fm), kiểm tra tên bài trên MusicBrainz cho video không chính thức.
 - File nhạc dùng chung giữa mọi người: bài đã có trên máy chủ không tải lại.
 
 **Gợi ý**
 - Tự động gợi ý phát khi hàng đợi sắp hết, giữ đúng một ngôn ngữ (đang nghe nhạc Việt thì chỉ nhạc Việt).
-- Mix hằng ngày, radio từ một bài, nghệ sĩ tương tự, playlist theo tâm trạng (trò chuyện với linh vật Vani).
+- Mix hằng ngày, radio từ một bài, nghệ sĩ tương tự, playlist theo tâm trạng (trò chuyện với linh vật Vani), playlist thông minh theo thể loại.
+- “Nghe giống” so âm sắc (MFCC), hoà âm (chroma), phổ, năng lượng và nhịp của bài.
 - Tự động tải trước nhạc hợp gu trong giới hạn dung lượng.
 
 **Tài khoản và quản trị**
@@ -114,6 +121,10 @@ Token được lưu trên máy, lần sau chỉ cần chạy lại lệnh. Để
 ## API
 
 Tạo token ở Cài đặt → API rồi gọi với header `Authorization: Bearer <token>`. Tài liệu đầy đủ tại `/docs` trên máy chủ của bạn (OpenAPI ở `/api/openapi.json`, thư viện TypeScript ở `/api/docs/client.ts`).
+
+## Phiên bản và bản phát hành
+
+`VERSION` giữ số chính và phụ (vd `1.0`). Mỗi lần push hoặc merge vào `main`, GitHub Actions chạy test rồi phát hành `v1.0.<số lần chạy>`: file chạy cho Linux (amd64, arm64), Windows, macOS (Intel, Apple Silicon) kèm `SHA256SUMS.txt`, và image Docker trên GHCR. Phiên bản đang chạy hiện ở Cài đặt → Giới thiệu và `rii_music -version`.
 
 ## Xử lý sự cố
 

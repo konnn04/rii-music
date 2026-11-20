@@ -74,7 +74,7 @@ web/src/
 
 **Language.** `textutil.DetectLang` uses script (ko/ja/zh/th), Vietnamese letters, and a word list for unaccented Vietnamese. `resolveLangs` lets an artist's majority override weak guesses (`en`, `zh`, empty), so V-pop with English titles stays `vi`; lyrics refine it. Radio, mixes, autoplay and auto-download stay in one language (`sameLang`). lingua-go was rejected (+110 MB binary, and it doesn't solve V-pop with English titles).
 
-**Recommendations.** Taste profile from listens (finish +1, repeat +2, skip before 30 s −1.5), likes, playlists and "less like this", decaying with a 30-day half-life. Tier 1: similar artists from Deezer (no key) or Last.fm, cached 7 days. Tier 2: co-listening within sessions. Tier 3: hand-crafted ffmpeg features over 90 s (spectrum, energy, tempo), z-scored per dimension; not a learned embedding.
+**Recommendations.** Taste profile from listens (finish +1, repeat +2, skip before 30 s −1.5), likes, playlists and "less like this", decaying with a 30-day half-life. Tier 1: similar artists from Deezer (no key) or Last.fm, cached 7 days. Tier 2: co-listening within sessions. Tier 3: hand-crafted features, 58 dims: ffmpeg spectral stats over 90 s, energy and tempo (0–19, read by index in mood.go), MFCC 1–13 mean/std (20–45) and a key-independent chroma profile (46–57) computed in Go (`timbre.go`); z-scored per dimension, weighted per group (`featureWeight`), cosine similarity. Bump `featureVersion` when the vector changes (the worker recomputes). Not a learned embedding: the target server is small.
 
 **Autoplay** (`web/src/player/autofill.ts` + `/api/radio`, `/api/recs/autoplay`). Modes: off / lib / free. When fewer than 5 upcoming tracks remain it tops the queue up to 10 from radio; free mode also downloads up to 6 new songs and slots them in when ready. Skipped entries do not come back. Home shelves pass `oneLang` so a mixed shelf only queues songs in the picked song's language.
 
@@ -90,7 +90,17 @@ web/src/
 
 **API docs.** The `apiDocs` table in `docs.go` generates OpenAPI 3.1 at `/api/openapi.json`; `/docs` renders it. `TestDocsMatchRoutes` fails if a documented endpoint is not routed, so add a row when you add an endpoint. The TypeScript client is `internal/server/client.ts`.
 
-**Realtime.** Per-user SSE hub (`/api/events`): job progress, library changes, loudness results. Proxies must not buffer it.
+**Realtime.** Per-user SSE hub (`/api/events`): job progress, library changes, loudness results, playback of the user's other devices. Proxies must not buffer it.
+
+**Playback sync** (`web/src/player/sync.ts`, `playback.go`). One player at a time: tabs tell each other over BroadcastChannel; devices POST `/api/playback` (on change + 30 s heartbeat) and get `playback` SSE events; a device that was playing pauses and offers "Phát ở đây" (GET `/api/playback` returns the session with its tracks). Discord presence is fed from the same reports. State is in memory.
+
+**Sound effects** (`web/src/player/fx.ts`). Web Audio chain between the master gain and the output: 10-band EQ with pre-gain, exciter (harmonic waveshaper on the 3.5 kHz+ band), bass shelf, crossfeed (bs2b-style), mid/side width, limiter. Per device in localStorage (`rii-fx`), bypassed when off. Not available in simple mode (no Web Audio).
+
+**Offline** (`web/src/sw.ts`, `web/src/offline/idb.ts`, `web/src/lib/offline.ts`). Our own service worker (vite-plugin-pwa `injectManifest`; typechecked with `tsconfig.sw.json`). Songs live in IndexedDB `rii-offline` and are served by the service worker for `/api/tracks/{id}/stream` with Range support, online or not. With offline mode on (setting stored in IndexedDB so the SW can read it), library GETs are network-first into the `rii-api` cache. Auto-stored songs (played 20 s) expire after 30/60/90 days since last use; pinned ones ("Tải về máy") stay. Logout clears both.
+
+**Enrichment worker** (`enrich.go`, migration 0002). One track at a time: LRCLIB lyrics written into the file tags with an ffmpeg stream copy (`lyrics_embedded`), Deezer album genres (+ Last.fm tags with a key) into `tracks.genres`, MusicBrainz check (1 req/s) only for `meta_source = 'heuristic'`. Failures are retried hourly. Smart playlists support `{type: "genre"}`; `GET /api/genres`.
+
+**Versioning / CI.** `VERSION` = major.minor; release builds are `<major.minor>.<run number>`, linked with `-X rii_music/internal/server.Version=…` (shown by `/api/health`, OpenAPI, Settings → About). `.github/workflows/ci.yml` runs vet + tests against a Postgres service; `release.yml` on push to `main` tests, then publishes binaries and a GHCR image.
 
 ## Frontend conventions
 
@@ -125,4 +135,4 @@ Beyond the ones in `README.md`:
 
 ## Not done yet
 
-Offline cache, equalizer, cross-device playback sync, learned audio embeddings (e.g. CLAP) for tier 3, a desktop wrapper (Tauri) that could consume the `riimusic:nowplaying` window event.
+Learned audio embeddings (e.g. CLAP) for tier 3 if a stronger server is available, a desktop wrapper (Tauri) that could consume the `riimusic:nowplaying` window event.

@@ -12,8 +12,8 @@ services:
       DATA_DIR: /data
       PORT: "8080"
       TRUST_PROXY: "true" # behind a reverse proxy (Caddy, Nginx, Traefik, Coolify)
-    ports:
-      - "8080:8080"
+    expose:
+      - "8080"
     volumes:
       - rii_music-data:/data # database, music, covers, yt-dlp, cookies.txt
     # Optional: YouTube cookies when it asks to "confirm you're not a bot":

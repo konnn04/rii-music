@@ -180,3 +180,17 @@ html[data-accent] [data-now-playing] {
   --vg-accent-soft: hsl(var(--ah) calc(var(--as) * 0.35) 20%);
   --vg-focus: hsl(var(--ah) var(--as) 80%);
 }
+
+/* Cover shared-element transition (lib/viewTransition.ts): the cover morphs
+   between the mini player and Now Playing; the rest cross-fades. */
+::view-transition-group(np-cover) {
+  animation-duration: 340ms;
+  animation-timing-function: cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 260ms;
+}
+html.cover-vt .np-sheet {
+  animation: none !important;
+}

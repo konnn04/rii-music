@@ -13,6 +13,7 @@ import { usePulse } from "./Pulse";
 import { ArtistLinks } from "@/components/ArtistLinks";
 import { SleepButton } from "@/components/SleepButton";
 import { SoundButton } from "@/components/SoundButton";
+import { COVER_VT, withCoverTransition } from "@/lib/viewTransition";
 
 /** Dark scope with the cover blurred behind a scrim and the accent taken from the cover. */
 export function NowPlayingSurface({ children, className = "", style }: { children: ReactNode; className?: string; style?: CSSProperties }) {
@@ -111,6 +112,12 @@ export function MobileNowPlaying() {
   if (!open || !current) return null;
 
   const close = () => {
+    // The cover flies back into the mini player when it is on screen.
+    if (tab === "cover") {
+      setDy(0);
+      withCoverTransition(() => setNp(false));
+      return;
+    }
     setClosing(true);
     setTimeout(() => {
       setClosing(false);
@@ -148,7 +155,7 @@ export function MobileNowPlaying() {
 
   return (
     <NowPlayingSurface
-      className="fixed inset-0 z-[50] flex flex-col pt-safe pb-safe animate-[sheet-up_250ms_var(--ease-out)]"
+      className="np-sheet fixed inset-0 z-[50] flex flex-col pt-safe pb-safe animate-[sheet-up_250ms_var(--ease-out)]"
       style={{
         transform: closing ? "translateY(100%)" : `translateY(${dy}px)`,
         transition: start.current == null ? "transform 200ms var(--ease-out)" : "none",
@@ -229,6 +236,7 @@ function CoverStage({ onLyrics }: { onLyrics: () => void }) {
           data-beat
           className="shrink-0 rounded-card will-change-transform"
           style={{
+            viewTransitionName: COVER_VT,
             transform: "scale(calc(1 + var(--beat, 0) * 0.025))",
             boxShadow: "0 0 calc(var(--beat, 0) * 56px + var(--energy, 0) * 28px) color-mix(in srgb, var(--np-accent) 45%, transparent)",
           }}

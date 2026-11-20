@@ -9,6 +9,7 @@ import { t } from "@/i18n";
 import { ArtistLinks } from "@/components/ArtistLinks";
 import { SleepButton } from "@/components/SleepButton";
 import { SoundButton } from "@/components/SoundButton";
+import { COVER_VT, withCoverTransition } from "@/lib/viewTransition";
 
 /** Fixed bottom player for tablet and desktop. */
 export function PlayerBar() {
@@ -55,6 +56,7 @@ export function PlayerBar() {
 /** Floating mini player above the tab bar on mobile. */
 export function MiniPlayer() {
   const current = usePlayer((s) => s.current);
+  const npOpen = usePlayer((s) => s.npOpen);
   const playing = usePlayback((s) => s.isPlaying);
   const buffering = usePlayback((s) => s.buffering);
   const position = usePlayback((s) => s.position);
@@ -65,11 +67,13 @@ export function MiniPlayer() {
     <div className="px-2 pb-1 md:hidden">
       <div
         className="relative flex h-[var(--spacing-miniplayer)] items-center gap-3 overflow-hidden rounded-control bg-surface-2 pl-2 pr-1 shadow-float"
-        onClick={() => usePlayer.getState().setNp(true, "cover")}
+        onClick={() => withCoverTransition(() => usePlayer.getState().setNp(true, "cover"))}
         role="button"
         aria-label={t("ui.player.openNowPlayingTrack", { title: current.track.title })}
       >
-        <Cover trackId={current.track.id} hasCover={current.track.hasCover} size={48} />
+        <div style={{ viewTransitionName: npOpen ? undefined : COVER_VT }} className="shrink-0 rounded-xs">
+          <Cover trackId={current.track.id} hasCover={current.track.hasCover} size={48} />
+        </div>
         <div className="min-w-0 flex-1">
           <div className="truncate text-label">{current.track.title}</div>
           <div className="truncate text-body-sm text-fg-muted">{current.track.artist}</div>

@@ -6,6 +6,7 @@ import { api } from "@/lib/api";
 import { engine } from "@/player/engine";
 import { usePlayer } from "@/player/store";
 import { useShortcuts } from "@/player/shortcuts";
+import { startSync } from "@/player/sync";
 import { applyAccent, applyTheme } from "@/lib/theme";
 import { connectEvents } from "@/lib/events";
 import { Icon, type IconName } from "../ui/Icon";
@@ -19,6 +20,7 @@ import { Tooltip } from "../ui/Tooltip";
 import { t, tn, syncLang } from "@/i18n";
 import { useBranding } from "@/lib/branding";
 import { Onboarding } from "@/pages/Onboarding";
+import { RemoteBanner } from "@/components/RemoteBanner";
 
 // `header`: shown as an icon in the top bar (desktop) and the mobile header
 // instead of the sidebar / tab bar; tablets (no top bar) keep it in the sidebar.
@@ -43,6 +45,7 @@ export function AppShell() {
 
   useEffect(() => {
     engine.init();
+    startSync(); // one player at a time across tabs and devices
     connectEvents();
   }, []);
   useEffect(() => {
@@ -77,8 +80,10 @@ export function AppShell() {
           </main>
           <RightPanel />
         </div>
+        <RemoteBanner className="mx-2 mb-1 hidden md:flex" />
         <PlayerBar />
         <div className="fixed inset-x-0 bottom-0 z-[40] md:hidden">
+          <RemoteBanner className="mx-2 mb-1" />
           <MiniPlayer />
           <TabBar />
         </div>

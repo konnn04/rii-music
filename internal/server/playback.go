@@ -1,0 +1,131 @@
+package server
+
+import (
+	"net/http"
+	"strings"
+	"sync"
+	"time"
+)
+
+// Playback sync across a user's devices: each device reports what it plays;
+// the others hear it over SSE ("playback"), pause if they were playing, and
+// can take the session over ("Phát ở đây") with the same song, position and
+// queue. Kept in memory: a restart only forgets the last session.
+
+type Playback struct {
+	DeviceID   string   `json:"deviceId"`
+	DeviceName string   `json:"deviceName"`
+	TrackID    string   `json:"trackId"`
+	PositionMs int64    `json:"positionMs"`
+	Playing    bool     `json:"playing"`
+	Upcoming   []string `json:"upcoming"` // next track ids, in order
+	SourceName string   `json:"sourceName"`
+	UpdatedAt  int64    `json:"updatedAt"`
+}
+
+type playbackState struct {
+	mu sync.Mutex
+	m  map[string]Playback // user id →
+}
+
+func (p *playbackState) set(uid string, v Playback) {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+	if p.m == nil {
+		p.m = map[string]Playback{}
+	}
+	p.m[uid] = v
+}
+
+// get extrapolates the position of a playing session; one without a heartbeat
+// for 2 minutes counts as paused (the tab was closed).
+func (p *playbackState) get(uid string) (Playback, bool) {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+	v, ok := p.m[uid]
+	if !ok {
+		return v, false
+	}
+	now := time.Now().UnixMilli()
+	if v.Playing {
+		if now-v.UpdatedAt > 2*60*1000 {
+			v.Playing = false
+		} else {
+			v.PositionMs += now - v.UpdatedAt
+		}
+	}
+	return v, true
+}
+
+func (s *Server) handlePostPlayback(w http.ResponseWriter, r *http.Request) {
+	u := userOf(r)
+	var b Playback
+	if !readJSON(w, r, &b) {
+		return
+	}
+	b.DeviceID = strings.TrimSpace(b.DeviceID)
+	if b.DeviceID == "" || len(b.DeviceID) > 64 {
+		httpError(w, http.StatusBadRequest, "Thiếu mã thiết bị")
+		return
+	}
+	if len(b.DeviceName) > 80 {
+		b.DeviceName = b.DeviceName[:80]
+	}
+	if len(b.SourceName) > 200 {
+		b.SourceName = b.SourceName[:200]
+	}
+	if len(b.Upcoming) > 100 {
+		b.Upcoming = b.Upcoming[:100]
+	}
+	b.PositionMs = max(0, b.PositionMs)
+	b.UpdatedAt = nowMs()
+	prev, had := s.playback.get(u.ID)
+	s.playback.set(u.ID, b)
+	// Tell the user's other devices when something they'd notice changed
+	// (heartbeats of the same song on the same device stay quiet).
+	if !had || prev.DeviceID != b.DeviceID || prev.TrackID != b.TrackID || prev.Playing != b.Playing || abs64(prev.PositionMs-b.PositionMs) > 5000 {
+		s.hub.Publish(u.ID, "playback", b)
+	}
+
+	// Discord presence reads the same report.
+	if s.loadSettings(u.ID).DiscordPresence {
+		if b.TrackID == "" {
+			s.np.set(u.ID, nil)
+		} else if t, err := s.getTrack(u.ID, b.TrackID); err == nil {
+			s.np.set(u.ID, &NowPlaying{Playing: b.Playing, TrackID: t.ID, Title: t.Title, Artist: t.Artist, Album: t.Album,
+				DurationMs: t.DurationMs, PositionMs: b.PositionMs, UpdatedAt: b.UpdatedAt})
+		}
+	}
+	w.WriteHeader(http.StatusNoContent)
+}
+
+// handleGetPlayback returns the last session with its tracks, to take it over.
+func (s *Server) handleGetPlayback(w http.ResponseWriter, r *http.Request) {
+	u := userOf(r)
+	b, ok := s.playback.get(u.ID)
+	if !ok || b.TrackID == "" {
+		writeJSON(w, http.StatusOK, map[string]any{"session": nil})
+		return
+	}
+	ids := append([]string{b.TrackID}, b.Upcoming...)
+	byID := map[string]Track{}
+	if all, err := s.libTracks(u.ID, ``); err == nil {
+		for _, t := range all {
+			byID[t.ID] = t
+		}
+	}
+	tracks := []Track{}
+	for _, id := range ids {
+		if t, ok := byID[id]; ok {
+			tracks = append(tracks, t)
+		}
+	}
+	writeJSON(w, http.StatusOK, map[string]any{"session": b, "tracks": tracks})
+}
+
+func abs64(x int64) int64 {
+	if x < 0 {
+		return -x
+	}
+	return x
+}

@@ -95,6 +95,8 @@ var apiDocs = []apiDoc{
 
 	// discord
 	{"POST", "/api/nowplaying", "Discord", "Báo bài đang phát (khi bật Trạng thái Discord)", "", nil, `{"trackId":"…","positionMs":42000,"playing":true}`, ``},
+	{"POST", "/api/playback", "Phát nhạc", "Báo trạng thái phát của thiết bị này (đồng bộ giữa thiết bị, Discord)", "", nil, `{"deviceId":"…","deviceName":"Chrome · Windows","trackId":"…","positionMs":42000,"playing":true,"upcoming":["…"]}`, ``},
+	{"GET", "/api/playback", "Phát nhạc", "Phiên phát gần nhất (thiết bị, bài, vị trí, hàng chờ) để tiếp tục ở đây", "", nil, ``, `{"session":{},"tracks":[]}`},
 	{"GET", "/api/agent/nowplaying", "Discord", "Agent đọc bài đang phát (token loại agent)", "agent", nil, ``, `{"nowPlaying":{"title":"…"},"discordClientId":"…"}`},
 
 	// admin

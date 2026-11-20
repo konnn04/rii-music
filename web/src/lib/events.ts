@@ -7,6 +7,7 @@ import { engine } from "@/player/engine";
 import { isAutoplayJob, onJobEvent } from "@/player/autofill";
 import { onJobForPlay } from "./playweb";
 import { onJobForList } from "@/player/playlistFill";
+import { onRemotePlayback, type RemoteSession } from "@/player/sync";
 import { t, tsv } from "@/i18n";
 
 let es: EventSource | null = null;
@@ -36,6 +37,8 @@ export function connectEvents() {
     usePlayer.getState().patchTrack(id, { gainDb });
     engine.refreshNorm();
   });
+  // Another device of this user started / paused / changed song.
+  es.addEventListener("playback", (e) => onRemotePlayback(JSON.parse((e as MessageEvent).data) as RemoteSession));
   es.addEventListener("jobRemoved", () => queryClient.invalidateQueries({ queryKey: ["jobs"] }));
   es.addEventListener("jobsCleared", () => queryClient.invalidateQueries({ queryKey: ["jobs"] }));
   const lib = () => {

@@ -36,6 +36,7 @@ type Server struct {
 	features *featureIndex
 	co       coIndex
 	np       nowPlayingState
+	playback playbackState
 	autodl   *autoDL
 	logs     *LogBuffer
 }
@@ -146,6 +147,8 @@ func (s *Server) Handler() http.Handler {
 	api("POST /api/tokens", s.handleCreateToken)
 	api("DELETE /api/tokens/{id}", s.handleDeleteToken)
 	api("POST /api/nowplaying", s.handlePostNowPlaying)
+	api("POST /api/playback", s.handlePostPlayback)
+	api("GET /api/playback", s.handleGetPlayback)
 	api("GET /api/discord", s.handleDiscordInfo)
 	mux.HandleFunc("GET /api/agent/nowplaying", s.handleAgentNowPlaying) // agent token
 

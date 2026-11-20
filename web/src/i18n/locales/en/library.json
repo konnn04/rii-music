@@ -27,5 +27,38 @@
     "new": "New playlist",
     "smart": "Smart playlist"
   },
-  "langFilter": "Filter by language"
+  "filter": {
+    "button": "Filters",
+    "searchPlaceholder": "Filter library",
+    "clearSearch": "Clear search",
+    "clear": "Clear filters",
+    "removeChip": "Remove filter {label}",
+    "sourceFiltered": "Library · filtered",
+    "emptyTitle": "No matching songs",
+    "emptyBody": "Try loosening or clearing some filters.",
+    "lang": "Language",
+    "artist": "Artist",
+    "searchArtist": "Search artists…",
+    "album": "Album",
+    "searchAlbum": "Search albums…",
+    "likedOnly": "Liked only",
+    "playsLabel": "Plays",
+    "plays": {
+      "unplayed": "Unplayed",
+      "played": "Played",
+      "frequent": "5+ plays"
+    },
+    "addedLabel": "Added in",
+    "added": {
+      "7d": "7 days",
+      "30d": "30 days",
+      "90d": "90 days"
+    },
+    "durationLabel": "Duration",
+    "duration": {
+      "short": "Under 3 min",
+      "medium": "3–5 min",
+      "long": "Over 5 min"
+    }
+  }
 }

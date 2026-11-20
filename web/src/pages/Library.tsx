@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Link, useNavigate, useSearch } from "@tanstack/react-router";
 import { DropdownMenu } from "radix-ui";
 import { useAlbums, useArtists, usePlaylists, useTracks, type TrackSort } from "@/lib/queries";
@@ -8,6 +8,7 @@ import { Icon } from "@/components/ui/Icon";
 import { Empty, ErrorState, Spinner } from "@/components/ui/misc";
 import { AlbumCard, ArtistCard, PlaylistCard } from "@/components/Cards";
 import { TrackList } from "@/components/TrackList";
+import { activeCount, applyFilter, emptyFilter, LibraryFilterBar, type LibraryFilter } from "@/components/LibraryFilters";
 import { PageHeader } from "@/components/layout/AppShell";
 import { openDialog } from "@/components/dialogs";
 import { useIsMobile } from "@/lib/useMedia";
@@ -60,7 +61,8 @@ const grid = "grid grid-cols-2 gap-4 px-4 md:grid-cols-[repeat(auto-fill,minmax(
 function Songs({ sort, onSort }: { sort: TrackSort; onSort: (s: TrackSort) => void }) {
   const { data: all, isLoading, error, refetch } = useTracks(sort);
   const mobile = useIsMobile();
-  const [langFilter, setLangFilter] = useState("");
+  const [filter, setFilter] = useState<LibraryFilter>(emptyFilter);
+  const data = useMemo(() => applyFilter(all ?? [], filter), [all, filter]);
   if (isLoading) return <Spinner />;
   if (error) return <ErrorState error={error} onRetry={refetch} />;
   if (!all?.length)
@@ -69,32 +71,20 @@ function Songs({ sort, onSort }: { sort: TrackSort; onSort: (s: TrackSort) => vo
         {t("library.empty.songsBody")}
       </Empty>
     );
-  // Songs by language (Việt, Âu Mỹ, Nhật…): pick one to keep a session in one language.
-  const langs = [...new Set(all.map((x) => x.lang || ""))].filter(Boolean);
-  const data = langFilter ? all.filter((x) => x.lang === langFilter) : all;
-  const source = { type: "library" as const, id: `all:${sort}:${langFilter}`, name: langFilter ? `${t("common.nav.library")} · ${t(`common.lang.${langFilter}`)}` : t("common.nav.library") };
+  const filtered = activeCount(filter) > 0;
+  const source = {
+    type: "library" as const,
+    id: filtered ? `filtered:${sort}:${JSON.stringify(filter)}` : `all:${sort}`,
+    name: filtered ? t("library.filter.sourceFiltered") : t("common.nav.library"),
+  };
   return (
     <div className="md:px-6">
-      {langs.length > 1 && (
-        <div role="radiogroup" aria-label={t("library.langFilter")} className="mb-3 flex flex-wrap gap-2 px-4 md:px-0">
-          {["", ...langs].map((l) => (
-            <button
-              key={l || "all"}
-              role="radio"
-              aria-checked={langFilter === l}
-              onClick={() => setLangFilter(l)}
-              className={`focus-ring h-8 rounded-full px-3 text-label ${langFilter === l ? "bg-fg text-canvas" : "bg-surface-2 text-fg hover:bg-surface-3"}`}
-            >
-              {l ? t(`common.lang.${l}`) : t("common.all")}
-            </button>
-          ))}
-        </div>
-      )}
+      <LibraryFilterBar tracks={all} value={filter} onChange={setFilter} />
       <div className="mb-3 flex flex-wrap items-center gap-2 px-4 md:px-0">
-        <Button variant="primary" icon="play" onClick={() => usePlayer.getState().playList(data, 0, source, { shuffle: false })}>
+        <Button variant="primary" icon="play" disabled={data.length === 0} onClick={() => usePlayer.getState().playList(data, 0, source, { shuffle: false })}>
           {t("common.play")}
         </Button>
-        <Button icon="shuffle" onClick={() => usePlayer.getState().playList(data, -1, source, { shuffle: true })}>
+        <Button icon="shuffle" disabled={data.length === 0} onClick={() => usePlayer.getState().playList(data, -1, source, { shuffle: true })}>
           {t("common.shuffle")}
         </Button>
         <span className="ml-1 text-body-sm text-fg-muted">{tn("common.songs", data.length, { n: data.length.toLocaleString(locale()) })}</span>
@@ -123,12 +113,24 @@ function Songs({ sort, onSort }: { sort: TrackSort; onSort: (s: TrackSort) => vo
           </DropdownMenu.Portal>
         </DropdownMenu.Root>
       </div>
-      <p className="mb-2 px-4 text-caption text-fg-subtle md:px-0">
-        {mobile ? t("library.hint.mobile") : t("library.hint.desktop")}
-      </p>
-      <div className="px-2 md:px-0">
-        <TrackList tracks={data} source={source} showAdded={sort === "added"} />
-      </div>
+      {data.length === 0 ? (
+        <Empty
+          icon="filter"
+          title={t("library.filter.emptyTitle")}
+          action={<Button onClick={() => setFilter(emptyFilter)}>{t("library.filter.clear")}</Button>}
+        >
+          {t("library.filter.emptyBody")}
+        </Empty>
+      ) : (
+        <>
+          <p className="mb-2 px-4 text-caption text-fg-subtle md:px-0">
+            {mobile ? t("library.hint.mobile") : t("library.hint.desktop")}
+          </p>
+          <div className="px-2 md:px-0">
+            <TrackList tracks={data} source={source} showAdded={sort === "added"} />
+          </div>
+        </>
+      )}
     </div>
   );
 }

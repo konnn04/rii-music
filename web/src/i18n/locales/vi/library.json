@@ -27,5 +27,38 @@
     "new": "Playlist mới",
     "smart": "Playlist thông minh"
   },
-  "langFilter": "Lọc theo ngôn ngữ"
+  "filter": {
+    "button": "Bộ lọc",
+    "searchPlaceholder": "Lọc trong thư viện",
+    "clearSearch": "Xoá từ khoá",
+    "clear": "Xoá lọc",
+    "removeChip": "Bỏ lọc {label}",
+    "sourceFiltered": "Thư viện · đã lọc",
+    "emptyTitle": "Không có bài phù hợp",
+    "emptyBody": "Thử nới lỏng hoặc xoá bớt điều kiện lọc.",
+    "lang": "Ngôn ngữ",
+    "artist": "Nghệ sĩ",
+    "searchArtist": "Tìm nghệ sĩ…",
+    "album": "Album",
+    "searchAlbum": "Tìm album…",
+    "likedOnly": "Đã thích",
+    "playsLabel": "Lượt nghe",
+    "plays": {
+      "unplayed": "Chưa nghe",
+      "played": "Đã nghe",
+      "frequent": "Nghe nhiều (5+)"
+    },
+    "addedLabel": "Thêm trong",
+    "added": {
+      "7d": "7 ngày",
+      "30d": "30 ngày",
+      "90d": "90 ngày"
+    },
+    "durationLabel": "Thời lượng",
+    "duration": {
+      "short": "Dưới 3 phút",
+      "medium": "3–5 phút",
+      "long": "Trên 5 phút"
+    }
+  }
 }

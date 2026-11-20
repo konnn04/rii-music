@@ -123,21 +123,21 @@
   "offline": {
     "title": "Nghe offline",
     "enable": "Bật nghe offline",
-    "enableHint": "Lưu giao diện, thư viện và bài đã nghe trên thiết bị này để nghe khi mất mạng. Menu ⋯ của bài có thêm “Tải về máy”.",
+    "enableHint": "Lưu giao diện, thư viện và bài đã nghe trên thiết bị này để nghe khi mất mạng. Menu ⋯ của bài có thêm “Lưu offline”.",
     "autoCache": "Tự lưu bài đang nghe",
     "autoCacheHint": "Bài nghe quá 20 giây được lưu lại trên máy.",
     "retention": "Giữ bài tự lưu trong",
-    "retentionHint": "Tính từ lần nghe gần nhất. Bài “Tải về máy” giữ đến khi bạn xoá.",
+    "retentionHint": "Tính từ lần nghe gần nhất. Bài “Lưu offline” giữ đến khi bạn bỏ lưu.",
     "days": {
       "one": "{n} ngày",
       "other": "{n} ngày"
     },
     "stored": "{n} bài trên máy · {size}",
     "pinned": {
-      "one": "{n} bài tải về máy",
-      "other": "{n} bài tải về máy"
+      "one": "{n} bài lưu offline",
+      "other": "{n} bài lưu offline"
     },
-    "pinHint": "Chọn “Tải về máy” trong menu ⋯ của bài để giữ lâu dài.",
+    "pinHint": "Chọn “Lưu offline” trong menu ⋯ của bài để giữ lâu dài. “Tải về máy” lưu file nhạc vào thư mục Tải xuống.",
     "clear": "Xoá bộ nhớ offline",
     "cleared": "Đã xoá nhạc lưu trên máy"
   }

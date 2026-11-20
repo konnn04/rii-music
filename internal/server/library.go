@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"net/http"
+	"net/url"
 	"os"
 	"path/filepath"
 	"sort"
@@ -299,8 +300,8 @@ func (s *Server) handleStream(w http.ResponseWriter, r *http.Request) {
 		http.NotFound(w, r)
 		return
 	}
-	var file, mime string
-	if err := s.db.QueryRow(`SELECT file_path, mime FROM tracks WHERE id=?`, id).Scan(&file, &mime); err != nil {
+	var file, mime, title, artist string
+	if err := s.db.QueryRow(`SELECT file_path, mime, title, artist FROM tracks WHERE id=?`, id).Scan(&file, &mime, &title, &artist); err != nil {
 		http.NotFound(w, r)
 		return
 	}
@@ -317,7 +318,44 @@ func (s *Server) handleStream(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Header().Set("Content-Type", mime)
 	w.Header().Set("Cache-Control", "private, max-age=86400")
+	if r.URL.Query().Get("download") != "" {
+		// "Tải về máy": save the file as "Artist - Title.m4a".
+		w.Header().Set("Content-Disposition", downloadDisposition(artist, title, filepath.Ext(file)))
+	}
 	http.ServeContent(w, r, "", st.ModTime(), f) // handles Range
+}
+
+// downloadDisposition: attachment with a UTF-8 file name (RFC 6266 / 5987) and
+// an accent-free fallback for old clients.
+func downloadDisposition(artist, title, ext string) string {
+	name := strings.TrimSpace(title)
+	if a := strings.TrimSpace(artist); a != "" {
+		name = a + " - " + name
+	}
+	name = strings.Map(func(r rune) rune {
+		switch {
+		case r < 0x20, strings.ContainsRune(`<>:"/\|?*`, r):
+			return '_'
+		}
+		return r
+	}, name)
+	if rs := []rune(name); len(rs) > 150 {
+		name = string(rs[:150])
+	}
+	if name == "" {
+		name = "track"
+	}
+	name += ext
+	ascii := strings.Map(func(r rune) rune {
+		if r < 0x20 || r > 0x7e || r == '"' || r == '\\' {
+			return -1
+		}
+		return r
+	}, textutil.Fold(name))
+	if strings.TrimSuffix(ascii, ext) == "" {
+		ascii = "track" + ext
+	}
+	return `attachment; filename="` + ascii + `"; filename*=UTF-8''` + url.PathEscape(name)
 }
 
 func (s *Server) handleCover(w http.ResponseWriter, r *http.Request) {

@@ -36,7 +36,7 @@ self.addEventListener("fetch", (event) => {
   const url = new URL(event.request.url);
   if (url.origin !== self.location.origin || event.request.method !== "GET") return;
   const m = STREAM.exec(url.pathname);
-  if (!m) return;
+  if (!m || url.searchParams.has("download")) return; // "Tải về máy" saves the server's file
   event.respondWith(streamFromStore(m[1], event.request));
 });
 

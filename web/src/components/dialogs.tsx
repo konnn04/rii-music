@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { create } from "zustand";
 import { useNavigate } from "@tanstack/react-router";
-import { api, type Rule, type Track } from "@/lib/api";
+import { api, streamUrl, type Rule, type Track } from "@/lib/api";
 import { invalidateLibrary, useAddToPlaylist, useArtists, useCreatePlaylist, useGenres, usePlaylists, useToggleLike } from "@/lib/queries";
 import { usePlayer } from "@/player/store";
 import { Dialog } from "./ui/Dialog";
@@ -29,6 +29,18 @@ const close = () => useDialogs.setState({ d: null });
 export type Action = { key: string; label: string; icon: IconName; run: () => void; danger?: boolean; shortcut?: string };
 
 /** The action set shared by dropdown, context menu and mobile action sheet. */
+/** Save the song's file to the device ("Nghệ sĩ - Tên bài.m4a"). */
+export function downloadFile(track: Track) {
+  const a = document.createElement("a");
+  a.href = `${streamUrl(track.id)}?download=1`;
+  a.download = "";
+  a.rel = "noopener";
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  toast(t("tracks.toast.downloadStarted", { title: track.title }));
+}
+
 export function useTrackActions(track: Track, ctx?: TrackContext): { primary: Action[]; danger: Action[] } {
   const navigate = useNavigate();
   const like = useToggleLike();
@@ -76,13 +88,15 @@ export function useTrackActions(track: Track, ctx?: TrackContext): { primary: Ac
       icon: "album",
       run: () => navigate({ to: "/album/$artist/$name", params: { artist: track.artist, name: track.album } }),
     });
-  // Offline mode only (Cài đặt → Nghe offline): keep / drop this song on the device.
+  // Tải về máy: the audio file itself, into the device's Downloads.
+  primary.push({ key: "download", label: t("tracks.action.downloadFile"), icon: "download", run: () => downloadFile(track) });
+  // Lưu offline (Cài đặt → Nghe offline): keep / drop this song in the browser for offline listening.
   if (offline.enabled) {
     const pinned = offline.stored.get(track.id) === true;
     primary.push({
       key: "offline",
       label: pinned ? t("tracks.action.offlineRemove") : t("tracks.action.offlineSave"),
-      icon: pinned ? "download-done" : "download",
+      icon: pinned ? "close" : "download-done",
       run: () =>
         pinned
           ? void removeStored(track.id).then(() => toast(t("tracks.toast.offlineRemoved")))

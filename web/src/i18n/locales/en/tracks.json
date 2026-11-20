@@ -43,15 +43,17 @@
     "removeFromLiked": "Remove from Liked songs",
     "removeFromPlaylist": "Remove from playlist",
     "deleteFromLibrary": "Delete from library",
-    "offlineSave": "Save to device",
-    "offlineRemove": "Remove from device"
+    "offlineSave": "Save offline",
+    "offlineRemove": "Remove offline copy",
+    "downloadFile": "Download file"
   },
   "toast": {
     "playNext": "Playing next",
     "addedToQueue": "Added to queue",
     "noSimilar": "No similar songs found yet — your library needs more songs or audio analysis is still running",
-    "offlineSaved": "“{title}” saved on this device",
-    "offlineRemoved": "Removed from this device"
+    "offlineSaved": "“{title}” saved for offline",
+    "offlineRemoved": "Offline copy removed",
+    "downloadStarted": "Downloading “{title}”"
   },
   "addToPlaylist": {
     "selectedCount": "{count} songs selected",

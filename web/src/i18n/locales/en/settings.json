@@ -123,21 +123,21 @@
   "offline": {
     "title": "Offline listening",
     "enable": "Turn on offline listening",
-    "enableHint": "Keep the app, your library and songs you play on this device to listen without a connection. A song's ⋯ menu gets “Save to device”.",
+    "enableHint": "Keep the app, your library and songs you play on this device to listen without a connection. A song's ⋯ menu gets “Save offline”.",
     "autoCache": "Keep songs I play",
     "autoCacheHint": "Songs played for more than 20 seconds are kept on the device.",
     "retention": "Keep played songs for",
-    "retentionHint": "Since they were last played. “Save to device” songs stay until you remove them.",
+    "retentionHint": "Since they were last played. “Save offline” songs stay until you remove them.",
     "days": {
       "one": "{n} day",
       "other": "{n} days"
     },
     "stored": "{n} songs on this device · {size}",
     "pinned": {
-      "one": "{n} song saved to device",
-      "other": "{n} songs saved to device"
+      "one": "{n} song saved offline",
+      "other": "{n} songs saved offline"
     },
-    "pinHint": "Use “Save to device” in a song's ⋯ menu to keep it for good.",
+    "pinHint": "Use “Save offline” in a song's ⋯ menu to keep it for good. “Download file” saves the audio file to your Downloads.",
     "clear": "Clear offline storage",
     "cleared": "Offline songs removed"
   }

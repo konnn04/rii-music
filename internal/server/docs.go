@@ -40,7 +40,7 @@ var apiDocs = []apiDoc{
 	{"GET", "/api/tracks/{id}", "Thư viện", "Một bài", "", nil, ``, ``},
 	{"PATCH", "/api/tracks/{id}", "Thư viện", "Sửa tên bài / nghệ sĩ / album", "", nil, `{"title":"…","artist":"…"}`, ``},
 	{"DELETE", "/api/tracks/{id}", "Thư viện", "Bỏ bài khỏi thư viện của bạn", "", nil, ``, ``},
-	{"GET", "/api/tracks/{id}/stream", "Thư viện", "File nhạc (hỗ trợ Range)", "", nil, ``, ``},
+	{"GET", "/api/tracks/{id}/stream", "Thư viện", "File nhạc (hỗ trợ Range); download=1 để tải về với tên “Nghệ sĩ - Tên bài”", "", nil, ``, ``},
 	{"GET", "/api/tracks/{id}/cover", "Thư viện", "Ảnh bìa 720×720 JPEG", "", nil, ``, ``},
 	{"GET", "/api/tracks/{id}/lyrics", "Lời bài hát", "Lời của bạn (của bạn chọn → cộng đồng chọn → tự động)", "", nil, ``, `{"plain":"…","synced":"[00:12.30] …","source":"lrclib","offsetMs":0,"choice":"auto"}`},
 	{"GET", "/api/tracks/{id}/lyrics/candidates", "Lời bài hát", "Tìm lời trên LRCLIB bằng từ khoá của bạn", "", []string{"title", "artist", "q: tìm tự do"}, ``, `{"results":[{"id":123,"title":"…","artist":"…","synced":true,"picks":2,"durationOk":true}]}`},

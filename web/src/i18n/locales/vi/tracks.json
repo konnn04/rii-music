@@ -43,15 +43,17 @@
     "removeFromLiked": "Xoá khỏi Yêu thích",
     "removeFromPlaylist": "Xoá khỏi playlist",
     "deleteFromLibrary": "Xoá khỏi thư viện",
-    "offlineSave": "Tải về máy",
-    "offlineRemove": "Xoá khỏi máy"
+    "offlineSave": "Lưu offline",
+    "offlineRemove": "Bỏ lưu offline",
+    "downloadFile": "Tải về máy"
   },
   "toast": {
     "playNext": "Sẽ phát tiếp theo",
     "addedToQueue": "Đã thêm vào hàng đợi",
     "noSimilar": "Chưa tìm được bài giống — thư viện cần thêm bài hoặc đang phân tích âm thanh",
-    "offlineSaved": "Đã lưu “{title}” trên máy",
-    "offlineRemoved": "Đã xoá khỏi máy"
+    "offlineSaved": "Đã lưu offline “{title}”",
+    "offlineRemoved": "Đã bỏ lưu offline",
+    "downloadStarted": "Đang tải “{title}” về máy"
   },
   "addToPlaylist": {
     "selectedCount": "{count} bài đã chọn",

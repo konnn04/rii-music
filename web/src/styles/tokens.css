@@ -1,4 +1,4 @@
-/* Vang design tokens v0.1 — Tailwind CSS v4. Import after `@import "tailwindcss";` */
+/* RiiMusic design tokens v0.1 — Tailwind CSS v4. Import after `@import "tailwindcss";` */
 /* Theme: <html data-theme="dark|light">. Dark is default. */
 
 @custom-variant light (&:where([data-theme=light], [data-theme=light] *));

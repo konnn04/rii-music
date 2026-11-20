@@ -486,7 +486,7 @@ type YTMList struct {
 	Subtitle  string      `json:"subtitle"`
 	Thumbnail string      `json:"thumbnail"`
 	Tracks    []WebResult `json:"tracks"`
-	Saved     string      `json:"saved,omitempty"` // id of the Vang playlist it was saved as
+	Saved     string      `json:"saved,omitempty"` // id of the RiiMusic playlist it was saved as
 }
 
 // ytmBrowseList reads the songs of an album or playlist by its playlist id

@@ -176,14 +176,14 @@ func TestCommunityLyrics(t *testing.T) {
 func TestBrandingInIndex(t *testing.T) {
 	s, _ := newTestServer(t)
 	s.saveBranding(Branding{Name: "Nhạc <Nhà>", Description: "Mô tả & thử"})
-	page := string(s.brandIndex([]byte(`<head><title>Vang</title></head>`), "/"))
+	page := string(s.brandIndex([]byte(`<head><title>RiiMusic</title></head>`), "/"))
 	if !strings.Contains(page, "<title>Nhạc &lt;Nhà&gt;</title>") || !strings.Contains(page, `content="Mô tả &amp; thử"`) {
 		t.Fatalf("branding not injected / escaped: %s", page)
 	}
 	if strings.Contains(page, "noindex") {
 		t.Fatal("home page must be indexable")
 	}
-	if !strings.Contains(string(s.brandIndex([]byte(`<title>Vang</title>`), "/s/abc")), "noindex") {
+	if !strings.Contains(string(s.brandIndex([]byte(`<title>RiiMusic</title>`), "/s/abc")), "noindex") {
 		t.Fatal("share pages must be noindex")
 	}
 	_ = io.Discard

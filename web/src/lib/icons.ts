@@ -1,4 +1,4 @@
-// Vang icon set v0.1 — 24×24, stroke 1.75, round caps/joins. Color = currentColor.
+// RiiMusic icon set v0.1 — 24×24, stroke 1.75, round caps/joins. Color = currentColor.
 export type IconDef = { d: string; fill?: boolean; label: string };
 export const icons = {
   "home": { d: "M4 10.5 12 4l8 6.5V19a1 1 0 0 1-1 1h-4.5v-5.5h-5V20H5a1 1 0 0 1-1-1z", label: "Trang chủ" },

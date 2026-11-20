@@ -19,8 +19,8 @@ export default defineConfig({
       registerType: "autoUpdate",
       includeAssets: ["icon.svg"],
       manifest: {
-        name: "Vang",
-        short_name: "Vang",
+        name: "RiiMusic",
+        short_name: "RiiMusic",
         description: "Nghe nhạc cá nhân",
         lang: "vi",
         theme_color: "#0E0F12",

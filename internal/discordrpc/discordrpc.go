@@ -145,7 +145,7 @@ func (c *Client) SetActivity(a *Activity) error {
 		m := map[string]any{
 			"type":    2, // Listening
 			"details": clip(a.Title, 128),
-			"state":   clip(firstNonEmpty(a.Artist, "Vang"), 128),
+			"state":   clip(firstNonEmpty(a.Artist, "RiiMusic"), 128),
 		}
 		if a.StartUnix > 0 {
 			ts := map[string]int64{"start": a.StartUnix}

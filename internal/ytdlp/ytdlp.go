@@ -231,13 +231,13 @@ func (c *Client) Status() (ready bool, err error) {
 }
 
 // Update downloads the latest nightly now (admin action). Only for the binary
-// Vang manages; a YTDLP_PATH binary is the operator's to update.
+// RiiMusic manages; a YTDLP_PATH binary is the operator's to update.
 func (c *Client) Update(ctx context.Context) error {
 	c.mu.RLock()
 	managed := c.managed
 	c.mu.RUnlock()
 	if !managed {
-		return errors.New("yt-dlp không do Vang quản lý (đang dùng YTDLP_PATH hoặc bản cài sẵn)")
+		return errors.New("yt-dlp không do RiiMusic quản lý (đang dùng YTDLP_PATH hoặc bản cài sẵn)")
 	}
 	return c.download(ctx)
 }

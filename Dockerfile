@@ -1,4 +1,4 @@
-# Vang: one image with the web app, the server, ffmpeg and a JS runtime for yt-dlp.
+# RiiMusic: one image with the web app, the server, ffmpeg and a JS runtime for yt-dlp.
 #
 #   docker compose up -d --build        (see docker-compose.yml, reads .env)
 #

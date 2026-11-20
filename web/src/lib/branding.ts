@@ -8,7 +8,7 @@ declare global {
 }
 
 const initial: Branding = {
-  name: window.__VANG_BRAND__?.name ?? "Vang",
+  name: window.__VANG_BRAND__?.name ?? "RiiMusic",
   description: window.__VANG_BRAND__?.description ?? "",
   logoUrl: window.__VANG_BRAND__?.logoUrl ?? "/icon.svg",
   customLogo: false,

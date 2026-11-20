@@ -139,7 +139,7 @@ func (s *Server) handleAdminCreateUser(w http.ResponseWriter, r *http.Request) {
 	u, _ := s.userByID(id)
 	info := s.adminUserInfo(u, nil)
 	if body.SendInvite && s.cfg.MailConfigured() {
-		if err := s.sendMail(email, "Bạn được mời dùng Vang", inviteEmail(email, name, s.cfg.PublicURL)); err != nil {
+		if err := s.sendMail(email, "Bạn được mời dùng RiiMusic", inviteEmail(email, name, s.cfg.PublicURL)); err != nil {
 			s.log.Warn("invite email", "err", err)
 			info.Note = "Đã tạo tài khoản nhưng gửi email mời thất bại"
 		}
@@ -552,7 +552,7 @@ func (s *Server) handleAdminTestMail(w http.ResponseWriter, r *http.Request) {
 		httpError(w, http.StatusBadRequest, "Chưa cấu hình SMTP trong .env")
 		return
 	}
-	err := s.sendMail(me.Email, "Thử gửi email từ Vang", "Email thử từ máy chủ Vang. Nếu bạn đọc được dòng này, cấu hình SMTP đã đúng.\n")
+	err := s.sendMail(me.Email, "Thử gửi email từ RiiMusic", "Email thử từ máy chủ RiiMusic. Nếu bạn đọc được dòng này, cấu hình SMTP đã đúng.\n")
 	if err != nil {
 		httpError(w, http.StatusBadGateway, err.Error())
 		return

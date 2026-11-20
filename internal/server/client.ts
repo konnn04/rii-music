@@ -1,13 +1,13 @@
 /**
- * Vang API client: one file, no dependencies, works in Node 18+, Deno, Bun and browsers.
+ * RiiMusic API client: one file, no dependencies, works in Node 18+, Deno, Bun and browsers.
  *
- *   import { Vang } from "./vang-client";
- *   const vang = new Vang("https://nhac.example.com", process.env.VANG_TOKEN!);
- *   const me = await vang.me();
- *   const hits = await vang.search("tìm em");
- *   await vang.download(hits.results[0].url);
+ *   import { RiiMusic } from "./riimusic-client";
+ *   const music = new RiiMusic("https://nhac.example.com", process.env.VANG_TOKEN!);
+ *   const me = await music.me();
+ *   const hits = await music.search("tìm em");
+ *   await music.download(hits.results[0].url);
  *
- * Create a token in Vang → Cài đặt → API. Everything you do with it acts as
+ * Create a token in RiiMusic → Cài đặt → API. Everything you do with it acts as
  * your own account (your library, playlists, history).
  */
 
@@ -36,7 +36,7 @@ export class VangError extends Error {
   }
 }
 
-export class Vang {
+export class RiiMusic {
   constructor(
     private base: string,
     private token: string,

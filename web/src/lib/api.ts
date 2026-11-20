@@ -1,5 +1,5 @@
 import { translateServer } from "@/i18n";
-// Typed client for the Vang API. Mutating requests carry the X-Vang header the server requires.
+// Typed client for the RiiMusic API. Mutating requests carry the X-Vang header the server requires.
 
 export type Track = {
   id: string;
@@ -68,7 +68,7 @@ export type Lyrics = {
   source: "lrclib" | "manual" | "none";
   offsetMs: number;
   lrclibId?: number;
-  /** auto: found by Vang; mine: picked / pasted by you; community: picked by several users */
+  /** auto: found by RiiMusic; mine: picked / pasted by you; community: picked by several users */
   choice: "auto" | "mine" | "community";
 };
 export type Settings = {

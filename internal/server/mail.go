@@ -85,7 +85,7 @@ func (s *Server) sendMail(to, subject, body string) error {
 }
 
 func otpEmail(code, what, publicURL string) string {
-	b := "Mã " + what + " Vang của bạn:\n\n    " + code + "\n\n" +
+	b := "Mã " + what + " RiiMusic của bạn:\n\n    " + code + "\n\n" +
 		"Mã dùng được một lần, hết hạn sau 10 phút.\n" +
 		"Nếu không phải bạn yêu cầu, hãy bỏ qua email này.\n"
 	if publicURL != "" {
@@ -99,11 +99,11 @@ func inviteEmail(email, name, publicURL string) string {
 	if name != "" {
 		hi = "Chào " + name + ","
 	}
-	where := "trang Vang của admin"
+	where := "trang RiiMusic của admin"
 	if publicURL != "" {
 		where = publicURL
 	}
-	return hi + "\n\nBạn vừa được tạo tài khoản nghe nhạc trên Vang.\n" +
+	return hi + "\n\nBạn vừa được tạo tài khoản nghe nhạc trên RiiMusic.\n" +
 		"Đăng nhập tại " + where + " bằng email " + email + ": chọn \"Đăng nhập bằng mã\" để nhận mã qua email, rồi đặt mật khẩu trong Cài đặt.\n\n" +
 		"Lưu ý: admin của máy chủ xem được thói quen nghe nhạc của bạn (bài hay nghe, thời gian nghe) để quản lý và gợi ý.\n"
 }
@@ -112,9 +112,9 @@ func inviteEmail(email, name, publicURL string) string {
 func fromHeader(from, fallback string) string {
 	if a, err := mail.ParseAddress(from); err == nil {
 		if a.Name == "" {
-			a.Name = "Vang"
+			a.Name = "RiiMusic"
 		}
 		return a.String()
 	}
-	return (&mail.Address{Name: "Vang", Address: fallback}).String()
+	return (&mail.Address{Name: "RiiMusic", Address: fallback}).String()
 }

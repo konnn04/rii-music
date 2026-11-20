@@ -34,7 +34,7 @@
   "autoDl": {
     "title": "Auto-download",
     "hint": "Every 6 hours, reviews your listening habits and pre-downloads up to 8 tracks from your favorite and similar artists.",
-    "evictionNote": "When your library exceeds the storage limit set by your admin, Vang automatically removes the tracks you're least likely to play. Liked songs, playlist tracks, songs added in the last 3 days, and songs played in the last 14 days are never removed.",
+    "evictionNote": "When your library exceeds the storage limit set by your admin, RiiMusic automatically removes the tracks you're least likely to play. Liked songs, playlist tracks, songs added in the last 3 days, and songs played in the last 14 days are never removed.",
     "used": "Using {used} / {limit}",
     "autoCount": { "one": "{n} auto-downloaded", "other": "{n} auto-downloaded" },
     "running": "Reviewing listening habits…",

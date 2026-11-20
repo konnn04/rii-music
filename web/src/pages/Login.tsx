@@ -2,11 +2,13 @@ import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
 import { Button } from "@/components/ui/Button";
 import { t } from "@/i18n";
+import { useBranding } from "@/lib/branding";
 
 type Mode = "password" | "otp" | "forgot";
 
 /** Sign in: email + password, email + one-time code, or reset a forgotten password. */
 export function Login({ onDone }: { onDone: () => void }) {
+  const brand = useBranding();
   const [mode, setMode] = useState<Mode>("password");
   const [email, setEmail] = useState(() => localStorage.getItem("vang-last-email") ?? "");
   const [pw, setPw] = useState("");
@@ -94,8 +96,8 @@ export function Login({ onDone }: { onDone: () => void }) {
     <main className="flex min-h-dvh items-center justify-center bg-canvas px-6 pt-safe pb-safe">
       <form onSubmit={submit} className="flex w-full max-w-sm flex-col gap-5 md:rounded-sheet md:bg-surface-1 md:p-8 md:shadow-float" noValidate>
         <div className="flex flex-col items-center gap-3 text-center">
-          <img src="/icon.svg" alt="" className="size-16" />
-          <h1 className="text-title-1">Vang</h1>
+          <img src={brand.logoUrl} alt="" className="size-16 rounded-card" />
+          <h1 className="text-title-1">{brand.name}</h1>
           <p className="text-body-sm text-fg-muted">{title}</p>
         </div>
 

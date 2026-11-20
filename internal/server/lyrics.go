@@ -24,7 +24,7 @@ type Lyrics struct {
 	Source   string `json:"source"` // lrclib | manual | none
 	OffsetMs int64  `json:"offsetMs"`
 	LrclibID int64  `json:"lrclibId,omitempty"`
-	// Where they come from: auto (found by Vang), mine (this user picked or
+	// Where they come from: auto (found by RiiMusic), mine (this user picked or
 	// pasted them), community (picked by several other users of this server).
 	Choice string `json:"choice"`
 }
@@ -54,7 +54,7 @@ func (l *LRCLib) get(ctx context.Context, path string, q url.Values, v any) erro
 	if err != nil {
 		return err
 	}
-	req.Header.Set("User-Agent", "Vang self-hosted music player")
+	req.Header.Set("User-Agent", "RiiMusic self-hosted music player")
 	res, err := l.hc.Do(req)
 	if err != nil {
 		return err
@@ -150,7 +150,7 @@ func (l *LRCLib) Find(ctx context.Context, title, artist string, durationSec flo
 
 // ── storage ─────────────────────────────────────────────────────────────
 
-// sharedLyrics: what Vang found automatically (one row per track).
+// sharedLyrics: what RiiMusic found automatically (one row per track).
 func (s *Server) sharedLyrics(id string) (*Lyrics, error) {
 	var l Lyrics
 	err := s.db.QueryRow(`SELECT plain, synced, source, offset_ms, lrclib_id FROM lyrics WHERE track_id = ?`, id).Scan(&l.Plain, &l.Synced, &l.Source, &l.OffsetMs, &l.LrclibID)
@@ -200,7 +200,7 @@ func (s *Server) communityChoice(uid, tid string) *Lyrics {
 }
 
 // lyricsFor resolves what one user sees: their own choice, else what several
-// others picked (when Vang's automatic lookup found nothing or something
+// others picked (when RiiMusic's automatic lookup found nothing or something
 // else), else the automatic result. ok=false: nothing looked up yet.
 func (s *Server) lyricsFor(uid, tid string) (*Lyrics, bool, error) {
 	c, err := s.userChoice(uid, tid)

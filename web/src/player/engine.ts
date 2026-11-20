@@ -585,7 +585,7 @@ class Engine {
     const t = entry.track;
     const art = t.hasCover ? [{ src: new URL(coverUrl(t.id), location.href).href, sizes: "720x720", type: "image/jpeg" }] : [];
     ms.metadata = new MediaMetadata({ title: t.title, artist: t.artist, album: t.album, artwork: art });
-    document.title = `${t.title}${t.artist ? " · " + t.artist : ""} — Vang`;
+    document.title = `${t.title}${t.artist ? " · " + t.artist : ""} — ${window.__VANG_BRAND__?.name ?? "RiiMusic"}`;
   }
 
   /**

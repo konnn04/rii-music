@@ -8,7 +8,7 @@ import (
 )
 
 // Albums and playlists from YouTube Music: look inside before downloading,
-// save one as a Vang playlist (its songs download into it, in order), and see
+// save one as a RiiMusic playlist (its songs download into it, in order), and see
 // the full album of a song you only have one track of.
 
 // markResults fills inLibrary (this user has it) and onServer (someone has
@@ -67,7 +67,7 @@ func (s *Server) savedPlaylistID(uid, listID string) string {
 }
 
 // handleSaveWebList: POST /api/web/list/save {id} — keep an album / playlist
-// as a Vang playlist. Songs already on the server go in at once, the others
+// as a RiiMusic playlist. Songs already on the server go in at once, the others
 // as they finish downloading. Saving again tops it up.
 func (s *Server) handleSaveWebList(w http.ResponseWriter, r *http.Request) {
 	u := userOf(r)

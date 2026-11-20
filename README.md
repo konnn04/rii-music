@@ -1,4 +1,4 @@
-# Vang — web nghe nhạc cá nhân
+# RiiMusic — web nghe nhạc cá nhân
 
 Web app nghe nhạc tự host cho bạn và nhóm nhỏ: tải nhạc từ YouTube bằng yt-dlp, mỗi người một thư viện riêng (file nhạc lưu chung, không tải trùng), nghe trên điện thoại và máy tính như một app (PWA).
 
@@ -20,7 +20,7 @@ Một binary Go phục vụ cả API lẫn giao diện (Vite + React nhúng bằ
 | Lời bài hát | LRCLIB (lời đồng bộ theo dòng), cache trong DB, dòng hiện tại sáng + tự cuộn, chạm dòng để tua, chỉnh lệch ±0,5 s lưu theo bài, dán lời thường hoặc LRC. Toàn màn hình bằng phím L. |
 | Trang chủ | Tiếp tục nghe, Mix hằng ngày, Nghệ sĩ bạn hay nghe, Hay nghe buổi sáng/chiều/tối, Mới thêm, Radio từ một bài. |
 | Lịch sử | Ghi finish / skip / repeat, trang Nghe gần đây, thống kê tuần/tháng/năm (phút nghe mỗi ngày, top bài, top nghệ sĩ). |
-| Giao diện | Bộ token “Vang” (tối + sáng), Be Vietnam Pro, màu nhấn khung Đang phát lấy từ ảnh bìa, nền bìa mờ. Mobile: thanh tab, mini-player, Đang phát toàn màn hình (vuốt xuống để thu). PC: sidebar + playlist, panel phải Đang phát / Hàng đợi / Lời, chuột phải, Ctrl+click chọn nhiều, phím tắt. |
+| Giao diện | Bộ token “RiiMusic” (tối + sáng), Be Vietnam Pro, màu nhấn khung Đang phát lấy từ ảnh bìa, nền bìa mờ. Mobile: thanh tab, mini-player, Đang phát toàn màn hình (vuốt xuống để thu). PC: sidebar + playlist, panel phải Đang phát / Hàng đợi / Lời, chuột phải, Ctrl+click chọn nhiều, phím tắt. |
 | Bảo mật | Tài khoản email + mật khẩu (PBKDF2-SHA256) hoặc mã OTP qua email, cookie phiên ký HMAC (đổi mật khẩu là mọi phiên khác mất hiệu lực), giới hạn đăng nhập theo IP, OTP 6 số hết hạn 10 phút / tối đa 5 lần thử, mọi API cần đăng nhập, request thay đổi dữ liệu cần header `X-Vang`, chỉ nhận URL YouTube, tham số yt-dlp truyền bằng mảng (không qua shell). |
 
 ### Tài khoản

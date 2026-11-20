@@ -10,10 +10,10 @@ import (
 	"time"
 )
 
-// Agent polls a Vang server for what is playing and mirrors it to Discord.
+// Agent polls a RiiMusic server for what is playing and mirrors it to Discord.
 type Agent struct {
 	Server   string // e.g. https://music.example.com
-	Token    string // agent token from Vang → Cài đặt → Discord
+	Token    string // agent token from RiiMusic → Cài đặt → Discord
 	ClientID string // optional; otherwise taken from the server
 	Log      *slog.Logger
 }
@@ -69,9 +69,9 @@ func (a *Agent) Run(ctx context.Context) error {
 		clientID := firstNonEmpty(a.ClientID, serverClientID)
 		switch {
 		case err != nil:
-			a.Log.Warn("không lấy được trạng thái từ Vang", "err", err)
+			a.Log.Warn("không lấy được trạng thái từ RiiMusic", "err", err)
 		case clientID == "":
-			a.Log.Warn("chưa có Discord Application ID: đặt trong Vang → Cài đặt → Discord, hoặc dùng -client-id")
+			a.Log.Warn("chưa có Discord Application ID: đặt trong RiiMusic → Cài đặt → Discord, hoặc dùng -client-id")
 		default:
 			if dc == nil {
 				dc, err = Connect(clientID)

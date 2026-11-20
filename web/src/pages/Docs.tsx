@@ -50,12 +50,12 @@ export function DocsPage() {
     })).filter((g) => g.ops.length);
   }, [spec.data, filter]);
 
-  const example = `import { Vang } from "./vang-client";
+  const example = `import { RiiMusic } from "./riimusic-client";
 
-const vang = new Vang("${base}", process.env.VANG_TOKEN!);
-const hits = await vang.search("tìm em");
-const { jobs } = await vang.download(hits.results[0].url);
-const job = await vang.waitForJob(jobs[0].id);
+const music = new RiiMusic("${base}", process.env.VANG_TOKEN!);
+const hits = await music.search("tìm em");
+const { jobs } = await music.download(hits.results[0].url);
+const job = await music.waitForJob(jobs[0].id);
 console.log(job.status, job.trackId);`;
 
   return (
@@ -87,7 +87,7 @@ console.log(job.status, job.trackId);`;
             <li>
               {t("docs.step3")}{" "}
               <a className="text-accent hover:underline" href="/api/docs/client.ts" download>
-                vang-client.ts
+                riimusic-client.ts
               </a>{" "}
               · <a className="text-accent hover:underline" href="/api/openapi.json">openapi.json</a>
             </li>

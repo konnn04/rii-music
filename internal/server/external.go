@@ -84,7 +84,7 @@ func (e *extClient) getJSON(ctx context.Context, u string, out any) error {
 	if err != nil {
 		return err
 	}
-	req.Header.Set("User-Agent", "Vang self-hosted music player")
+	req.Header.Set("User-Agent", "RiiMusic self-hosted music player")
 	// One request at a time, ~4/s at most: polite to free APIs. Only the HTTP
 	// call is locked, since fetchers nest (similar → artist id lookup).
 	e.mu.Lock()

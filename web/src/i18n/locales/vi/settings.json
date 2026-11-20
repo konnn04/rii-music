@@ -34,7 +34,7 @@
   "autoDl": {
     "title": "Tự động tải nhạc",
     "hint": "Cứ 6 giờ xem lại thói quen nghe và tải trước bài của nghệ sĩ bạn hay nghe và nghệ sĩ tương tự, tối đa 8 bài mỗi lần.",
-    "evictionNote": "Khi thư viện vượt giới hạn dung lượng (admin đặt cho tài khoản của bạn), Vang tự bỏ bài ít khả năng nghe nhất. Không bao giờ bỏ bài đã thích, bài trong playlist, bài thêm trong 3 ngày qua hoặc nghe trong 14 ngày qua.",
+    "evictionNote": "Khi thư viện vượt giới hạn dung lượng (admin đặt cho tài khoản của bạn), RiiMusic tự bỏ bài ít khả năng nghe nhất. Không bao giờ bỏ bài đã thích, bài trong playlist, bài thêm trong 3 ngày qua hoặc nghe trong 14 ngày qua.",
     "used": "Đang dùng {used} / {limit}",
     "autoCount": { "one": "{n} bài tự tải", "other": "{n} bài tự tải" },
     "running": "Đang xem lại thói quen nghe…",

@@ -13,7 +13,7 @@ import (
 	"strings"
 )
 
-// Branding: name, description and logo of this Vang server, set by an admin.
+// Branding: name, description and logo of this RiiMusic server, set by an admin.
 // They go into the page title, meta tags (SEO: the site only, never songs)
 // and the PWA manifest.
 type Branding struct {
@@ -31,13 +31,13 @@ func (b Branding) LogoURL() string {
 }
 
 func (s *Server) branding() Branding {
-	b := Branding{Name: "Vang", Description: "Nghe nhạc của riêng bạn"}
+	b := Branding{Name: "RiiMusic", Description: "Nghe nhạc của riêng bạn"}
 	var raw string
 	if s.db.QueryRow(`SELECT value_json FROM settings WHERE key = 'branding'`).Scan(&raw) == nil {
 		json.Unmarshal([]byte(raw), &b)
 	}
 	if strings.TrimSpace(b.Name) == "" {
-		b.Name = "Vang"
+		b.Name = "RiiMusic"
 	}
 	return b
 }
@@ -173,7 +173,7 @@ func (s *Server) brandIndex(page []byte, path string) []byte {
 	}
 	brandJSON, _ := json.Marshal(map[string]string{"name": b.Name, "description": b.Description, "logoUrl": b.LogoURL()})
 	head += `<script>window.__VANG_BRAND__=` + strings.ReplaceAll(string(brandJSON), "<", `<`) + `</script>`
-	page = bytes.Replace(page, []byte("<title>Vang</title>"), []byte("<title>"+name+"</title>"+head), 1)
+	page = bytes.Replace(page, []byte("<title>RiiMusic</title>"), []byte("<title>"+name+"</title>"+head), 1)
 	if b.LogoExt != "" {
 		page = bytes.Replace(page, []byte(`<link rel="icon" href="/icon.svg" type="image/svg+xml" />`), []byte(`<link rel="icon" href="`+logo+`" />`), 1)
 		page = bytes.Replace(page, []byte(`<link rel="apple-touch-icon" href="/icon-192.png" />`), []byte(`<link rel="apple-touch-icon" href="`+logo+`" />`), 1)

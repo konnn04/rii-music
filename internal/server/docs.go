@@ -50,7 +50,7 @@ var apiDocs = []apiDoc{
 	{"GET", "/api/albums", "Thư viện", "Album trong thư viện", "", nil, ``, ``},
 	{"GET", "/api/album", "Thư viện", "Một album", "", []string{"name", "artist"}, ``, ``},
 	{"GET", "/api/web/list", "Tìm kiếm", "Các bài của một album / playlist YouTube Music", "", []string{"id: playlist id (OLAK5uy_… / PL…)"}, ``, `{"id":"…","title":"…","tracks":[]}`},
-	{"POST", "/api/web/list/save", "Tìm kiếm", "Lưu album / playlist thành playlist Vang (tải các bài vào đó)", "", nil, `{"id":"OLAK5uy_…"}`, `{"playlist":{},"queued":8,"added":2}`},
+	{"POST", "/api/web/list/save", "Tìm kiếm", "Lưu album / playlist thành playlist RiiMusic (tải các bài vào đó)", "", nil, `{"id":"OLAK5uy_…"}`, `{"playlist":{},"queued":8,"added":2}`},
 	{"GET", "/api/album/full", "Thư viện", "Đủ bài của album (từ YouTube Music), đánh dấu bài đã có", "", []string{"name", "artist"}, ``, ``},
 	{"PUT", "/api/likes/{id}", "Thư viện", "Thích bài", "", nil, ``, `{"liked":true}`},
 	{"DELETE", "/api/likes/{id}", "Thư viện", "Bỏ thích", "", nil, ``, `{"liked":false}`},
@@ -190,6 +190,6 @@ var clientTS []byte
 // handleClientLib serves the TypeScript client library.
 func (s *Server) handleClientLib(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
-	w.Header().Set("Content-Disposition", `attachment; filename="vang-client.ts"`)
+	w.Header().Set("Content-Disposition", `attachment; filename="riimusic-client.ts"`)
 	w.Write(clientTS)
 }

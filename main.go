@@ -1,4 +1,4 @@
-// Vang — self-hosted personal music player: one binary serving the web app and API.
+// RiiMusic — self-hosted personal music player: one binary serving the web app and API.
 package main
 
 import (
@@ -150,17 +150,17 @@ func envOr(k, def string) string {
 }
 
 // runDiscordAgent: "vang discord-agent -server URL -token TOKEN" on the computer
-// where Discord desktop runs. Shows what you play on Vang as Discord presence.
-// The token comes from Vang → Cài đặt → Trạng thái Discord; the Discord
+// where Discord desktop runs. Shows what you play on RiiMusic as Discord presence.
+// The token comes from RiiMusic → Cài đặt → Trạng thái Discord; the Discord
 // Application ID from the server (set by its admin).
 func runDiscordAgent(args []string, log *slog.Logger) error {
 	fs := flag.NewFlagSet("discord-agent", flag.ExitOnError)
-	server := fs.String("server", envOr("VANG_SERVER", "http://localhost:8080"), "địa chỉ server Vang")
+	server := fs.String("server", envOr("VANG_SERVER", "http://localhost:8080"), "địa chỉ server RiiMusic")
 	token := fs.String("token", os.Getenv("VANG_AGENT_TOKEN"), "token agent (Cài đặt → Trạng thái Discord)")
 	clientID := fs.String("client-id", os.Getenv("DISCORD_CLIENT_ID"), "Discord Application ID (mặc định lấy từ server)")
 	fs.Parse(args)
 	if *token == "" {
-		return errors.New("thiếu -token (tạo trong Vang → Cài đặt → Trạng thái Discord)")
+		return errors.New("thiếu -token (tạo trong RiiMusic → Cài đặt → Trạng thái Discord)")
 	}
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()

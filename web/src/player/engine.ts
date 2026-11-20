@@ -570,9 +570,24 @@ class Engine {
     h("previoustrack", () => this.prev());
     h("nexttrack", () => this.next());
     h("seekto", (d) => d.seekTime != null && this.seek(d.seekTime));
-    h("seekbackward", (d) => this.seekBy(-(d.seekOffset ?? 10)));
-    h("seekforward", (d) => this.seekBy(d.seekOffset ?? 10));
+    // iOS shows ±10 s buttons instead of previous / next when these exist.
+    const ios = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+    if (!ios) {
+      h("seekbackward", (d) => this.seekBy(-(d.seekOffset ?? 10)));
+      h("seekforward", (d) => this.seekBy(d.seekOffset ?? 10));
+    }
     h("stop", () => this.pause());
+    // Play / pause state of the notification, lock screen and media keys.
+    const sync = (playing: boolean) => {
+      ms.playbackState = usePlayer.getState().current ? (playing ? "playing" : "paused") : "none";
+    };
+    usePlayback.subscribe((s, prev) => {
+      if (s.isPlaying !== prev.isPlaying) {
+        sync(s.isPlaying);
+        this.updatePositionState();
+      }
+      if (s.duration !== prev.duration) this.updatePositionState();
+    });
   }
 
   private updateMediaSession(entry: QueueEntry | null) {
@@ -580,10 +595,14 @@ class Engine {
     if (!ms) return;
     if (!entry) {
       ms.metadata = null;
+      ms.playbackState = "none";
       return;
     }
     const t = entry.track;
-    const art = t.hasCover ? [{ src: new URL(coverUrl(t.id), location.href).href, sizes: "720x720", type: "image/jpeg" }] : [];
+    const src = new URL(t.hasCover ? coverUrl(t.id) : "/icon-512.png", location.href).href;
+    const art = t.hasCover
+      ? ["96x96", "256x256", "512x512", "720x720"].map((sizes) => ({ src, sizes, type: "image/jpeg" }))
+      : [{ src, sizes: "512x512", type: "image/png" }];
     ms.metadata = new MediaMetadata({ title: t.title, artist: t.artist, album: t.album, artwork: art });
     document.title = `${t.title}${t.artist ? " · " + t.artist : ""} — ${window.__VANG_BRAND__?.name ?? "RiiMusic"}`;
   }

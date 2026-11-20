@@ -3,8 +3,9 @@
 #   docker compose up -d --build        (see docker-compose.yml, reads .env)
 #
 # Build args:
-#   AGENT_BINARIES=true   also build the Discord agent for Windows / macOS / Linux,
-#                         served at /download/agent/… for users (≈ +60 MB). false to skip.
+#   AGENT_BINARIES=false  true also builds the Discord agent as programs for Windows /
+#                         macOS / Linux at /download/agent/… (≈ +60 MB). Not needed:
+#                         users run the agent as a script from /agent.ps1 or /agent.sh.
 
 # ── 1. Web app ───────────────────────────────────────────────────────────
 FROM node:22-bookworm-slim AS web
@@ -17,7 +18,7 @@ RUN pnpm build
 
 # ── 2. Go binaries with the web app embedded ─────────────────────────────
 FROM golang:1.27-bookworm AS server
-ARG AGENT_BINARIES=true
+ARG AGENT_BINARIES=false
 WORKDIR /src
 COPY go.mod go.sum ./
 RUN go mod download

@@ -20,19 +20,32 @@
   },
   "discord": {
     "title": "Discord status",
-    "tip": "Shows “Listening to …” on Discord. A small program has to run on the computer with Discord desktop, because Discord doesn't let servers set your status.",
+    "tip": "Shows “Listening to …” on Discord. A small script has to run on the computer with Discord desktop (nothing to install), because Discord doesn't let servers set your status.",
     "notConfigured": "The admin hasn't set a Discord Application ID for this server yet.",
     "toggle": "Show what I'm playing on Discord",
     "toggleHint": "Only while the agent runs on a computer with Discord.",
     "on": "Discord status on",
     "off": "Discord status off",
-    "step1": "Download the agent for your computer:",
-    "step2": "Create a token for it (an older one stops working):",
-    "step3": "Open a terminal in the folder with the downloaded file and run:",
+    "step2": "Create a token for the agent (the old one stops working):",
+    "step3": "Open a terminal in the folder of the downloaded file and run:",
     "keepRunning": "Keep that window open. The agent reconnects by itself if Discord or the network drops.",
     "makeToken": "Create token",
     "otherDownloads": "Other builds",
-    "noDownloads": "This server has no agent downloads yet. Ask the admin.",
-    "os": { "windows": "Windows", "macos-arm64": "macOS (Apple Silicon)", "macos-amd64": "macOS (Intel)", "linux": "Linux" }
+    "os": {
+      "windows": "Windows",
+      "macos-arm64": "macOS (Apple Silicon)",
+      "macos-amd64": "macOS (Intel)",
+      "linux": "Linux"
+    },
+    "osLabel": "Operating system",
+    "osTab": {
+      "windows": "Windows",
+      "unix": "macOS / Linux"
+    },
+    "runWindows": "Open PowerShell on the computer running Discord, run this command and paste the token when asked:",
+    "runUnix": "Open Terminal on the computer running Discord, run this command and paste the token when asked:",
+    "needsPython": "Needs python3: on macOS install it with xcode-select --install; most Linux systems have it.",
+    "tokenSaved": "The token is kept on that computer; next time just run the command again.",
+    "prebuilt": "Use a prebuilt program (exe) instead of the script"
   }
 }

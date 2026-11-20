@@ -10,10 +10,10 @@
     "logoSaved": "Logo updated"
   },
   "discord": {
-    "tip": "Create an Application at discord.com/developers/applications: its name is what shows after “Listening to”. Users only download the agent and run one command.",
+    "tip": "Create an Application at discord.com/developers/applications: its name is what appears after “Listening to”. Users just run one command (a script served by this server, no exe to download).",
     "appId": "Discord Application ID",
-    "agentUrl": "Agent download link (optional)",
-    "agentUrlHint": "The Docker image already ships the agent for Windows / macOS / Linux. Set a link (e.g. GitHub Releases) to send users elsewhere.",
+    "agentUrl": "Prebuilt download link (optional)",
+    "agentUrlHint": "Users run the agent with the script at /agent.ps1 (Windows) or /agent.sh (macOS / Linux). Set this only to also offer exe builds (e.g. GitHub Releases).",
     "saved": "Discord settings saved"
   },
   "logs": {

@@ -135,18 +135,21 @@ export function DiscordPresence() {
   const settings = useSettings();
   const info = useQuery({ queryKey: ["discordInfo"], queryFn: () => api<DiscordInfo>("/api/discord") });
   const [token, setToken] = useState<string | null>(null);
+  const [os, setOs] = useState<"windows" | "unix">(/Windows/i.test(navigator.userAgent) ? "windows" : "unix");
   const on = !!settings.data?.discordPresence;
   const d = info.data;
   if (!d) return null;
-  const guess = /Windows/i.test(navigator.userAgent) ? "windows" : /Mac/i.test(navigator.userAgent) ? "macos-arm64" : "linux";
-  const mine = d.downloads.find((x) => x.os === guess) ?? d.downloads[0];
-  const exe = mine?.file ?? (guess === "windows" ? "vang.exe" : "./vang");
-  const run = guess === "windows" ? `.\\${exe}` : `chmod +x ${exe} && ./${exe}`;
-  const cmd = token ? `${run} discord-agent -server ${d.server} -token ${token}` : "";
+  // The agent is a script served by this server: PowerShell (built into
+  // Windows) or sh + python3. It asks for the token once and keeps it.
+  const cmd = os === "windows" ? `irm ${d.server}/agent.ps1 | iex` : `curl -fsSL ${d.server}/agent.sh | sh`;
   const newToken = async () => {
     const r = await api<{ token: string }>("/api/tokens", { method: "POST", json: { kind: "agent" } });
     setToken(r.token);
   };
+  const guess = /Windows/i.test(navigator.userAgent) ? "windows" : /Mac/i.test(navigator.userAgent) ? "macos-arm64" : "linux";
+  const mine = d.downloads.find((x) => x.os === guess) ?? d.downloads[0];
+  const exe = mine?.file ?? (guess === "windows" ? "vang.exe" : "./vang");
+  const exeCmd = `${guess === "windows" ? `.\\${exe}` : `chmod +x ${exe} && ./${exe}`} discord-agent -server ${d.server} -token ${token ?? "<token>"}`;
   return (
     <Card title={t("settingsx.discord.title")} icon="headphones" tip={t("settingsx.discord.tip")}>
       {!d.configured ? (
@@ -169,45 +172,75 @@ export function DiscordPresence() {
             </button>
           </div>
           {on && (
-            <ol className="flex list-decimal flex-col gap-4 py-4 pl-5 text-body-sm">
-              <li>
-                {t("settingsx.discord.step1")}
-                <div className="mt-2 flex flex-wrap gap-2">
-                  {d.downloads.map((x) => (
-                    <a key={x.file} href={x.url} download className={`focus-ring inline-flex h-9 items-center gap-2 rounded-control px-3 text-label ${x === mine ? "bg-accent text-fg-on-accent" : "bg-surface-2"}`}>
-                      <Icon name="download" size={16} /> {t(`settingsx.discord.os.${x.os}`)} · {fmtBytes(x.size)}
-                    </a>
-                  ))}
-                  {d.agentUrl && (
-                    <a href={d.agentUrl} target="_blank" rel="noreferrer" className="focus-ring inline-flex h-9 items-center gap-2 rounded-control bg-surface-2 px-3 text-label">
-                      <Icon name="download" size={16} /> {t("settingsx.discord.otherDownloads")}
-                    </a>
-                  )}
-                  {!d.downloads.length && !d.agentUrl && <span className="text-fg-muted">{t("settingsx.discord.noDownloads")}</span>}
-                </div>
-              </li>
-              <li>
-                {t("settingsx.discord.step2")}
-                <div className="mt-2">
-                  <Button size="sm" icon="key" onClick={newToken}>
-                    {t("settingsx.discord.makeToken")}
-                  </Button>
-                </div>
-              </li>
-              {cmd && (
+            <div className="flex flex-col gap-4 py-4 text-body-sm">
+              <div role="radiogroup" aria-label={t("settingsx.discord.osLabel")} className="inline-flex self-start rounded-control bg-surface-2 p-1">
+                {(["windows", "unix"] as const).map((k) => (
+                  <button
+                    key={k}
+                    role="radio"
+                    aria-checked={os === k}
+                    onClick={() => setOs(k)}
+                    className={`focus-ring h-9 rounded-[6px] px-4 text-label transition-colors duration-fast ${os === k ? "bg-surface-4 text-fg" : "text-fg-muted hover:text-fg"}`}
+                  >
+                    {t(`settingsx.discord.osTab.${k}`)}
+                  </button>
+                ))}
+              </div>
+              <ol className="flex list-decimal flex-col gap-4 pl-5">
                 <li>
-                  {t("settingsx.discord.step3")}
-                  <div className="mt-2 flex items-center gap-2 rounded-control bg-surface-2 p-2">
-                    <code className="min-w-0 flex-1 break-all font-mono text-caption">{cmd}</code>
-                    <Button size="sm" icon="clipboard" onClick={() => copy(cmd)} aria-label={t("common.copy")} />
+                  {t("settingsx.discord.step2")}
+                  <div className="mt-2 flex flex-wrap items-center gap-2">
+                    <Button size="sm" icon="key" onClick={newToken}>
+                      {t("settingsx.discord.makeToken")}
+                    </Button>
+                    {token && <CopyLine text={token} />}
                   </div>
-                  <p className="mt-1 text-caption text-fg-muted">{t("settingsx.discord.keepRunning")}</p>
                 </li>
+                <li>
+                  {t(os === "windows" ? "settingsx.discord.runWindows" : "settingsx.discord.runUnix")}
+                  <div className="mt-2">
+                    <CopyLine text={cmd} />
+                  </div>
+                  {os === "unix" && <p className="mt-1 text-caption text-fg-muted">{t("settingsx.discord.needsPython")}</p>}
+                </li>
+              </ol>
+              <p className="text-caption text-fg-muted">
+                {t("settingsx.discord.tokenSaved")} {t("settingsx.discord.keepRunning")}
+              </p>
+              {(d.downloads.length > 0 || d.agentUrl) && (
+                <details className="text-caption text-fg-muted">
+                  <summary className="cursor-pointer select-none">{t("settingsx.discord.prebuilt")}</summary>
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    {d.downloads.map((x) => (
+                      <a key={x.file} href={x.url} download className="focus-ring inline-flex h-9 items-center gap-2 rounded-control bg-surface-2 px-3 text-label text-fg">
+                        <Icon name="download" size={16} /> {t(`settingsx.discord.os.${x.os}`)} · {fmtBytes(x.size)}
+                      </a>
+                    ))}
+                    {d.agentUrl && (
+                      <a href={d.agentUrl} target="_blank" rel="noreferrer" className="focus-ring inline-flex h-9 items-center gap-2 rounded-control bg-surface-2 px-3 text-label text-fg">
+                        <Icon name="download" size={16} /> {t("settingsx.discord.otherDownloads")}
+                      </a>
+                    )}
+                  </div>
+                  <p className="mt-2">{t("settingsx.discord.step3")}</p>
+                  <div className="mt-1">
+                    <CopyLine text={exeCmd} />
+                  </div>
+                </details>
               )}
-            </ol>
+            </div>
           )}
         </>
       )}
     </Card>
+  );
+}
+
+function CopyLine({ text }: { text: string }) {
+  return (
+    <div className="flex min-w-0 flex-1 items-center gap-2 rounded-control bg-surface-2 p-2">
+      <code className="min-w-0 flex-1 break-all font-mono text-caption text-fg">{text}</code>
+      <Button size="sm" icon="clipboard" onClick={() => copy(text)} aria-label={t("common.copy")} />
+    </div>
   );
 }

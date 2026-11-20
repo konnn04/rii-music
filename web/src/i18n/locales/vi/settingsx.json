@@ -20,19 +20,32 @@
   },
   "discord": {
     "title": "Trạng thái Discord",
-    "tip": "Hiện “Đang nghe …” trên Discord. Cần một chương trình nhỏ chạy trên máy tính có Discord desktop, vì Discord không cho máy chủ đặt trạng thái hộ bạn.",
+    "tip": "Hiện “Đang nghe …” trên Discord. Cần một script nhỏ chạy trên máy tính có Discord desktop (không cần cài thêm gì), vì Discord không cho máy chủ đặt trạng thái hộ bạn.",
     "notConfigured": "Admin chưa cài Discord Application ID cho máy chủ này.",
     "toggle": "Hiện bài đang nghe trên Discord",
     "toggleHint": "Chỉ khi agent đang chạy trên máy có Discord.",
     "on": "Đã bật trạng thái Discord",
     "off": "Đã tắt trạng thái Discord",
-    "step1": "Tải agent cho máy của bạn:",
     "step2": "Tạo token cho agent (token cũ sẽ hết hiệu lực):",
     "step3": "Mở terminal ở thư mục chứa file vừa tải, chạy:",
     "keepRunning": "Để cửa sổ chạy. Agent tự kết nối lại nếu Discord hoặc mạng gián đoạn.",
     "makeToken": "Tạo token",
     "otherDownloads": "Bản khác",
-    "noDownloads": "Máy chủ này chưa có file agent để tải. Hỏi admin.",
-    "os": { "windows": "Windows", "macos-arm64": "macOS (Apple Silicon)", "macos-amd64": "macOS (Intel)", "linux": "Linux" }
+    "os": {
+      "windows": "Windows",
+      "macos-arm64": "macOS (Apple Silicon)",
+      "macos-amd64": "macOS (Intel)",
+      "linux": "Linux"
+    },
+    "osLabel": "Hệ điều hành",
+    "osTab": {
+      "windows": "Windows",
+      "unix": "macOS / Linux"
+    },
+    "runWindows": "Mở PowerShell trên máy có Discord, chạy lệnh này rồi dán token khi được hỏi:",
+    "runUnix": "Mở Terminal trên máy có Discord, chạy lệnh này rồi dán token khi được hỏi:",
+    "needsPython": "Cần python3: macOS cài bằng lệnh xcode-select --install, Linux thường có sẵn.",
+    "tokenSaved": "Token được lưu trên máy, lần sau chỉ cần chạy lại lệnh.",
+    "prebuilt": "Dùng bản chạy sẵn (file exe) thay cho script"
   }
 }

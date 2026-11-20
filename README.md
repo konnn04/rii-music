@@ -61,7 +61,7 @@ Một binary Go phục vụ cả API lẫn giao diện (Vite + React nhúng bằ
 | Thương hiệu | Admin đặt tên trang, mô tả, logo: vào tiêu đề, header mobile, manifest PWA, thẻ meta. |
 | Song ngữ | Tiếng Việt / English cho toàn bộ giao diện (kể cả admin), từ điển JSON theo vùng ở `web/src/i18n/locales/<vi|en>/`. Lỗi từ server được dịch ở client. |
 | Thông báo | Toast có tiêu đề, nút hành động; `Tip` (icon giải thích) và `Hint` (mẹo hiện một lần) thay cho đoạn chữ dài. |
-| Discord | Cài đặt → Trạng thái Discord: tải agent (Windows / macOS / Linux, image Docker có sẵn), tạo token, chạy một lệnh. Admin đặt Discord Application ID một lần cho cả máy chủ. |
+| Discord | Cài đặt → Trạng thái Discord: tạo token, chạy một lệnh, dán token khi được hỏi. Agent là script do máy chủ phục vụ, không cần tải exe: Windows `irm https://…/agent.ps1 \| iex` (PowerShell có sẵn), macOS / Linux `curl -fsSL https://…/agent.sh \| sh` (cần python3). Token được lưu trên máy, lần sau chỉ cần chạy lại lệnh. Admin đặt Discord Application ID một lần cho cả máy chủ. |
 | API | Token cá nhân (Cài đặt → API), tài liệu tại `/docs` (OpenAPI 3.1 ở `/api/openapi.json`), thư viện TypeScript một file ở `/api/docs/client.ts`. |
 | Admin | Thêm: log hệ thống trực tiếp (lọc mức độ, tìm, mật khẩu/token được che), thương hiệu, Discord. |
 
@@ -97,7 +97,7 @@ docker compose logs -f      # lần đầu: yt-dlp tự tải về /data/bin
 - Dữ liệu (DB, nhạc, ảnh bìa, yt-dlp, `cookies.txt`) nằm trong volume `vang-data` → `/data`. Sao lưu volume này là đủ.
 - Đặt sau reverse proxy có HTTPS (Caddy, Nginx, Traefik). Ví dụ Caddy: `nhac.example.com { reverse_proxy localhost:8080 }`. Đặt `PUBLIC_URL=https://nhac.example.com` (link trong email, link chia sẻ, ảnh bìa cho Discord).
 - SSE (cập nhật trực tiếp) cần proxy không đệm: Nginx thêm `proxy_buffering off;` cho `/api/events`.
-- Image đã có ffmpeg, deno và agent Discord cho Windows / macOS / Linux (tắt bằng `--build-arg AGENT_BINARIES=false` để image nhỏ hơn ~60 MB).
+- Image đã có ffmpeg và deno. Agent Discord chạy bằng script (`/agent.ps1`, `/agent.sh`); muốn kèm thêm bản exe cho người dùng tải thì build với `--build-arg AGENT_BINARIES=true` (~60 MB).
 - Cập nhật: `git pull && docker compose up -d --build`. Migration DB tự chạy.
 - Coolify: tạo resource từ Docker Compose (hoặc Dockerfile), gắn volume `/data`, khai các biến trong `.env.example`.
 
@@ -126,7 +126,7 @@ docker compose logs -f      # lần đầu: yt-dlp tự tải về /data/bin
 | `WEB_DIR` | | Phát triển: đọc giao diện từ thư mục này |
 | `LOG_LEVEL` | `info` | `debug` để log mọi request |
 | `PUBLIC_URL` | | Địa chỉ công khai (https) của trang: link trong email, link chia sẻ, ảnh bìa cho Discord |
-| `AGENT_DIR` | `/opt/vang/agent` trong Docker | Thư mục chứa file agent Discord cho người dùng tải |
+| `AGENT_DIR` | `/opt/vang/agent` trong Docker | Thư mục chứa bản exe của agent Discord (chỉ khi build với `AGENT_BINARIES=true`) |
 | `TZ` | `Asia/Ho_Chi_Minh` trong Docker | Múi giờ log |
 
 Khi YouTube báo “Sign in to confirm you're not a bot”: xuất cookies.txt từ trình duyệt (tiện ích “Get cookies.txt LOCALLY”) và đặt vào `$DATA_DIR/cookies.txt`.

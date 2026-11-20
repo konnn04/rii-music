@@ -158,6 +158,8 @@ func (s *Server) Handler() http.Handler {
 	mux.HandleFunc("GET /branding/logo", s.handleLogo)
 	mux.HandleFunc("GET /robots.txt", s.handleRobots)
 	mux.HandleFunc("GET /download/agent/{file}", s.handleAgentFile)
+	mux.HandleFunc("GET /agent.ps1", s.serveAgentScript(agentPS1))
+	mux.HandleFunc("GET /agent.sh", s.serveAgentScript(agentSH))
 	mux.HandleFunc("GET /api/openapi.json", s.handleOpenAPI)
 	mux.HandleFunc("GET /api/docs/client.ts", s.handleClientLib)
 

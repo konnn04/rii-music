@@ -10,10 +10,10 @@
     "logoSaved": "Đã đổi logo"
   },
   "discord": {
-    "tip": "Tạo một Application tại discord.com/developers/applications: tên của nó là chữ hiện sau “Đang nghe”. Người dùng chỉ cần tải agent và chạy một lệnh.",
+    "tip": "Tạo một Application tại discord.com/developers/applications: tên của nó là chữ hiện sau “Đang nghe”. Người dùng chỉ cần chạy một lệnh (script do máy chủ này phục vụ, không cần tải file exe).",
     "appId": "Discord Application ID",
-    "agentUrl": "Link tải agent (không bắt buộc)",
-    "agentUrlHint": "Bản Docker đã có sẵn file agent cho Windows / macOS / Linux. Đặt link (vd GitHub Releases) nếu muốn người dùng tải ở nơi khác.",
+    "agentUrl": "Link tải bản chạy sẵn (không bắt buộc)",
+    "agentUrlHint": "Người dùng chạy agent bằng script tại /agent.ps1 (Windows) hoặc /agent.sh (macOS / Linux). Chỉ đặt link này nếu muốn cho tải thêm bản exe (vd GitHub Releases).",
     "saved": "Đã lưu cài đặt Discord"
   },
   "logs": {

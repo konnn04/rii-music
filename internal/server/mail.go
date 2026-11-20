@@ -27,12 +27,16 @@ func (s *Server) sendMail(to, subject, body string) error {
 	dialer := &net.Dialer{Timeout: 15 * time.Second}
 	tlsCfg := &tls.Config{ServerName: c.SMTPHost, MinVersion: tls.VersionTLS12}
 
+	network := "tcp"
+	if c.ForceIPv4 {
+		network = "tcp4"
+	}
 	var conn net.Conn
 	var err error
 	if c.SMTPPort == 465 {
-		conn, err = tls.DialWithDialer(dialer, "tcp", addr, tlsCfg)
+		conn, err = tls.DialWithDialer(dialer, network, addr, tlsCfg)
 	} else {
-		conn, err = dialer.Dial("tcp", addr)
+		conn, err = dialer.Dial(network, addr)
 	}
 	if err != nil {
 		return fmt.Errorf("smtp dial: %w", err)

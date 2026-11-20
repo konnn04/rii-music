@@ -7,6 +7,7 @@ import (
 	"flag"
 	"fmt"
 	"log/slog"
+	"net"
 	"net/http"
 	"os"
 	"os/exec"
@@ -72,6 +73,9 @@ func main() {
 
 func run(log *slog.Logger, logBuf *server.LogBuffer) error {
 	cfg := server.LoadConfig()
+	if cfg.ForceIPv4 {
+		forceIPv4()
+	}
 	for _, d := range []string{cfg.DataDir, cfg.MusicDir(), cfg.CoverDir(), cfg.TmpDir(), cfg.BinDir()} {
 		if err := os.MkdirAll(d, 0o755); err != nil {
 			return err
@@ -105,6 +109,7 @@ func run(log *slog.Logger, logBuf *server.LogBuffer) error {
 		JSRuntime:  os.Getenv("YTDLP_JS_RUNTIME"),
 		RemoteEJS:  os.Getenv("YTDLP_REMOTE_EJS") != "false",
 		GeoCountry: os.Getenv("YTDLP_GEO_COUNTRY"),
+		ForceIPv4:  cfg.ForceIPv4,
 	}, log.With("component", "ytdlp"))
 
 	webFS := web.Dist()
@@ -224,4 +229,19 @@ func runMigrate(args []string) error {
 		return fmt.Errorf("lệnh không rõ %q: dùng status hoặc up", cmd)
 	}
 	return nil
+}
+
+// forceIPv4 makes every outbound HTTP request of the server (YouTube Music,
+// LRCLIB, Deezer, the yt-dlp download…) connect over IPv4 only (FORCE_IPV4).
+func forceIPv4() {
+	t := http.DefaultTransport.(*http.Transport).Clone()
+	d := &net.Dialer{Timeout: 30 * time.Second, KeepAlive: 30 * time.Second}
+	t.DialContext = func(ctx context.Context, network, addr string) (net.Conn, error) {
+		switch network {
+		case "tcp", "tcp6":
+			network = "tcp4"
+		}
+		return d.DialContext(ctx, network, addr)
+	}
+	http.DefaultTransport = t
 }

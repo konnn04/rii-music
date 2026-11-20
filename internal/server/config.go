@@ -14,6 +14,9 @@ type Config struct {
 	// DatabaseURL: PostgreSQL connection string (DATABASE_URL).
 	DatabaseURL string
 	TrustProxy  bool
+	// ForceIPv4 (FORCE_IPV4): outbound connections and yt-dlp use IPv4 only,
+	// for hosts whose IPv6 is broken or blocked by YouTube.
+	ForceIPv4   bool
 	FFmpeg      string
 	MaxJobs     int
 	MaxDuration int // seconds; longer videos are refused
@@ -45,6 +48,7 @@ func LoadConfig() Config {
 		DataDir:     env("DATA_DIR", "./data"),
 		DatabaseURL: strings.TrimSpace(os.Getenv("DATABASE_URL")),
 		TrustProxy:  envBool("TRUST_PROXY", false),
+		ForceIPv4:   envBool("FORCE_IPV4", false),
 		FFmpeg:      env("FFMPEG_PATH", "ffmpeg"),
 		MaxJobs:     envInt("DOWNLOAD_CONCURRENCY", 2),
 		MaxDuration: envInt("MAX_DURATION_SEC", 3*60*60),

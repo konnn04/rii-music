@@ -31,6 +31,7 @@ type Config struct {
 	Cookies    string // Netscape cookies.txt, used when the file exists
 	JSRuntime  string // deno|node|"" (auto)
 	RemoteEJS  bool   // --remote-components ejs:github
+	ForceIPv4  bool   // --force-ipv4
 	GeoCountry string
 }
 
@@ -277,6 +278,9 @@ func (c *Client) BaseArgs() []string {
 	}
 	if c.cfg.GeoCountry != "" {
 		args = append(args, "--xff", c.cfg.GeoCountry)
+	}
+	if c.cfg.ForceIPv4 {
+		args = append(args, "--force-ipv4")
 	}
 	return args
 }

@@ -103,6 +103,7 @@ Mở http://localhost:8080. Tắt bằng Ctrl+C. Sau mỗi lần cập nhật co
 | `YT_COOKIES_PATH` | `$DATA_DIR/cookies.txt` | Cookie YouTube khi bị đòi xác minh |
 | `YTDLP_PATH` | tự quản lý | Dùng yt-dlp có sẵn thay vì tự tải |
 | `YTDLP_GEO_COUNTRY` | | Giả vùng, ví dụ `VN` |
+| `FORCE_IPV4` | `false` | Tắt IPv6, ép IPv4 cho yt-dlp (`--force-ipv4`) và mọi kết nối ra ngoài của server |
 | `FFMPEG_PATH` | `ffmpeg` | |
 | `LOG_LEVEL` | `info` | `debug` để log mọi request |
 | `ENV_FILE` | `.env` | Đường dẫn file cấu hình |

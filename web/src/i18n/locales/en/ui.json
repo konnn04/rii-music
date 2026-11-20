@@ -52,5 +52,9 @@
     "playingOn": "Playing on {device}",
     "pausedOn": "Last played on {device}",
     "playHere": "Play here"
+  },
+  "drag": {
+    "count": "{n} songs",
+    "added": "Added {n} to {name}"
   }
 }

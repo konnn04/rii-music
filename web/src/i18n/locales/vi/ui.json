@@ -52,5 +52,9 @@
     "playingOn": "Đang phát trên {device}",
     "pausedOn": "Vừa nghe trên {device}",
     "playHere": "Phát ở đây"
+  },
+  "drag": {
+    "count": "{n} bài",
+    "added": "Đã thêm {n} bài vào {name}"
   }
 }

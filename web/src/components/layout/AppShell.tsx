@@ -1,8 +1,8 @@
-import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useRef, useState, type DragEvent as ReactDragEvent, type ReactNode } from "react";
 import { Link, Outlet, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useIsDesktop } from "@/lib/useMedia";
-import { useJobs, useMe, usePlaylists, useSettings } from "@/lib/queries";
-import { api } from "@/lib/api";
+import { queryClient, useJobs, useMe, usePlaylists, useSettings, useToggleLike } from "@/lib/queries";
+import { api, type Playlist } from "@/lib/api";
 import { engine } from "@/player/engine";
 import { usePlayer } from "@/player/store";
 import { useShortcuts } from "@/player/shortcuts";
@@ -12,7 +12,8 @@ import { connectEvents } from "@/lib/events";
 import { Icon, type IconName } from "../ui/Icon";
 import { IconButton } from "../ui/Button";
 import { Collage } from "../ui/Cover";
-import { useScrollEl } from "../TrackList";
+import { toast } from "../ui/Toast";
+import { TRACK_DRAG_MIME, useScrollEl } from "../TrackList";
 import { GlobalDialogs, openDialog } from "../dialogs";
 import { MiniPlayer, PlayerBar } from "./PlayerBar";
 import { LyricsFullscreen, MobileNowPlaying, RightPanel } from "./NowPlaying";
@@ -133,6 +134,10 @@ function TabBar() {
   );
 }
 
+function hasTrackDrag(dt: DataTransfer | null): boolean {
+  return !!dt && Array.from(dt.types).includes(TRACK_DRAG_MIME);
+}
+
 function Sidebar() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const desktop = useIsDesktop();
@@ -141,6 +146,56 @@ function Sidebar() {
   const navigate = useNavigate();
   const isAdmin = useMe().data?.user.role === "admin";
   const brand = useBranding();
+  const toggleLike = useToggleLike();
+  const [draggingTracks, setDraggingTracks] = useState(false);
+  const [dropTargetId, setDropTargetId] = useState<string | null>(null);
+
+  useEffect(() => {
+    const onStart = (e: DragEvent) => {
+      if (hasTrackDrag(e.dataTransfer)) setDraggingTracks(true);
+    };
+    const onEnd = () => {
+      setDraggingTracks(false);
+      setDropTargetId(null);
+    };
+    window.addEventListener("dragstart", onStart);
+    window.addEventListener("dragend", onEnd);
+    return () => {
+      window.removeEventListener("dragstart", onStart);
+      window.removeEventListener("dragend", onEnd);
+    };
+  }, []);
+
+  const handleDrop = async (e: ReactDragEvent<HTMLButtonElement>, p: Playlist) => {
+    if (!hasTrackDrag(e.dataTransfer)) return;
+    e.preventDefault();
+    setDropTargetId(null);
+    setDraggingTracks(false);
+    let ids: string[] = [];
+    try {
+      const parsed: unknown = JSON.parse(e.dataTransfer.getData(TRACK_DRAG_MIME));
+      if (Array.isArray(parsed)) ids = parsed.filter((x): x is string => typeof x === "string" && x.length > 0);
+    } catch {
+      return;
+    }
+    if (!ids.length) return;
+    const name = p.id === "liked" ? t("common.nav.liked") : p.name;
+    try {
+      if (p.id === "liked") {
+        await Promise.all(ids.map((id) => toggleLike.mutateAsync({ id, liked: true })));
+      } else {
+        await api(`/api/playlists/${p.id}/items`, { method: "POST", json: { trackIds: ids } });
+        queryClient.invalidateQueries({ queryKey: ["playlists"] });
+        queryClient.invalidateQueries({ queryKey: ["playlist", p.id] });
+      }
+      toast(t("ui.drag.added", { n: ids.length, name }), "success");
+    } catch (err) {
+      if (p.id !== "liked") {
+        toast((err as Error)?.message ?? t("common.error"), "error");
+      }
+    }
+  };
+
   return (
     <aside
       className="hidden w-[var(--spacing-sidebar-collapsed)] shrink-0 flex-col gap-2 md:flex lg:w-[var(--spacing-sidebar)]"
@@ -183,11 +238,41 @@ function Sidebar() {
         <div className="min-h-0 flex-1 overflow-y-auto">
           {playlists.data?.map((p) => {
             const on = pathname === `/playlist/${p.id}`;
+            const canDrop = p.kind === "manual" || p.id === "liked";
+            const isOver = canDrop && dropTargetId === p.id;
             return (
               <button
                 key={p.id}
                 onClick={() => navigate({ to: "/playlist/$id", params: { id: p.id } })}
-                className={`focus-ring state-layer flex h-14 w-full items-center gap-3 rounded-control px-2 text-left ${on ? "bg-surface-2" : ""}`}
+                onDragOver={
+                  canDrop
+                    ? (e) => {
+                        if (!hasTrackDrag(e.dataTransfer)) return;
+                        e.preventDefault();
+                        e.dataTransfer.dropEffect = "copy";
+                        if (dropTargetId !== p.id) setDropTargetId(p.id);
+                      }
+                    : undefined
+                }
+                onDragLeave={
+                  canDrop
+                    ? (e) => {
+                        if (!e.currentTarget.contains(e.relatedTarget as Node | null)) {
+                          setDropTargetId((cur) => (cur === p.id ? null : cur));
+                        }
+                      }
+                    : undefined
+                }
+                onDrop={canDrop ? (e) => void handleDrop(e, p) : undefined}
+                className={`focus-ring state-layer flex h-14 w-full items-center gap-3 rounded-control px-2 text-left transition-colors ${
+                  isOver
+                    ? "bg-accent-soft ring-2 ring-inset ring-accent"
+                    : canDrop && draggingTracks
+                      ? `${on ? "bg-surface-2" : ""} outline-1 outline-dashed outline-accent/50 -outline-offset-1`
+                      : on
+                        ? "bg-surface-2"
+                        : ""
+                }`}
               >
                 {p.id === "liked" ? (
                   <span className="flex size-10 shrink-0 items-center justify-center rounded-xs bg-accent-soft text-accent">

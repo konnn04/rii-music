@@ -1,4 +1,4 @@
-import { memo, useCallback, useLayoutEffect, useRef, useState } from "react";
+import { memo, useCallback, useLayoutEffect, useRef, useState, type DragEvent } from "react";
 import { create } from "zustand";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { DndContext, KeyboardSensor, PointerSensor, TouchSensor, closestCenter, useSensor, useSensors, type DragEndEvent } from "@dnd-kit/core";
@@ -22,6 +22,8 @@ import { ArtistLinks } from "@/components/ArtistLinks";
 
 /** The scrolling <main> element, so lists can virtualise against it. */
 export const useScrollEl = create<{ el: HTMLElement | null }>(() => ({ el: null }));
+/** Custom MIME type for dragging track rows onto sidebar playlists. */
+export const TRACK_DRAG_MIME = "application/x-rii-tracks";
 // The DOM node exists before React attaches the ref, so fall back to it.
 const getScrollEl = () => useScrollEl.getState().el ?? document.getElementById("main");
 
@@ -218,6 +220,19 @@ const Row = memo(function Row({
   const pressTimer = useRef<number | null>(null);
   const selecting = selected !== null;
   const isSel = selected?.has(track.id) ?? false;
+  const canDrag = desktop && canHover && !dragHandle;
+
+  const onDragStart = (e: DragEvent<HTMLDivElement>) => {
+    const ids = isSel && selected ? Array.from(selected) : [track.id];
+    e.dataTransfer.setData(TRACK_DRAG_MIME, JSON.stringify(ids));
+    e.dataTransfer.effectAllowed = "copy";
+    const pill = document.createElement("div");
+    pill.textContent = ids.length > 1 ? t("ui.drag.count", { n: ids.length }) : track.title;
+    pill.className = "fixed -left-[9999px] top-0 max-w-60 truncate rounded-full border border-line bg-surface-3 px-3 py-1.5 text-label text-fg shadow-float";
+    document.body.appendChild(pill);
+    e.dataTransfer.setDragImage(pill, 16, 16);
+    setTimeout(() => pill.remove(), 0);
+  };
 
   const onActivate = () => {
     if (selecting) toggleSel(track.id);
@@ -280,6 +295,8 @@ const Row = memo(function Row({
       role="listitem"
       aria-current={isCurrent || undefined}
       tabIndex={0}
+      draggable={canDrag || undefined}
+      onDragStart={canDrag ? onDragStart : undefined}
       onClick={
         canHover && !selecting
           ? (e) => {

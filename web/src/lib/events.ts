@@ -6,7 +6,7 @@ import { usePlayer } from "@/player/store";
 import { engine } from "@/player/engine";
 import { isAutoplayJob, onJobEvent } from "@/player/autofill";
 import { onJobForPlay } from "./playweb";
-import { onPlaylistChanged } from "@/player/playlistFill";
+import { onJobForList } from "@/player/playlistFill";
 import { t, tsv } from "@/i18n";
 
 let es: EventSource | null = null;
@@ -28,6 +28,7 @@ export function connectEvents() {
     if (job.status === "error" && job.origin === "user" && !isAutoplayJob(job.id)) toast(t("ui.toast.downloadError", { target: job.title ? tsv(job.title) : job.url }), "error");
     onJobEvent(job);
     onJobForPlay(job);
+    onJobForList(job); // "Phát tất cả" on a YouTube Music album / playlist
   });
   // Loudness measured in the background after a download.
   es.addEventListener("trackGain", (e) => {
@@ -42,9 +43,7 @@ export function connectEvents() {
     libTimer = window.setTimeout(invalidateLibrary, 400); // coalesce bursts (playlist downloads)
   };
   es.addEventListener("library", lib);
-  es.addEventListener("playlists", (e) => {
-    const { id } = JSON.parse((e as MessageEvent).data || "{}") as { id?: string };
-    if (id) onPlaylistChanged(id); // a song of a playlist being played finished downloading
+  es.addEventListener("playlists", () => {
     queryClient.invalidateQueries({ queryKey: ["playlists"] });
     queryClient.invalidateQueries({ queryKey: ["playlist"] });
   });

@@ -43,7 +43,11 @@
     "playAll": "Phát tất cả",
     "openSaved": "Mở playlist đã lưu",
     "save": "Lưu vào thư viện",
-    "saveHint": "Lưu thành playlist của bạn: bài đã có trên máy chủ vào ngay, bài chưa có được tải và tự vào đúng vị trí."
+    "saveHint": "Lưu thành playlist của bạn: bài đã có trên máy chủ vào ngay, bài chưa có được tải và tự vào đúng vị trí.",
+    "playDownloading": {
+      "one": "Đang tải {n} bài còn lại, bài nào xong sẽ tự vào hàng chờ",
+      "other": "Đang tải {n} bài còn lại, bài nào xong sẽ tự vào hàng chờ"
+    }
   },
   "row": {
     "inLibrary": "Đã có trong thư viện",

@@ -11,9 +11,9 @@ import { Icon } from "@/components/ui/Icon";
 import { Button } from "@/components/ui/Button";
 import { Empty, ErrorState } from "@/components/ui/misc";
 import { PageHeader } from "@/components/layout/AppShell";
-import { t } from "@/i18n";
+import { t, tn } from "@/i18n";
 import { ArtistLinks } from "@/components/ArtistLinks";
-import { playFollowing } from "@/player/playlistFill";
+import { playWebList } from "@/player/playlistFill";
 
 export function SearchPage() {
   const { q = "" } = useSearch({ from: "/search" });
@@ -194,8 +194,23 @@ function CollectionDialog({ r, onClose }: { r: WebResult; onClose: () => void })
   const navigate = useNavigate();
   const list = useQuery({ queryKey: ["webList", r.id], queryFn: () => api<WebList>(`/api/web/list?id=${encodeURIComponent(r.id)}`), staleTime: 60_000 });
   const [busy, setBusy] = useState<"" | "save" | "play">("");
-  const save = async (andPlay: boolean) => {
-    setBusy(andPlay ? "play" : "save");
+  const d = list.data;
+  // Play: just play it (downloading what is missing), nothing is saved.
+  const play = async () => {
+    if (!d?.tracks.length) return;
+    setBusy("play");
+    try {
+      const r2 = await playWebList(r.id, r.title, d.tracks);
+      if (r2 && r2.downloading > 0) notify({ icon: "download", text: tn("search.collection.playDownloading", r2.downloading) });
+      onClose();
+    } catch (e) {
+      toast((e as Error).message, "error");
+    } finally {
+      setBusy("");
+    }
+  };
+  const save = async () => {
+    setBusy("save");
     try {
       const res = await api<{ playlist: { id: string; name: string }; queued: number; added: number }>("/api/web/list/save", { method: "POST", json: { id: r.id, title: r.title } });
       queryClient.invalidateQueries({ queryKey: ["playlists"] });
@@ -206,7 +221,6 @@ function CollectionDialog({ r, onClose }: { r: WebResult; onClose: () => void })
         text: res.queued ? t("search.collection.savedQueued", { n: res.queued }) : t("search.collection.savedAll"),
         action: { label: t("search.collection.open"), onClick: () => navigate({ to: "/playlist/$id", params: { id: res.playlist.id } }) },
       });
-      if (andPlay) await playFollowing(res.playlist.id, res.playlist.name);
       onClose();
     } catch (e) {
       toast((e as Error).message, "error");
@@ -214,12 +228,11 @@ function CollectionDialog({ r, onClose }: { r: WebResult; onClose: () => void })
       setBusy("");
     }
   };
-  const d = list.data;
   return (
     <Dialog open onOpenChange={(o) => !o && onClose()} title={r.title} description={[r.artist, r.album].filter(Boolean).join(" · ")}>
       <div className="flex flex-col gap-3">
         <div className="flex flex-wrap gap-2">
-          <Button variant="primary" icon="play" loading={busy === "play"} disabled={!d?.tracks.length} onClick={() => save(true)}>
+          <Button variant="primary" icon="play" loading={busy === "play"} disabled={!d?.tracks.length} onClick={play}>
             {t("search.collection.playAll")}
           </Button>
           {d?.saved ? (
@@ -227,7 +240,7 @@ function CollectionDialog({ r, onClose }: { r: WebResult; onClose: () => void })
               {t("search.collection.openSaved")}
             </Button>
           ) : (
-            <Button icon="playlist-add" loading={busy === "save"} disabled={!d?.tracks.length} onClick={() => save(false)}>
+            <Button icon="playlist-add" loading={busy === "save"} disabled={!d?.tracks.length} onClick={save}>
               {t("search.collection.save")}
             </Button>
           )}

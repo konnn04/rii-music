@@ -43,7 +43,11 @@
     "playAll": "Play all",
     "openSaved": "Open saved playlist",
     "save": "Save to library",
-    "saveHint": "Saved as your playlist: songs already on the server go in now, the others download and land in their place."
+    "saveHint": "Saved as your playlist: songs already on the server go in now, the others download and land in their place.",
+    "playDownloading": {
+      "one": "Downloading {n} more song; it joins the queue when ready",
+      "other": "Downloading {n} more songs; each joins the queue when ready"
+    }
   },
   "row": {
     "inLibrary": "In your library",

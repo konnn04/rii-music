@@ -178,16 +178,46 @@ func (c *Client) download(ctx context.Context) error {
 		return fmt.Errorf("checksum mismatch for %s: want %s got %s", asset, want, got)
 	}
 
-	tmp := c.managedPath() + ".tmp"
+	mp := c.managedPath()
+	c.removeOld()
+	// Same build as the one we have: just mark it fresh.
+	if cur, err := os.ReadFile(mp); err == nil {
+		if s := sha256.Sum256(cur); hex.EncodeToString(s[:]) == want {
+			now := time.Now()
+			os.Chtimes(mp, now, now)
+			return nil
+		}
+	}
+	tmp := mp + ".tmp"
 	if err := os.WriteFile(tmp, body, 0o755); err != nil {
 		return err
 	}
-	if err := os.Rename(tmp, c.managedPath()); err != nil {
-		os.Remove(tmp)
-		return err
+	if err := os.Rename(tmp, mp); err != nil {
+		// Windows refuses to overwrite an exe that is running, but lets it be
+		// renamed: move the old one aside (deleted once nothing runs it).
+		old := fmt.Sprintf("%s.old-%d", mp, time.Now().UnixNano())
+		if err2 := os.Rename(mp, old); err2 != nil {
+			os.Remove(tmp)
+			return err
+		}
+		if err := os.Rename(tmp, mp); err != nil {
+			os.Rename(old, mp)
+			os.Remove(tmp)
+			return err
+		}
 	}
 	c.log.Info("yt-dlp downloaded", "asset", asset, "bytes", len(body))
 	return nil
+}
+
+// removeOld deletes binaries moved aside by earlier updates (fails silently
+// while one is still running).
+func (c *Client) removeOld() {
+	olds, _ := filepath.Glob(c.managedPath() + ".old-*")
+	for _, f := range olds {
+		os.Remove(f)
+	}
+	os.Remove(c.managedPath() + ".tmp")
 }
 
 func httpGet(ctx context.Context, hc *http.Client, url string) ([]byte, error) {
@@ -251,6 +281,8 @@ func (c *Client) Info() (bin string, managed bool, jsRuntime string) {
 }
 
 func (c *Client) Version(ctx context.Context) string {
+	ctx, cancel := context.WithTimeout(ctx, 20*time.Second)
+	defer cancel()
 	out, err := c.Run(ctx, []string{"--version"}, nil)
 	if err != nil {
 		return ""

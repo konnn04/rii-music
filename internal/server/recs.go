@@ -731,7 +731,9 @@ func (s *Server) dailyMixes(rc *recCtx, n int) []Mix {
 		}
 		tracks := []Track{}
 		for _, id := range ids {
-			tracks = append(tracks, rc.byID[id])
+			if tr, ok := rc.byID[id]; ok { // sound-alikes may be other users' tracks
+				tracks = append(tracks, tr)
+			}
 		}
 		used[seed] = true
 		mixes = append(mixes, Mix{ID: seed, Name: "Mix " + strconv.Itoa(len(mixes)+1), Reason: "Vì bạn hay nghe " + t.name(seed), Tracks: tracks})

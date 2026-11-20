@@ -552,7 +552,11 @@ func (s *Server) handleRadio(w http.ResponseWriter, r *http.Request) {
 		if len(out) == 50 {
 			break
 		}
-		out = append(out, rc.byID[id])
+		// Sound-alikes and co-listens come from every user's tracks: keep only
+		// what is in this user's library (an empty track breaks the queue).
+		if tr, ok := rc.byID[id]; ok {
+			out = append(out, tr)
+		}
 	}
 	// Small library or no signal yet: pad with the rest, shuffled.
 	if len(out) < 20 {

@@ -11,7 +11,9 @@ export type PanelTab = "nowplaying" | "queue" | "lyrics";
 
 let uidSeq = 0;
 export const newUid = () => `${Date.now().toString(36)}-${(uidSeq++).toString(36)}-${Math.random().toString(36).slice(2, 6)}`;
-const entries = (ts: Track[]): QueueEntry[] => ts.map((track) => ({ uid: newUid(), track }));
+/** A track without an id can't be played: never let one into the queue. */
+const playable = (ts: Track[]) => ts.filter((t) => t?.id);
+const entries = (ts: Track[]): QueueEntry[] => playable(ts).map((track) => ({ uid: newUid(), track }));
 
 function shuffled<T>(a: T[]): T[] {
   const b = a.slice();
@@ -107,6 +109,11 @@ export const usePlayer = create<State & Actions>()(
       lyricsFull: false,
 
       playList: (tracks, start, source, opts) => {
+        if (tracks.some((t) => !t?.id)) {
+          const picked = tracks[start];
+          tracks = playable(tracks);
+          start = start < 0 ? start : Math.max(0, tracks.indexOf(picked));
+        }
         if (!tracks.length) return;
         if (opts?.oneLang && start >= 0 && start < tracks.length) {
           // Mixed shelves (continue listening, recently added…): keep only the
@@ -250,11 +257,12 @@ export const usePlayer = create<State & Actions>()(
       clearUpcoming: () => set((s) => ({ manual: [], context: s.context.slice(0, s.pos + 1), original: null })),
       appendAuto: (tracks) =>
         set((s) => {
-          const add = tracks.map((track) => ({ uid: newUid(), track, auto: true }));
+          const add = playable(tracks).map((track) => ({ uid: newUid(), track, auto: true }));
           return { context: [...s.context, ...add], original: s.original ? [...s.original, ...add] : null };
         }),
       insertAuto: (track, index) =>
         set((s) => {
+          if (!track?.id) return {};
           const e = { uid: newUid(), track, auto: true };
           const i = Math.max(s.pos + 1, Math.min(index, s.context.length));
           const context = [...s.context.slice(0, i), e, ...s.context.slice(i)];

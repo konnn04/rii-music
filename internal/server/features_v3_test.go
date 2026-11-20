@@ -272,3 +272,36 @@ func TestMoodPlaylistOneLanguage(t *testing.T) {
 		t.Fatalf("unknown mood: %d", code)
 	}
 }
+
+// Sound-alikes are computed over every track on the server; radio must only
+// hand back tracks from the user's own library (an empty one broke the queue).
+func TestRadioOnlyOwnTracks(t *testing.T) {
+	s, ts := newTestServer(t)
+	admin, uid := loginAdmin(t, ts.URL)
+	vec := `[1,0.5,0.2,0.1,0.3,0.4,0.2,0.1,0.3,0.2,0.1,0.4,0.3,0.2,0.1,0.2,0.3,0.4,0.5,0.6]`
+	for i := 0; i < 8; i++ {
+		owner := uid
+		if i >= 4 {
+			owner = "" // someone else's track: on the server, not in this library
+		}
+		seedTrack(t, s, owner, hexID(i), "Bài", "Ca Sĩ", "vi")
+		s.db.Exec(`INSERT INTO track_features(track_id, version, vec, computed_at) VALUES (?,?,?,?)`, hexID(i), featureVersion, vec, nowMs())
+	}
+	s.features.markDirty()
+	req, _ := http.NewRequest("GET", ts.URL+"/api/radio?seed="+hexID(0), nil)
+	res, err := admin.hc.Do(req)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var body struct{ Tracks []Track }
+	json.NewDecoder(res.Body).Decode(&body)
+	res.Body.Close()
+	if len(body.Tracks) < 2 {
+		t.Fatalf("radio: %d tracks", len(body.Tracks))
+	}
+	for _, tr := range body.Tracks {
+		if tr.ID == "" || tr.Title == "" {
+			t.Fatalf("radio returned an empty track: %+v", tr)
+		}
+	}
+}

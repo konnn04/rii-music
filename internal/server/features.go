@@ -16,13 +16,28 @@ import (
 	"time"
 )
 
-// Tier-3 "nghe giống": a hand-crafted audio feature vector per track, computed
-// with ffmpeg from a 90 s excerpt. It captures timbre (spectral centroid,
-// spread, rolloff, flatness…), energy dynamics and tempo/pulse — not semantics
-// like a learned embedding would. Vectors are z-scored across the library and
-// compared by cosine similarity.
+// Tier-3 "nghe giống": a hand-crafted audio feature vector per track.
+//   0–19   ffmpeg spectral stats over 90 s (centroid, spread, rolloff, flatness…),
+//          energy dynamics, tempo and pulse clarity (mood.go reads these by index)
+//   20–45  MFCC 1–13 mean / std (timbre), timbre.go
+//   46–57  key-independent chroma profile (harmony), timbre.go
+// Not semantics like a learned embedding (too heavy for a small server).
+// Vectors are z-scored across the library, weighted per group and compared by
+// cosine similarity.
 
-const featureVersion = 1
+const featureVersion = 2
+
+// featureWeight: how much each group counts in "sounds like".
+func featureWeight(i int) float64 {
+	switch {
+	case i < 20:
+		return 1
+	case i < 46:
+		return 0.75
+	default:
+		return 0.6
+	}
+}
 
 var spectralMeasures = []string{"centroid", "spread", "flatness", "crest", "entropy", "rolloff", "flux", "slope"}
 
@@ -41,7 +56,15 @@ func extractFeatures(ctx context.Context, ffmpeg, file string, durationMs int64)
 	if err != nil {
 		return nil, fmt.Errorf("ffmpeg features: %w", err)
 	}
-	return featuresFromMetadata(out)
+	vec, err := featuresFromMetadata(out)
+	if err != nil {
+		return nil, err
+	}
+	tim, err := timbreFeatures(ctx, ffmpeg, file, start)
+	if err != nil {
+		return nil, err
+	}
+	return append(vec, tim...), nil
 }
 
 // featuresFromMetadata aggregates ffmpeg's per-frame metadata into a vector:
@@ -316,7 +339,7 @@ func zscoreUnit(raw [][]float64) [][]float64 {
 		if len(v) == dim {
 			var norm float64
 			for i, x := range v {
-				z[i] = (x - mu[i]) / sd[i]
+				z[i] = (x - mu[i]) / sd[i] * featureWeight(i)
 				norm += z[i] * z[i]
 			}
 			norm = math.Sqrt(norm)

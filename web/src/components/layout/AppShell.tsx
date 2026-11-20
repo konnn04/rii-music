@@ -24,6 +24,7 @@ import { Onboarding } from "@/pages/Onboarding";
 import { RemoteBanner } from "@/components/RemoteBanner";
 import { clearStored, initOffline, useOffline } from "@/lib/offline";
 import { useFollows } from "@/lib/follows";
+import { useNet } from "@/player/net";
 import { FollowedRow } from "@/components/Follow";
 
 // `header`: shown as an icon in the top bar (desktop) and the mobile header
@@ -372,11 +373,22 @@ function TopBar() {
 function OfflineBanner() {
   const online = useOffline((s) => s.online);
   const enabled = useOffline((s) => s.enabled);
-  if (online) return null;
+  const serverDown = useNet((n) => n.serverDown);
+  const offline = !online || serverDown;
+  // Closed by the user: stays closed until the connection comes back.
+  const [closed, setClosed] = useState(false);
+  useEffect(() => {
+    if (!offline) setClosed(false);
+  }, [offline]);
+  if (!offline || closed) return null;
   return (
-    <div role="status" className="fixed left-1/2 top-[calc(8px+env(safe-area-inset-top))] z-[70] flex -translate-x-1/2 items-center gap-2 rounded-full bg-surface-3 px-4 py-2 text-body-sm shadow-float">
-      <Icon name="globe" size={16} className="text-warning" />
-      {enabled ? t("ui.offline.onlyStored") : t("ui.offline.noConnection")}
+    <div
+      role="status"
+      className="fixed left-1/2 top-[calc(8px+env(safe-area-inset-top))] z-[70] flex max-w-[calc(100vw-24px)] -translate-x-1/2 items-center gap-2 rounded-full bg-surface-3 py-1 pl-4 pr-1 text-body-sm shadow-float"
+    >
+      <Icon name="globe" size={16} className="shrink-0 text-warning" />
+      <span className="min-w-0">{enabled ? t("ui.offline.onlyStored") : t("ui.offline.noConnection")}</span>
+      <IconButton icon="close" label={t("common.close")} size={16} className="size-8 shrink-0" onClick={() => setClosed(true)} />
     </div>
   );
 }

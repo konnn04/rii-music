@@ -45,7 +45,9 @@
     "deleteFromLibrary": "Xoá khỏi thư viện",
     "offlineSave": "Lưu offline",
     "offlineRemove": "Bỏ lưu offline",
-    "downloadFile": "Tải về máy"
+    "downloadFile": "Tải về máy",
+    "dislikeTrack": "Không thích bài này",
+    "dislikeArtist": "Không thích {name}"
   },
   "toast": {
     "playNext": "Sẽ phát tiếp theo",
@@ -53,7 +55,9 @@
     "noSimilar": "Chưa tìm được bài giống — thư viện cần thêm bài hoặc đang phân tích âm thanh",
     "offlineSaved": "Đã lưu offline “{title}”",
     "offlineRemoved": "Đã bỏ lưu offline",
-    "downloadStarted": "Đang tải “{title}” về máy"
+    "downloadStarted": "Đang tải “{title}” về máy",
+    "dislikedTrack": "Sẽ không phát gợi ý “{title}” nữa",
+    "dislikedArtist": "Sẽ không gợi ý nhạc của {name} nữa"
   },
   "addToPlaylist": {
     "selectedCount": "{count} bài đã chọn",

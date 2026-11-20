@@ -142,5 +142,14 @@
     "pinHint": "Chọn “Lưu offline” trong menu ⋯ của bài để giữ lâu dài. “Tải về máy” lưu file nhạc vào thư mục Tải xuống.",
     "clear": "Xoá bộ nhớ offline",
     "cleared": "Đã xoá nhạc lưu trên máy"
+  },
+  "disliked": {
+    "title": "Không thích",
+    "hint": "Những nghệ sĩ và bài không bao giờ xuất hiện trong radio, tự phát, mix hay tự động tải. Bạn vẫn tự phát được.",
+    "empty": "Chưa có gì. Chọn “Không thích…” trong menu ⋯ của bài.",
+    "artist": "Nghệ sĩ",
+    "song": "Bài hát",
+    "remove": "Bỏ",
+    "removed": "Đã bỏ “{name}” khỏi danh sách không thích"
   }
 }

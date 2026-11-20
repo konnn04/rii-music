@@ -89,7 +89,8 @@ var apiDocs = []apiDoc{
 	{"GET", "/api/recs/discover", "Nghe & gợi ý", "Nghệ sĩ và bài mới ngoài thư viện", "", nil, ``, ``},
 	{"GET", "/api/recs/autoplay", "Nghe & gợi ý", "Bài mới để tự phát sau một bài", "", []string{"seed", "ext: số bài (0–4)"}, ``, ``},
 	{"POST", "/api/recs/mood", "Nghe & gợi ý", "Playlist theo tâm trạng (happy | sad | chill | energetic | focus)", "", nil, `{"mood":"chill"}`, `{"name":"Thư giãn","tracks":[]}`},
-	{"POST", "/api/feedback", "Nghe & gợi ý", "“Ít gợi ý kiểu này” cho nghệ sĩ / bài", "", nil, `{"kind":"artist","key":"Tên nghệ sĩ","value":-1}`, ``},
+	{"POST", "/api/feedback", "Nghe & gợi ý", "“Không thích” nghệ sĩ / bài (value -1), bỏ (0)", "", nil, `{"kind":"artist","key":"Tên nghệ sĩ","value":-1}`, ``},
+	{"GET", "/api/feedback", "Nghe & gợi ý", "Nghệ sĩ và bài bạn đã đánh dấu không thích", "", nil, ``, `[{"kind":"artist","key":"Tên nghệ sĩ","name":"Tên nghệ sĩ","at":0}]`},
 
 	// share
 	{"GET", "/api/tracks/{id}/share", "Chia sẻ", "Tạo link chia sẻ", "", nil, ``, `{"url":"https://…/s/…"}`},

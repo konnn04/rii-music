@@ -20,6 +20,7 @@ import { SoundButton } from "@/components/SoundButton";
 import { clearStored, setOffline, useOffline } from "@/lib/offline";
 import { useIsMobile } from "@/lib/useMedia";
 import { UI_SCALES, getUiScale, setUiScale } from "@/lib/uiScale";
+import { undoDislike, useDisliked } from "@/lib/dislike";
 
 export function SettingsPage() {
   const { data } = useSettings();
@@ -87,6 +88,7 @@ export function SettingsPage() {
 
         <AutoDownloadSettings data={data} set={set} />
         <OfflineSettings />
+        <DislikedSettings />
 
         <Group title={t("settings.appearance.title")} icon="sun">
           <Row label={t("settings.appearance.theme")}>
@@ -300,6 +302,41 @@ function AccountSettings() {
         </div>
       </form>
       <p className="py-3 text-caption text-fg-subtle">{t("settings.account.privacyNote")}</p>
+    </Group>
+  );
+}
+
+/** Không thích: artists and songs never suggested, with a way to take them back. */
+function DislikedSettings() {
+  const { data } = useDisliked();
+  const list = data ?? [];
+  return (
+    <Group title={t("settings.disliked.title")} icon="close">
+      <p className="py-2 text-body-sm text-fg-muted">{t("settings.disliked.hint")}</p>
+      {list.length === 0 ? (
+        <p className="pb-3 text-body-sm text-fg-subtle">{t("settings.disliked.empty")}</p>
+      ) : (
+        <ul className="flex flex-col pb-2">
+          {list.map((d) => (
+            <li key={d.kind + d.key} className="flex min-h-12 items-center gap-3">
+              <Icon name={d.kind === "artist" ? "artist" : "music-note"} size={20} className="shrink-0 text-fg-muted" />
+              <span className="min-w-0 flex-1">
+                <span className="block truncate text-body">{d.name}</span>
+                <span className="block truncate text-caption text-fg-muted">
+                  {d.kind === "artist" ? t("settings.disliked.artist") : d.artist || t("settings.disliked.song")}
+                </span>
+              </span>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => void undoDislike(d.kind, d.key).then(() => toast(t("settings.disliked.removed", { name: d.name })))}
+              >
+                {t("settings.disliked.remove")}
+              </Button>
+            </li>
+          ))}
+        </ul>
+      )}
     </Group>
   );
 }

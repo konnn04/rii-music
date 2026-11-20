@@ -681,22 +681,71 @@ func (s *Server) handleFeedback(w http.ResponseWriter, r *http.Request) {
 		httpError(w, http.StatusBadRequest, "Phản hồi không hợp lệ")
 		return
 	}
-	key := body.Key
+	key, label := body.Key, ""
 	if body.Kind == "artist" {
-		key = looseName(key)
+		key, label = looseName(key), strings.TrimSpace(body.Key)
+		if len(label) > 200 {
+			label = label[:200]
+		}
 	}
 	var err error
 	if body.Value == 0 {
 		_, err = s.db.Exec(`DELETE FROM feedback WHERE user_id = ? AND kind = ? AND key = ?`, uid, body.Kind, key)
 	} else {
-		_, err = s.db.Exec(`INSERT INTO feedback(user_id, kind, key, value, created_at) VALUES (?,?,?,?,?)
-			ON CONFLICT(user_id, kind, key) DO UPDATE SET value = excluded.value, created_at = excluded.created_at`, uid, body.Kind, key, body.Value, nowMs())
+		_, err = s.db.Exec(`INSERT INTO feedback(user_id, kind, key, value, created_at, label) VALUES (?,?,?,?,?,?)
+			ON CONFLICT(user_id, kind, key) DO UPDATE SET value = excluded.value, created_at = excluded.created_at, label = excluded.label`, uid, body.Kind, key, body.Value, nowMs(), label)
 	}
 	if err != nil {
 		s.internalError(w, r, err)
 		return
 	}
+	s.hub.Publish(uid, "feedback", map[string]string{"kind": body.Kind})
 	w.WriteHeader(http.StatusNoContent)
+}
+
+// Disliked is one "Không thích" entry, for Cài đặt.
+type Disliked struct {
+	Kind   string `json:"kind"` // artist | track
+	Key    string `json:"key"`  // send back as is to undo (artist: the name)
+	Name   string `json:"name"`
+	Artist string `json:"artist,omitempty"`
+	At     int64  `json:"at"`
+}
+
+// handleListDisliked: the artists and songs the user doesn't want to hear.
+func (s *Server) handleListDisliked(w http.ResponseWriter, r *http.Request) {
+	uid := userOf(r).ID
+	rows, err := s.db.Query(`SELECT f.kind, f.key, f.label, f.created_at, COALESCE(t.title, ''), COALESCE(t.artist, '')
+		FROM feedback f LEFT JOIN tracks t ON f.kind = 'track' AND t.id = f.key
+		WHERE f.user_id = ? AND f.value < 0 ORDER BY f.created_at DESC`, uid)
+	if err != nil {
+		s.internalError(w, r, err)
+		return
+	}
+	defer rows.Close()
+	out := []Disliked{}
+	for rows.Next() {
+		var d Disliked
+		var label, title, artist string
+		if err := rows.Scan(&d.Kind, &d.Key, &label, &d.At, &title, &artist); err != nil {
+			s.internalError(w, r, err)
+			return
+		}
+		if d.Kind == "artist" {
+			d.Name = label
+			if d.Name == "" {
+				d.Name = d.Key
+			}
+			d.Key = d.Name // the handler folds it again
+		} else {
+			if title == "" {
+				continue // the song is gone from the server
+			}
+			d.Name, d.Artist = title, artist
+		}
+		out = append(out, d)
+	}
+	writeJSON(w, http.StatusOK, out)
 }
 
 // ── mixes & radio built on the recommenders ────────────────────────────

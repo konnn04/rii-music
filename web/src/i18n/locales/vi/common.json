@@ -30,14 +30,24 @@
   "no": "Không",
   "all": "Tất cả",
   "unknownArtist": "Không rõ nghệ sĩ",
-  "songs": { "one": "{n} bài", "other": "{n} bài" },
+  "songs": {
+    "one": "{n} bài",
+    "other": "{n} bài"
+  },
   "error": "Có lỗi xảy ra",
   "notFound": "Không tìm thấy trang.",
   "showAll": "Hiện tất cả",
   "download": "Tải về",
   "downloaded": "Đã tải",
   "notDownloaded": "Chưa tải",
-  "lang": { "vi": "Việt", "en": "Âu Mỹ", "ja": "Nhật", "ko": "Hàn", "zh": "Hoa", "th": "Thái" },
+  "lang": {
+    "vi": "Việt",
+    "en": "Âu Mỹ",
+    "ja": "Nhật",
+    "ko": "Hàn",
+    "zh": "Hoa",
+    "th": "Thái"
+  },
   "nav": {
     "home": "Trang chủ",
     "search": "Tìm kiếm",
@@ -67,5 +77,6 @@
     "daysAgo": "{n} ngày trước",
     "yesterday": "hôm qua",
     "seconds": "{n} giây"
-  }
+  },
+  "undo": "Hoàn tác"
 }

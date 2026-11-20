@@ -339,3 +339,45 @@ func TestRadioSkipsRecentlyFinished(t *testing.T) {
 		}
 	}
 }
+
+func TestDislikedArtistLeavesRadio(t *testing.T) {
+	s, ts := newTestServer(t)
+	admin, uid := loginAdmin(t, ts.URL)
+	for i := 0; i < 12; i++ {
+		seedTrack(t, s, uid, hexID(i), "Bài Việt", "Ca Sĩ Việt", "vi")
+		seedTrack(t, s, uid, hexID(40+i), "Bài Khác", "Đạt G, Du Uyên", "vi")
+	}
+	if code, _ := admin.do("POST", "/api/feedback", map[string]any{"kind": "artist", "key": "Đạt G", "value": -1}); code != http.StatusNoContent {
+		t.Fatal("feedback", code)
+	}
+	admin.do("POST", "/api/feedback", map[string]any{"kind": "track", "key": hexID(3), "value": -1})
+	req, _ := http.NewRequest("GET", ts.URL+"/api/radio?seed="+hexID(0), nil)
+	res, _ := admin.hc.Do(req)
+	var body struct{ Tracks []Track }
+	json.NewDecoder(res.Body).Decode(&body)
+	res.Body.Close()
+	for _, tr := range body.Tracks {
+		if tr.Artist == "Đạt G, Du Uyên" || tr.ID == hexID(3) {
+			t.Errorf("disliked %q (%s) is in the radio", tr.Title, tr.Artist)
+		}
+	}
+	res, _ = admin.hc.Get(ts.URL + "/api/feedback")
+	var list []Disliked
+	json.NewDecoder(res.Body).Decode(&list)
+	res.Body.Close()
+	if len(list) != 2 {
+		t.Fatalf("disliked list = %+v", list)
+	}
+	for _, d := range list {
+		if d.Kind == "artist" && d.Name != "Đạt G" {
+			t.Errorf("artist shown as %q", d.Name)
+		}
+	}
+	admin.do("POST", "/api/feedback", map[string]any{"kind": "artist", "key": "Đạt G", "value": 0})
+	res, _ = admin.hc.Get(ts.URL + "/api/feedback")
+	json.NewDecoder(res.Body).Decode(&list)
+	res.Body.Close()
+	if len(list) != 1 {
+		t.Errorf("after undo: %+v", list)
+	}
+}

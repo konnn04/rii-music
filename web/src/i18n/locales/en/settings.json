@@ -142,5 +142,14 @@
     "pinHint": "Use “Save offline” in a song's ⋯ menu to keep it for good. “Download file” saves the audio file to your Downloads.",
     "clear": "Clear offline storage",
     "cleared": "Offline songs removed"
+  },
+  "disliked": {
+    "title": "Disliked",
+    "hint": "Artists and songs that never show up in radio, autoplay, mixes or auto-download. You can still play them yourself.",
+    "empty": "Nothing yet. Use “Don't like…” in a song's ⋯ menu.",
+    "artist": "Artist",
+    "song": "Song",
+    "remove": "Remove",
+    "removed": "“{name}” removed from your dislikes"
   }
 }

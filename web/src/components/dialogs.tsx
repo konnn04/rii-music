@@ -11,6 +11,7 @@ import { Collage, Cover } from "./ui/Cover";
 import { toast } from "./ui/Toast";
 import { t, tn, tsv } from "@/i18n";
 import { removeStored, storeTrack, useOffline } from "@/lib/offline";
+import { dislikeArtist, dislikeTrack, mainArtist } from "@/lib/dislike";
 
 export type TrackContext = { playlistId?: string; playlistKind?: string };
 
@@ -119,6 +120,15 @@ export function useTrackActions(track: Track, ctx?: TrackContext): { primary: Ac
       },
     });
   }
+  // Không thích: never suggested again, and taken out of the queue now.
+  danger.push({ key: "dislike", label: t("tracks.action.dislikeTrack"), icon: "close", run: () => void dislikeTrack(track) });
+  if (track.artist)
+    danger.push({
+      key: "dislikeArtist",
+      label: t("tracks.action.dislikeArtist", { name: mainArtist(track.artist) }),
+      icon: "artist",
+      run: () => void dislikeArtist(mainArtist(track.artist)),
+    });
   danger.push({ key: "delete", label: t("tracks.action.deleteFromLibrary"), icon: "trash", danger: true, run: () => openDialog({ kind: "deleteTracks", tracks: [track] }) });
   return { primary, danger };
 }

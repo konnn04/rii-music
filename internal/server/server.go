@@ -144,6 +144,7 @@ func (s *Server) Handler() http.Handler {
 	api("GET /api/genres", s.handleGenres)
 	api("GET /api/tracks/{id}/similar", s.handleTrackSimilar)
 	api("POST /api/feedback", s.handleFeedback)
+	api("GET /api/feedback", s.handleListDisliked)
 	api("GET /api/onboarding/artists", s.handleOnboardingArtists)
 	api("POST /api/recs/mood", s.handleMood)
 

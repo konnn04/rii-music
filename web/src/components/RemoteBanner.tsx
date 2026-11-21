@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
-import { dismissRemote, remoteCommand, remotePositionMs, takeOver, useRemote } from "@/player/sync";
+import { remoteCommand, remotePositionMs, takeOver, useRemote } from "@/player/sync";
+import { openRemoteSheet, useRemoteSheet } from "@/player/view";
 import { fmtTime } from "@/lib/format";
 import { t } from "@/i18n";
 import { Button, IconButton, PlayButton } from "./ui/Button";
@@ -8,13 +9,14 @@ import { Dialog } from "./ui/Dialog";
 import { Slider } from "./ui/Slider";
 import { toast } from "./ui/Toast";
 
-/** Remote control card for another device's active session (collapsed bar + expanded dialog). */
-export function RemoteBanner({ className = "" }: { className?: string }) {
+/** Remote control sheet for the device that plays (opened from the player bar / mini player). */
+export function RemoteSheet() {
   const s = useRemote((r) => r.session);
   const title = useRemote((r) => r.title);
   const tracks = useRemote((r) => r.tracks);
   const [busy, setBusy] = useState(false);
-  const [open, setOpen] = useState(false);
+  const open = useRemoteSheet((r) => r.open) && !!s;
+  const setOpen = (v: boolean) => openRemoteSheet(v);
   const [now, setNow] = useState(() => Date.now());
   const [dragMs, setDragMs] = useState<number | null>(null);
   const [volDrag, setVolDrag] = useState<number | null>(null);
@@ -29,7 +31,7 @@ export function RemoteBanner({ className = "" }: { className?: string }) {
 
   useEffect(() => {
     if (!s) {
-      setOpen(false);
+      openRemoteSheet(false);
       setDragMs(null);
       setVolDrag(null);
     }
@@ -44,7 +46,6 @@ export function RemoteBanner({ className = "" }: { className?: string }) {
   const posMs = remotePositionMs(s, now);
   const displayPosMs = dragMs ?? posMs;
   const durationMs = s.durationMs || 0;
-  const pct = durationMs > 0 ? Math.min(100, Math.max(0, (posMs / durationMs) * 100)) : 0;
   const volVal = volDrag ?? Math.round((s.volume ?? 1) * 100);
 
   const queueItems = s.upcoming
@@ -66,67 +67,6 @@ export function RemoteBanner({ className = "" }: { className?: string }) {
 
   return (
     <>
-      <div
-        role="status"
-        className={`flex flex-col overflow-hidden rounded-control bg-accent-soft text-body-sm ${className}`}
-      >
-        <div className="flex min-w-0 items-center gap-1.5 px-2 py-1.5 sm:gap-2 sm:px-3 sm:py-2">
-          <button
-            type="button"
-            onClick={() => setOpen(true)}
-            aria-label={t("ui.remote.expand", { device: s.deviceName })}
-            className="focus-ring flex min-w-0 flex-1 items-center gap-2.5 rounded-xs text-left"
-          >
-            <Cover trackId={currentTrack?.id} hasCover={!!currentTrack?.hasCover} size={40} />
-            <div className="min-w-0 flex-1">
-              <div className="truncate text-label text-fg">{displayTitle || s.deviceName}</div>
-              <div className="truncate text-caption text-fg-muted">
-                {t(s.playing ? "ui.remote.playingOn" : "ui.remote.pausedOn", { device: s.deviceName })}
-              </div>
-            </div>
-          </button>
-
-          <div className="flex shrink-0 items-center gap-0.5 sm:gap-1">
-            <IconButton
-              icon={s.playing ? "pause" : "play"}
-              label={s.playing ? t("common.pause") : t("common.play")}
-              size={18}
-              tooltip={false}
-              className="!size-8 !text-fg"
-              onClick={() => void remoteCommand({ cmd: "toggle" })}
-            />
-            <IconButton
-              icon="skip-forward"
-              label={t("ui.player.nextTrack")}
-              size={18}
-              tooltip={false}
-              className="!size-8 !text-fg"
-              onClick={() => void remoteCommand({ cmd: "next" })}
-            />
-            <button
-              type="button"
-              className="focus-ring h-8 shrink-0 rounded-full bg-accent px-2.5 text-caption font-medium text-fg-on-accent hover:bg-accent-hover disabled:opacity-60 sm:px-3 sm:text-label"
-              onClick={take}
-              disabled={busy}
-            >
-              {t("ui.remote.playHere")}
-            </button>
-            <IconButton
-              icon="close"
-              label={t("common.close")}
-              size={16}
-              tooltip={false}
-              className="!size-8"
-              onClick={dismissRemote}
-            />
-          </div>
-        </div>
-
-        <div className="h-0.5 w-full bg-surface-4/60">
-          <div className="h-full bg-accent transition-[width] duration-300" style={{ width: `${pct}%` }} />
-        </div>
-      </div>
-
       <Dialog
         open={open}
         onOpenChange={setOpen}

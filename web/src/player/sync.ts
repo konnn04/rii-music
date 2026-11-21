@@ -32,7 +32,7 @@ export type RemoteSession = {
 };
 
 export type RemoteCmd =
-  | { cmd: "play" | "pause" | "toggle" | "next" | "prev" | "shuffle" | "repeat" }
+  | { cmd: "play" | "pause" | "toggle" | "next" | "prev" | "shuffle" | "repeat" | "takeOver" }
   | { cmd: "seek"; positionMs: number }
   | { cmd: "volume"; volume: number }
   | { cmd: "jump" | "remove"; index: number; trackId: string }
@@ -82,7 +82,7 @@ function upcoming(): string[] {
     .map((e) => e.track.id);
 }
 
-function report(force = false) {
+function report(force = false): Promise<unknown> {
   const s = usePlayer.getState();
   const pb = usePlayback.getState();
   const body = {
@@ -99,9 +99,29 @@ function report(force = false) {
     repeat: s.repeat,
   };
   const key = [body.trackId, body.playing, Math.round(body.positionMs / 5000), body.volume.toFixed(2), body.shuffle, body.repeat, body.upcoming.join(",")].join("|");
-  if (!force && key === lastSent) return;
+  if (!force && key === lastSent) return Promise.resolve();
   lastSent = key;
-  api("/api/playback", { method: "POST", json: body, keepalive: true }).catch(() => {});
+  return api("/api/playback", { method: "POST", json: body, keepalive: true }).catch(() => {});
+}
+
+// ── devices ("chọn thiết bị phát") ───────────────────────────────────────
+
+export type Device = { deviceId: string; deviceName: string; active: boolean; playing: boolean; lastSeen: number };
+
+/** This app is open: lets other devices pick it as the player. */
+function announce() {
+  void api("/api/devices", { method: "POST", json: { deviceId, deviceName: deviceName() } }).catch(() => {});
+}
+
+export function listDevices(): Promise<Device[]> {
+  return api<Device[]>("/api/devices");
+}
+
+/** Play on that device: the same song, position and queue continue there. */
+export async function transferTo(target: string) {
+  if (target === deviceId) return takeOver();
+  if (usePlayback.getState().isPlaying || usePlayer.getState().current) await report(true); // the session the target picks up
+  await api("/api/playback/command", { method: "POST", json: { cmd: "takeOver", target, from: deviceId } });
 }
 
 // ── watching another device ──────────────────────────────────────────────
@@ -209,6 +229,9 @@ export async function onRemoteCommand(c: RemoteCmd & { target: string; from: str
       if (e && to) p.moveUpcoming(e.uid, to.uid);
       break;
     }
+    case "takeOver":
+      await takeOver();
+      return;
     case "playNow":
     case "queue": {
       const tracks = (await Promise.all(c.trackIds.map((id) => api<Track>(`/api/tracks/${id}`).catch(() => null)))).filter((t): t is Track => !!t);
@@ -218,7 +241,7 @@ export async function onRemoteCommand(c: RemoteCmd & { target: string; from: str
       break;
     }
   }
-  report(true);
+  void report(true);
 }
 
 /** "Phát ở đây": continue the other device's session on this one. */
@@ -261,15 +284,15 @@ export function startSync() {
         bc?.postMessage({ type: "playing", tab: tabId });
         useRemote.setState({ session: null, title: "", tracks: [] }); // this device is the active one now
       }
-      report(true);
+      void report(true);
     } else if (s.isPlaying && Math.abs(s.position - prev.position) > 3) {
-      report(); // a seek
+      void report(); // a seek
     } else if (s.duration !== prev.duration && s.duration > 0) {
-      report();
+      void report();
     }
   });
   usePlayer.subscribe((s, prev) => {
-    if (s.current?.uid !== prev.current?.uid) report(true);
+    if (s.current?.uid !== prev.current?.uid) void report(true);
     else if (
       s.volume !== prev.volume ||
       s.muted !== prev.muted ||
@@ -280,13 +303,17 @@ export function startSync() {
       s.pos !== prev.pos
     ) {
       // Volume and queue changes, for remotes watching this device.
-      if (usePlayback.getState().isPlaying) report();
+      if (usePlayback.getState().isPlaying) void report();
     }
   });
-  // Heartbeat while playing, so other devices know this one is still on.
+  // Heartbeat while playing, so other devices know this one is still on; and
+  // "this app is open" so it shows in the device picker.
+  announce();
   timer = window.setInterval(() => {
-    if (usePlayback.getState().isPlaying) report(true);
+    if (usePlayback.getState().isPlaying) void report(true);
+    announce();
   }, 30_000);
+  document.addEventListener("visibilitychange", () => document.visibilityState === "visible" && announce());
   // On start: show what another device is playing (to control it or continue it here).
   api<{ session: Omit<RemoteSession, "receivedAt"> | null }>("/api/playback")
     .then((r) => {

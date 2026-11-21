@@ -102,6 +102,8 @@ var apiDocs = []apiDoc{
 	{"POST", "/api/nowplaying", "Discord", "Báo bài đang phát (khi bật Trạng thái Discord)", "", nil, `{"trackId":"…","positionMs":42000,"playing":true}`, ``},
 	{"POST", "/api/playback", "Phát nhạc", "Báo trạng thái phát của thiết bị này (đồng bộ giữa thiết bị, Discord)", "", nil, `{"deviceId":"…","deviceName":"Chrome · Windows","trackId":"…","positionMs":42000,"playing":true,"upcoming":["…"]}`, ``},
 	{"GET", "/api/playback", "Phát nhạc", "Phiên phát gần nhất (thiết bị, bài, vị trí, hàng chờ) để tiếp tục ở đây", "", nil, ``, `{"session":{},"tracks":[]}`},
+	{"POST", "/api/devices", "Phát nhạc", "Thiết bị này đang mở app (mỗi 30 giây), để chọn làm nơi phát", "", nil, `{"deviceId":"…","deviceName":"Chrome · Windows"}`, ``},
+	{"GET", "/api/devices", "Phát nhạc", "Các thiết bị đang mở app; thiết bị giữ phiên phát có active / playing", "", nil, ``, `[{"deviceId":"…","deviceName":"Chrome · Windows","active":true,"playing":true}]`},
 	{"POST", "/api/rooms", "Nghe chung", "Tạo phòng (mã 6 ký tự) với hàng chờ của bạn; bạn là chủ phòng", "", nil, `{"queue":["…"],"index":0,"positionMs":0,"playing":true}`, `{"room":{"code":"K7M2QX"},"tracks":[]}`},
 	{"GET", "/api/rooms/mine", "Nghe chung", "Phòng bạn đang ở (để vào lại sau khi tải lại trang)", "", nil, ``, `{"room":null}`},
 	{"GET", "/api/rooms/{code}", "Nghe chung", "Phòng: thành viên, trạng thái phát, bài", "", nil, ``, ``},

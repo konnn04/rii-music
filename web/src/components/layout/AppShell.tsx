@@ -21,7 +21,7 @@ import { Tooltip } from "../ui/Tooltip";
 import { t, tn, syncLang } from "@/i18n";
 import { useBranding } from "@/lib/branding";
 import { Onboarding } from "@/pages/Onboarding";
-import { RemoteBanner } from "@/components/RemoteBanner";
+import { RemoteSheet } from "@/components/RemoteBanner";
 import { clearStored, initOffline, useOffline } from "@/lib/offline";
 import { useFollows } from "@/lib/follows";
 import { useNet } from "@/player/net";
@@ -92,11 +92,10 @@ export function AppShell() {
           <RightPanel />
         </div>
         <RoomStrip className="mx-2 mb-1 hidden md:flex" />
-        <RemoteBanner className="mx-2 mb-1 hidden md:flex" />
         <PlayerBar />
+        <RemoteSheet />
         <div className="fixed inset-x-0 bottom-0 z-[40] md:hidden">
           <RoomStrip className="mx-2 mb-1" />
-          <RemoteBanner className="mx-2 mb-1" />
           <MiniPlayer />
           <TabBar />
         </div>

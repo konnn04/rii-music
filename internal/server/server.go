@@ -157,6 +157,8 @@ func (s *Server) Handler() http.Handler {
 	api("POST /api/playback", s.handlePostPlayback)
 	api("GET /api/playback", s.handleGetPlayback)
 	api("POST /api/playback/command", s.handlePlaybackCommand)
+	api("POST /api/devices", s.handleDeviceSeen)
+	api("GET /api/devices", s.handleListDevices)
 	api("POST /api/rooms", s.handleCreateRoom)
 	api("GET /api/rooms/mine", s.handleMyRoom)
 	api("GET /api/rooms/{code}", s.handleGetRoom)

@@ -1,5 +1,4 @@
 import { usePlayback, usePlayer } from "@/player/store";
-import { engine } from "@/player/engine";
 import { useIsDesktop } from "@/lib/useMedia";
 import { Cover } from "../ui/Cover";
 import { IconButton } from "../ui/Button";
@@ -14,10 +13,14 @@ import { SoundDialog } from "@/components/SoundDialog";
 import { MenuItems } from "@/components/TrackMenu";
 import { useFx } from "@/player/fx";
 import { COVER_VT, withCoverTransition } from "@/lib/viewTransition";
+import { ctl, openRemoteSheet, useRemoteView, useViewPlaying, useViewTime, useViewTrack } from "@/player/view";
+import { DevicesButton } from "@/components/DevicePicker";
 
 /** Fixed bottom player for tablet and desktop. */
 export function PlayerBar() {
   const current = usePlayer((s) => s.current);
+  const track = useViewTrack();
+  const remote = useRemoteView();
   const panel = usePlayer((s) => s.panel);
   const lyricsFull = usePlayer((s) => s.lyricsFull);
   const desktop = useIsDesktop();
@@ -27,14 +30,25 @@ export function PlayerBar() {
   return (
     <div className="hidden h-[var(--spacing-playerbar)] shrink-0 items-center gap-4 bg-canvas px-4 md:flex" role="region" aria-label={t("ui.player.region")}>
       <div className="flex min-w-0 flex-1 basis-0 items-center gap-3">
-        {current ? (
+        {track ? (
           <>
-            <button className="focus-ring rounded-xs" onClick={() => openPanel("nowplaying")} aria-label={t("ui.player.openNowPlaying")}>
-              <Cover trackId={current.track.id} hasCover={current.track.hasCover} size={56} />
+            <button
+              className="focus-ring rounded-xs"
+              onClick={() => (remote || !current ? openRemoteSheet() : openPanel("nowplaying"))}
+              aria-label={t("ui.player.openNowPlaying")}
+            >
+              <Cover trackId={track.id} hasCover={track.hasCover} size={56} />
             </button>
             <div className="min-w-0">
-              <div className="truncate text-label">{current.track.title}</div>
-              <ArtistLinks artist={current.track.artist} className="block truncate text-body-sm text-fg-muted" />
+              <div className="truncate text-label">{track.title}</div>
+              {remote ? (
+                <button className="focus-ring flex max-w-full items-center gap-1 rounded-xs text-body-sm text-accent" onClick={() => openRemoteSheet()}>
+                  <Icon name="devices" size={14} className="shrink-0" />
+                  <span className="truncate">{t(remote.playing ? "ui.remote.playingOn" : "ui.remote.pausedOn", { device: remote.deviceName })}</span>
+                </button>
+              ) : (
+                <ArtistLinks artist={track.artist} className="block truncate text-body-sm text-fg-muted" />
+              )}
             </div>
             <LikeCurrent size={20} />
           </>
@@ -57,6 +71,7 @@ export function PlayerBar() {
           size={20}
         />
         {desktop && <IconButton icon="panel-right" label={t("ui.player.nowPlayingPanel")} active={panel === "nowplaying"} onClick={() => openPanel("nowplaying")} size={20} />}
+        <DevicesButton />
         {desktop && <VolumeControl />}
         <PlayerMore />
       </div>
@@ -119,34 +134,45 @@ function PlayerMore() {
 export function MiniPlayer() {
   const current = usePlayer((s) => s.current);
   const npOpen = usePlayer((s) => s.npOpen);
-  const playing = usePlayback((s) => s.isPlaying);
-  const buffering = usePlayback((s) => s.buffering);
-  const position = usePlayback((s) => s.position);
-  const duration = usePlayback((s) => s.duration);
-  if (!current) return null;
+  const track = useViewTrack();
+  const remote = useRemoteView();
+  const playing = useViewPlaying();
+  const buffering = usePlayback((s) => s.buffering) && !remote;
+  const { position, duration } = useViewTime();
+  if (!track) return null;
   const pct = duration ? Math.min(100, (position / duration) * 100) : 0;
   return (
     <div className="px-2 pb-1 md:hidden">
       <div
         className="relative flex h-[var(--spacing-miniplayer)] items-center gap-3 overflow-hidden rounded-control bg-surface-2 pl-2 pr-1 shadow-float"
-        onClick={() => withCoverTransition(() => usePlayer.getState().setNp(true, "cover"))}
+        onClick={() => (remote || !current ? openRemoteSheet() : withCoverTransition(() => usePlayer.getState().setNp(true, "cover")))}
         role="button"
-        aria-label={t("ui.player.openNowPlayingTrack", { title: current.track.title })}
+        aria-label={t("ui.player.openNowPlayingTrack", { title: track.title })}
       >
-        <div style={{ viewTransitionName: npOpen ? undefined : COVER_VT }} className="shrink-0 rounded-xs">
-          <Cover trackId={current.track.id} hasCover={current.track.hasCover} size={48} />
+        <div style={{ viewTransitionName: npOpen || remote ? undefined : COVER_VT }} className="shrink-0 rounded-xs">
+          <Cover trackId={track.id} hasCover={track.hasCover} size={48} />
         </div>
         <div className="min-w-0 flex-1">
-          <div className="truncate text-label">{current.track.title}</div>
-          <div className="truncate text-body-sm text-fg-muted">{current.track.artist}</div>
+          <div className="truncate text-label">{track.title}</div>
+          {remote ? (
+            <div className="flex items-center gap-1 truncate text-body-sm text-accent">
+              <Icon name="devices" size={14} className="shrink-0" />
+              <span className="truncate">{remote.deviceName}</span>
+            </div>
+          ) : (
+            <div className="truncate text-body-sm text-fg-muted">{track.artist}</div>
+          )}
         </div>
+        <span onClick={(e) => e.stopPropagation()} className="contents">
+          <DevicesButton size={20} />
+        </span>
         <IconButton
           icon="skip-forward"
           label={t("ui.player.nextTrack")}
           tooltip={false}
           onClick={(e) => {
             e.stopPropagation();
-            engine.next();
+            ctl.next();
           }}
           className="!text-fg"
         />
@@ -155,13 +181,13 @@ export function MiniPlayer() {
           className="focus-ring flex size-11 shrink-0 items-center justify-center rounded-full text-fg"
           onClick={(e) => {
             e.stopPropagation();
-            engine.toggle();
+            ctl.toggle();
           }}
         >
           {buffering && playing ? <Icon name="loader" /> : <Icon name={playing ? "pause" : "play"} />}
         </button>
         <div className="absolute inset-x-2 bottom-0 h-0.5 overflow-hidden rounded-full bg-surface-4">
-          <div className="h-full bg-fg" style={{ width: `${pct}%` }} />
+          <div className={`h-full ${remote ? "bg-accent" : "bg-fg"}`} style={{ width: `${pct}%` }} />
         </div>
       </div>
     </div>

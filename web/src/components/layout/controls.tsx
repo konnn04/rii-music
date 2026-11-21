@@ -1,6 +1,5 @@
 import { useState } from "react";
-import { engine } from "@/player/engine";
-import { usePlayback, usePlayer } from "@/player/store";
+import { ctl, useRemoteView, useViewModes, useViewPlaying, useViewTime, useViewTrack, useViewVolume } from "@/player/view";
 import { fmtTime } from "@/lib/format";
 import { useToggleLike } from "@/lib/queries";
 import { IconButton, PlayButton } from "../ui/Button";
@@ -8,8 +7,7 @@ import { Slider } from "../ui/Slider";
 import { t } from "@/i18n";
 
 export function SeekBar({ np, compact }: { np?: boolean; compact?: boolean }) {
-  const position = usePlayback((s) => s.position);
-  const duration = usePlayback((s) => s.duration);
+  const { position, duration } = useViewTime();
   const [drag, setDrag] = useState<number | null>(null);
   const v = drag ?? position;
   const times = (cls: string, text: string) => <span className={`w-10 shrink-0 text-caption tabular ${np ? "text-np-fg-muted" : "text-fg-muted"} ${cls}`}>{text}</span>;
@@ -23,7 +21,7 @@ export function SeekBar({ np, compact }: { np?: boolean; compact?: boolean }) {
       valueText={`${fmtTime(v)} / ${fmtTime(duration)}`}
       onChange={setDrag}
       onCommit={(x) => {
-        engine.seek(x);
+        ctl.seek(x);
         setDrag(null);
       }}
       className="flex-1"
@@ -51,10 +49,9 @@ export function SeekBar({ np, compact }: { np?: boolean; compact?: boolean }) {
 }
 
 export function Transport({ size = "md", np }: { size?: "md" | "lg"; np?: boolean }) {
-  const playing = usePlayback((s) => s.isPlaying);
-  const shuffle = usePlayer((s) => s.shuffle);
-  const repeat = usePlayer((s) => s.repeat);
-  const has = usePlayer((s) => !!s.current);
+  const playing = useViewPlaying();
+  const { shuffle, repeat } = useViewModes();
+  const has = !!useViewTrack();
   const lg = size === "lg";
   const act = np ? "!text-np-accent" : "";
   return (
@@ -64,18 +61,18 @@ export function Transport({ size = "md", np }: { size?: "md" | "lg"; np?: boolea
         label={shuffle ? t("ui.player.shuffleOff") : t("common.shuffle")}
         active={shuffle}
         className={shuffle ? act : np ? "!text-np-fg-muted" : ""}
-        onClick={() => usePlayer.getState().toggleShuffle()}
+        onClick={ctl.toggleShuffle}
         size={lg ? 24 : 20}
       />
-      <IconButton icon="skip-back" label={t("ui.player.prevTrack")} shortcut="Shift+←" onClick={() => engine.prev()} disabled={!has} size={lg ? 32 : 24} className={np ? "!text-fg" : "!text-fg"} />
-      <PlayButton playing={playing} onClick={() => engine.toggle()} size={lg ? 72 : 44} np={np} label={playing ? t("ui.player.pauseShortcut") : t("ui.player.playShortcut")} />
-      <IconButton icon="skip-forward" label={t("ui.player.nextTrack")} shortcut="Shift+→" onClick={() => engine.next()} disabled={!has} size={lg ? 32 : 24} className="!text-fg" />
+      <IconButton icon="skip-back" label={t("ui.player.prevTrack")} shortcut="Shift+←" onClick={ctl.prev} disabled={!has} size={lg ? 32 : 24} className={np ? "!text-fg" : "!text-fg"} />
+      <PlayButton playing={playing} onClick={ctl.toggle} size={lg ? 72 : 44} np={np} label={playing ? t("ui.player.pauseShortcut") : t("ui.player.playShortcut")} />
+      <IconButton icon="skip-forward" label={t("ui.player.nextTrack")} shortcut="Shift+→" onClick={ctl.next} disabled={!has} size={lg ? 32 : 24} className="!text-fg" />
       <IconButton
         icon={repeat === "one" ? "repeat-one" : "repeat"}
         label={repeat === "off" ? t("ui.player.repeatOff") : repeat === "all" ? t("ui.player.repeatAll") : t("ui.player.repeatOne")}
         active={repeat !== "off"}
         className={repeat !== "off" ? act : np ? "!text-np-fg-muted" : ""}
-        onClick={() => usePlayer.getState().cycleRepeat()}
+        onClick={ctl.cycleRepeat}
         size={lg ? 24 : 20}
       />
     </div>
@@ -83,18 +80,32 @@ export function Transport({ size = "md", np }: { size?: "md" | "lg"; np?: boolea
 }
 
 export function VolumeControl() {
-  const volume = usePlayer((s) => s.volume);
-  const muted = usePlayer((s) => s.muted);
+  const { volume, muted } = useViewVolume();
+  const remote = !!useRemoteView();
+  const [drag, setDrag] = useState<number | null>(null);
+  const shown = drag ?? (muted ? 0 : volume * 100);
   return (
     <div className="flex w-36 items-center gap-1">
-      <IconButton icon={muted || volume === 0 ? "volume-mute" : "volume"} label={muted ? t("ui.player.unmute") : t("ui.player.mute")} shortcut="M" onClick={() => usePlayer.getState().toggleMute()} size={20} />
-      <Slider label={t("ui.player.volume")} value={muted ? 0 : volume * 100} max={100} onChange={(v) => usePlayer.getState().setVolume(v / 100)} className="flex-1" valueText={`${Math.round(volume * 100)}%`} />
+      <IconButton icon={muted || volume === 0 ? "volume-mute" : "volume"} label={muted ? t("ui.player.unmute") : t("ui.player.mute")} shortcut="M" onClick={ctl.toggleMute} size={20} />
+      <Slider
+        label={t("ui.player.volume")}
+        value={shown}
+        max={100}
+        // Local: live. Remote: on release, one command instead of dozens.
+        onChange={(v) => (remote ? setDrag(v) : ctl.setVolume(v / 100))}
+        onCommit={(v) => {
+          if (remote) ctl.setVolume(v / 100);
+          setDrag(null);
+        }}
+        className="flex-1"
+        valueText={`${Math.round(shown)}%`}
+      />
     </div>
   );
 }
 
 export function LikeCurrent({ np, size = 24 }: { np?: boolean; size?: number }) {
-  const track = usePlayer((s) => s.current?.track);
+  const track = useViewTrack();
   const like = useToggleLike();
   if (!track) return null;
   return (

@@ -61,7 +61,14 @@
     "expand": "Mở điều khiển {device}",
     "moveUp": "Đưa lên",
     "moveDown": "Đưa xuống",
-    "removeFromQueue": "Bỏ khỏi hàng đợi"
+    "removeFromQueue": "Bỏ khỏi hàng đợi",
+    "devicesTitle": "Phát trên thiết bị",
+    "thisDevice": "Thiết bị này",
+    "playingNow": "Đang phát",
+    "lastHere": "Phiên gần nhất",
+    "noOther": "Mở RiiMusic trên thiết bị khác (cùng tài khoản) để chọn phát ở đó.",
+    "devicesButton": "Chọn thiết bị phát",
+    "switching": "Đang chuyển sang {device}…"
   },
   "drag": {
     "count": "{n} bài",

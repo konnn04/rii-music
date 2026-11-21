@@ -2,6 +2,7 @@ package server
 
 import (
 	"net/http"
+	"sort"
 	"strings"
 	"sync"
 	"time"
@@ -44,8 +45,87 @@ func (a Playback) sameShape(b Playback) bool {
 }
 
 type playbackState struct {
-	mu sync.Mutex
-	m  map[string]Playback // user id →
+	mu      sync.Mutex
+	m       map[string]Playback              // user id →
+	devices map[string]map[string]deviceSeen // user id → device id →
+}
+
+type deviceSeen struct {
+	Name string
+	At   time.Time
+}
+
+// Device is one of the user's open apps, for "chọn thiết bị phát".
+type Device struct {
+	DeviceID   string `json:"deviceId"`
+	DeviceName string `json:"deviceName"`
+	Active     bool   `json:"active"`  // holds the session
+	Playing    bool   `json:"playing"` // and plays right now
+	LastSeen   int64  `json:"lastSeen"`
+}
+
+const deviceStale = 90 * time.Second
+
+func (p *playbackState) seen(uid, id, name string) {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+	if p.devices == nil {
+		p.devices = map[string]map[string]deviceSeen{}
+	}
+	if p.devices[uid] == nil {
+		p.devices[uid] = map[string]deviceSeen{}
+	}
+	now := time.Now()
+	for k, d := range p.devices[uid] {
+		if now.Sub(d.At) > deviceStale {
+			delete(p.devices[uid], k)
+		}
+	}
+	p.devices[uid][id] = deviceSeen{Name: name, At: now}
+}
+
+func (p *playbackState) list(uid string) []Device {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+	sess := p.m[uid]
+	out := []Device{}
+	now := time.Now()
+	for id, d := range p.devices[uid] {
+		if now.Sub(d.At) > deviceStale {
+			continue
+		}
+		active := id == sess.DeviceID && sess.TrackID != ""
+		out = append(out, Device{DeviceID: id, DeviceName: d.Name, Active: active,
+			Playing: active && sess.Playing && time.Now().UnixMilli()-sess.UpdatedAt < 2*60*1000, LastSeen: d.At.UnixMilli()})
+	}
+	sort.Slice(out, func(i, j int) bool { return out[i].LastSeen > out[j].LastSeen })
+	return out
+}
+
+// POST /api/devices: this app is open (every 30 s), so it can be picked as the player.
+func (s *Server) handleDeviceSeen(w http.ResponseWriter, r *http.Request) {
+	var b struct {
+		DeviceID   string `json:"deviceId"`
+		DeviceName string `json:"deviceName"`
+	}
+	if !readJSON(w, r, &b) {
+		return
+	}
+	b.DeviceID = strings.TrimSpace(b.DeviceID)
+	if b.DeviceID == "" || len(b.DeviceID) > 64 {
+		httpError(w, http.StatusBadRequest, "Thiếu mã thiết bị")
+		return
+	}
+	if len(b.DeviceName) > 80 {
+		b.DeviceName = b.DeviceName[:80]
+	}
+	s.playback.seen(userOf(r).ID, b.DeviceID, b.DeviceName)
+	w.WriteHeader(http.StatusNoContent)
+}
+
+// GET /api/devices: the user's open apps, the one playing first.
+func (s *Server) handleListDevices(w http.ResponseWriter, r *http.Request) {
+	writeJSON(w, http.StatusOK, s.playback.list(userOf(r).ID))
 }
 
 func (p *playbackState) set(uid string, v Playback) {
@@ -103,7 +183,14 @@ func (s *Server) handlePostPlayback(w http.ResponseWriter, r *http.Request) {
 		b.Repeat = "off"
 	}
 	b.UpdatedAt = nowMs()
+	s.playback.seen(u.ID, b.DeviceID, b.DeviceName)
 	prev, had := s.playback.get(u.ID)
+	// A device that stopped (e.g. paused because another one took over) must
+	// not replace the session of the device that is playing now.
+	if had && prev.DeviceID != b.DeviceID && prev.Playing && !b.Playing {
+		w.WriteHeader(http.StatusNoContent)
+		return
+	}
 	s.playback.set(u.ID, b)
 	// Tell the user's other devices when something they'd notice changed
 	// (heartbeats of the same song on the same device stay quiet).
@@ -163,6 +250,7 @@ type RemoteCommand struct {
 var remoteCmds = map[string]bool{
 	"play": true, "pause": true, "toggle": true, "next": true, "prev": true, "seek": true, "volume": true,
 	"jump": true, "remove": true, "move": true, "playNow": true, "queue": true, "shuffle": true, "repeat": true,
+	"takeOver": true, // "play here": the target continues the session
 }
 
 // handlePlaybackCommand relays a remote control command to the playing device.

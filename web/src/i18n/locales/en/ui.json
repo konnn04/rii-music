@@ -61,7 +61,14 @@
     "expand": "Open {device} controls",
     "moveUp": "Move up",
     "moveDown": "Move down",
-    "removeFromQueue": "Remove from queue"
+    "removeFromQueue": "Remove from queue",
+    "devicesTitle": "Play on a device",
+    "thisDevice": "This device",
+    "playingNow": "Playing",
+    "lastHere": "Last session",
+    "noOther": "Open RiiMusic on another device (same account) to play there.",
+    "devicesButton": "Choose a device",
+    "switching": "Switching to {device}…"
   },
   "drag": {
     "count": "{n} songs",

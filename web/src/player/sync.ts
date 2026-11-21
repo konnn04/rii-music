@@ -128,11 +128,17 @@ export async function transferTo(target: string) {
 
 let tracksFor = "";
 
+/** Forget the other device's session (and the songs loaded for it). */
+function clearRemote() {
+  tracksFor = "";
+  useRemote.setState({ session: null, title: "", tracks: [] });
+}
+
 /** Fed from the SSE "playback" event. */
 export function onRemotePlayback(p: Omit<RemoteSession, "receivedAt">) {
   if (p.deviceId === deviceId) return;
   if (p.playing && usePlayback.getState().isPlaying) engine.pause(); // another device took over
-  if (!p.trackId) return useRemote.setState({ session: null, title: "", tracks: [] });
+  if (!p.trackId) return clearRemote();
   // A paused session elsewhere matters only while this device isn't playing.
   if (!p.playing && usePlayback.getState().isPlaying) return;
   const session: RemoteSession = { ...p, upcoming: p.upcoming ?? [], volume: p.volume ?? 1, repeat: p.repeat ?? "off", durationMs: p.durationMs ?? 0, receivedAt: Date.now() };
@@ -252,7 +258,7 @@ export async function takeOver() {
   // Ask the other device to stop (it also pauses when this one starts playing).
   if (s.deviceId !== deviceId) void api("/api/playback/command", { method: "POST", json: { cmd: "pause", target: s.deviceId, from: deviceId } }).catch(() => {});
   usePlayer.getState().playList(r.tracks, 0, { type: "queue", name: s.sourceName || s.deviceName }, { shuffle: false });
-  useRemote.setState({ session: null, title: "", tracks: [] });
+  clearRemote();
   // Seek once the engine has loaded the song.
   const want = s.positionMs / 1000;
   if (want > 2) {
@@ -266,7 +272,7 @@ export async function takeOver() {
 }
 
 export function dismissRemote() {
-  useRemote.setState({ session: null, title: "", tracks: [] });
+  clearRemote();
 }
 
 export function startSync() {
@@ -282,7 +288,7 @@ export function startSync() {
     if (s.isPlaying !== prev.isPlaying) {
       if (s.isPlaying) {
         bc?.postMessage({ type: "playing", tab: tabId });
-        useRemote.setState({ session: null, title: "", tracks: [] }); // this device is the active one now
+        clearRemote(); // this device is the active one now
       }
       void report(true);
     } else if (s.isPlaying && Math.abs(s.position - prev.position) > 3) {

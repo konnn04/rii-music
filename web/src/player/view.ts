@@ -9,18 +9,20 @@ import { engine } from "./engine";
 import { usePlayback, usePlayer, type Repeat } from "./store";
 import { remoteCommand, remotePositionMs, useRemote, type RemoteSession } from "./sync";
 
-/** The remote session the bar should show, or null when this device leads. */
+/**
+ * The remote session the bar should show, or null when this device leads.
+ * Once another device is the player, the bar keeps controlling it, paused or
+ * not, until this device plays something itself (like Spotify Connect).
+ */
 export function useRemoteView(): RemoteSession | null {
   const session = useRemote((r) => r.session);
   const localPlaying = usePlayback((s) => s.isPlaying);
-  const hasLocal = usePlayer((s) => !!s.current);
-  if (!session || localPlaying) return null;
-  return session.playing || !hasLocal ? session : null;
+  return session && !localPlaying ? session : null;
 }
 
 const remoteNow = () => {
   const s = useRemote.getState().session;
-  return s && !usePlayback.getState().isPlaying && (s.playing || !usePlayer.getState().current) ? s : null;
+  return s && !usePlayback.getState().isPlaying ? s : null;
 };
 
 /** The song on the bar. */
@@ -28,7 +30,12 @@ export function useViewTrack(): Track | null {
   const remote = useRemoteView();
   const remoteTrack = useRemote((r) => r.tracks.find((t) => t.id === r.session?.trackId) ?? null);
   const local = usePlayer((s) => s.current?.track ?? null);
-  return remote ? remoteTrack : local;
+  const known = usePlayer((s) => {
+    // The remote song's details before /api/playback answered: from this device's queue.
+    const id = useRemote.getState().session?.trackId;
+    return id ? ([s.current, ...s.context, ...s.manual].find((e) => e?.track.id === id)?.track ?? null) : null;
+  });
+  return remote ? (remoteTrack ?? known) : local;
 }
 
 export function useViewPlaying(): boolean {

@@ -10,7 +10,9 @@
     "label": "YouTube link or search query",
     "placeholder": "https://www.youtube.com/watch?v=…\nhttps://www.youtube.com/playlist?list=…\nor: Song title Artist",
     "hint": "One item per line, up to 50. Playlists are split into individual tracks. Existing tracks are skipped.",
-    "paste": "Paste"
+    "paste": "Paste",
+    "open": "Download music",
+    "title": "Download music"
   },
   "ytdlp": {
     "notReady": "yt-dlp is not ready",

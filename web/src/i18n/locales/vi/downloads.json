@@ -10,7 +10,9 @@
     "label": "Liên kết YouTube hoặc từ khoá",
     "placeholder": "https://www.youtube.com/watch?v=…\nhttps://www.youtube.com/playlist?list=…\nhoặc: Mùa Hè Ở Lại Linh Đan",
     "hint": "Mỗi dòng một mục, tối đa 50. Playlist sẽ được tách thành từng bài. Bài đã có sẽ được bỏ qua.",
-    "paste": "Dán"
+    "paste": "Dán",
+    "open": "Tải nhạc",
+    "title": "Tải nhạc"
   },
   "ytdlp": {
     "notReady": "yt-dlp chưa sẵn sàng",

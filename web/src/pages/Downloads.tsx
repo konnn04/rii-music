@@ -8,6 +8,7 @@ import { Icon } from "@/components/ui/Icon";
 import { Empty, ErrorState, Spinner } from "@/components/ui/misc";
 import { Cover } from "@/components/ui/Cover";
 import { PageHeader } from "@/components/layout/AppShell";
+import { Dialog } from "@/components/ui/Dialog";
 import { t, tsv } from "@/i18n";
 
 const statusText: Record<Job["status"], string> = {
@@ -19,8 +20,8 @@ const statusText: Record<Job["status"], string> = {
   skipped: t("downloads.status.skipped"),
 };
 
-export function DownloadsPage() {
-  const { data, isLoading, error, refetch } = useJobs();
+/** "Tải nhạc": links or search words, one per line, in a dialog. */
+function DownloadDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (v: boolean) => void }) {
   const [input, setInput] = useState("");
   const [busy, setBusy] = useState(false);
 
@@ -30,9 +31,12 @@ export function DownloadsPage() {
     setBusy(true);
     try {
       const r = await startDownload(input);
-      if (r.jobs.length) setInput("");
+      if (r.jobs.length) {
+        setInput("");
+        onOpenChange(false);
+      }
     } catch {
-      /* toast from mutation default handler is not used here */
+      /* startDownload already shows the error */
     } finally {
       setBusy(false);
     }
@@ -47,6 +51,43 @@ export function DownloadsPage() {
     }
   };
 
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange} title={t("downloads.form.title")} description={t("downloads.form.hint")}>
+      <form onSubmit={submit} className="flex flex-col gap-3">
+        <label htmlFor="dl-input" className="sr-only">
+          {t("downloads.form.label")}
+        </label>
+        <textarea
+          id="dl-input"
+          autoFocus
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) submit(e);
+          }}
+          rows={4}
+          placeholder={t("downloads.form.placeholder")}
+          className="input min-h-28 resize-y"
+          autoComplete="off"
+          spellCheck={false}
+        />
+        <div className="flex gap-2">
+          <Button type="button" icon="clipboard" onClick={paste}>
+            {t("downloads.form.paste")}
+          </Button>
+          <Button type="submit" variant="primary" icon="download" loading={busy} disabled={!input.trim()} className="flex-1">
+            {t("common.download")}
+          </Button>
+        </div>
+      </form>
+    </Dialog>
+  );
+}
+
+export function DownloadsPage() {
+  const { data, isLoading, error, refetch } = useJobs();
+  const [open, setOpen] = useState(false);
+
   const jobs = data?.jobs ?? [];
   const active = jobs.filter((j) => ["queued", "downloading", "processing"].includes(j.status));
   const finished = jobs.filter((j) => !["queued", "downloading", "processing"].includes(j.status));
@@ -54,36 +95,17 @@ export function DownloadsPage() {
 
   return (
     <div>
-      <PageHeader title={t("common.nav.downloads")} />
-      <div className="grid gap-6 px-4 md:px-6 lg:grid-cols-[minmax(0,2fr)_minmax(0,3fr)]">
-        <section className="flex flex-col gap-3 lg:sticky lg:top-[calc(var(--spacing-topbar)+8px)] lg:self-start">
-          <form onSubmit={submit} className="flex flex-col gap-3 rounded-card bg-surface-1 p-4">
-            <label htmlFor="dl-input" className="text-label">
-              {t("downloads.form.label")}
-            </label>
-            <textarea
-              id="dl-input"
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) submit(e);
-              }}
-              rows={3}
-              placeholder={t("downloads.form.placeholder")}
-              className="input min-h-24 resize-y"
-              autoComplete="off"
-              spellCheck={false}
-            />
-            <p className="text-caption text-fg-subtle">{t("downloads.form.hint")}</p>
-            <div className="flex gap-2">
-              <Button type="button" icon="clipboard" onClick={paste}>
-                {t("downloads.form.paste")}
-              </Button>
-              <Button type="submit" variant="primary" icon="download" loading={busy} disabled={!input.trim()} className="flex-1">
-                {t("common.download")}
-              </Button>
-            </div>
-          </form>
+      <PageHeader
+        title={t("common.nav.downloads")}
+        actions={
+          <Button variant="primary" icon="plus" onClick={() => setOpen(true)}>
+            {t("downloads.form.open")}
+          </Button>
+        }
+      />
+      <DownloadDialog open={open} onOpenChange={setOpen} />
+      <div className="mx-auto flex max-w-3xl flex-col gap-6 px-4 md:px-6">
+        <section className="flex flex-col gap-3 empty:hidden">
           {data && !data.ytdlpReady && (
             <div className="flex gap-3 rounded-card bg-surface-1 p-4 text-body-sm" role="status">
               <Icon name={data.ytdlpError ? "alert" : "loader"} className={data.ytdlpError ? "text-warning" : "text-fg-muted"} />
@@ -107,7 +129,15 @@ export function DownloadsPage() {
           ) : error ? (
             <ErrorState error={error} onRetry={refetch} />
           ) : jobs.length === 0 ? (
-            <Empty icon="download" title={t("downloads.empty.title")}>
+            <Empty
+              icon="download"
+              title={t("downloads.empty.title")}
+              action={
+                <Button variant="primary" icon="plus" onClick={() => setOpen(true)}>
+                  {t("downloads.form.open")}
+                </Button>
+              }
+            >
               {t("downloads.empty.body")}
             </Empty>
           ) : (

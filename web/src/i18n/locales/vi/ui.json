@@ -92,5 +92,12 @@
     "sidebar": "Nghệ sĩ theo dõi",
     "sidebarEmpty": "Bấm “Theo dõi” ở trang nghệ sĩ để thêm vào đây.",
     "artist": "Nghệ sĩ"
+  },
+  "pull": {
+    "refresh": "Kéo để làm mới trang này",
+    "release": "Thả để làm mới",
+    "refreshing": "Đang làm mới…",
+    "reloadPage": "Kéo để tải lại toàn bộ",
+    "releaseReload": "Thả để tải lại toàn bộ"
   }
 }

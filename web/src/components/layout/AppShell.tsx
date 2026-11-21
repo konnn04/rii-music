@@ -22,6 +22,7 @@ import { t, tn, syncLang } from "@/i18n";
 import { useBranding } from "@/lib/branding";
 import { Onboarding } from "@/pages/Onboarding";
 import { RemoteSheet } from "@/components/RemoteBanner";
+import { PullToRefresh } from "./PullToRefresh";
 import { clearStored, initOffline, useOffline } from "@/lib/offline";
 import { useFollows } from "@/lib/follows";
 import { useNet } from "@/player/net";
@@ -48,6 +49,7 @@ const label = (k: string) => t(`common.nav.${k}`);
 export function AppShell() {
   const scrollEl = useScrollEl((s) => s.el);
   const setScrollEl = useCallback((el: HTMLElement | null) => useScrollEl.setState({ el }), []);
+  const [headerEl, setHeaderEl] = useState<HTMLElement | null>(null);
   const desktop = useIsDesktop();
   const settings = useSettings();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
@@ -78,10 +80,11 @@ export function AppShell() {
   return (
     <>
       <div className="flex h-dvh flex-col overflow-hidden bg-canvas">
-        <MobileHeader />
+        <MobileHeader innerRef={setHeaderEl} />
+        <PullToRefresh scrollEl={scrollEl ?? null} headerEl={headerEl} />
         <div className="flex min-h-0 flex-1 gap-2 md:p-2 md:pb-0">
           <Sidebar />
-          <main ref={setScrollEl} className="relative min-w-0 flex-1 overflow-y-auto overflow-x-hidden md:rounded-card" id="main">
+          <main ref={setScrollEl} className="relative min-w-0 flex-1 overflow-y-auto overflow-x-hidden overscroll-y-contain md:rounded-card" id="main">
             <div className="min-h-full pb-[calc(var(--spacing-tabbar)+var(--spacing-miniplayer)+24px+env(safe-area-inset-bottom))] md:pb-8">
               <TopBar />
               <div className="mx-auto w-full max-w-[1280px]">
@@ -476,11 +479,11 @@ export function LogoutButton() {
 }
 
 /** Mobile: the app's name and logo (set by the admin), and the account. */
-function MobileHeader() {
+function MobileHeader({ innerRef }: { innerRef?: (el: HTMLElement | null) => void }) {
   const brand = useBranding();
   const me = useMe().data?.user;
   return (
-    <header className="flex h-[calc(48px+env(safe-area-inset-top))] shrink-0 items-center gap-2 bg-canvas px-4 pt-safe md:hidden">
+    <header ref={innerRef} className="flex h-[calc(48px+env(safe-area-inset-top))] shrink-0 items-center gap-2 bg-canvas px-4 pt-safe md:hidden">
       <Link to="/" className="focus-ring flex min-w-0 items-center gap-2 rounded-control">
         <img src={brand.logoUrl} alt="" className="size-7 shrink-0 rounded-xs object-contain" />
         <span className="truncate text-title-3 tracking-tight">{brand.name}</span>

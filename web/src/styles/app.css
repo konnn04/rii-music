@@ -51,6 +51,10 @@
   #root {
     height: 100%;
   }
+  /* No browser pull-to-refresh (a full reload): the app has its own (PullToRefresh). */
+  html {
+    overscroll-behavior-y: none;
+  }
   body {
     margin: 0;
     overscroll-behavior: none;

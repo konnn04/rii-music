@@ -92,5 +92,12 @@
     "sidebar": "Followed artists",
     "sidebarEmpty": "Press “Follow” on an artist page to add them here.",
     "artist": "Artist"
+  },
+  "pull": {
+    "refresh": "Pull to refresh this page",
+    "release": "Release to refresh",
+    "refreshing": "Refreshing…",
+    "reloadPage": "Pull to reload the app",
+    "releaseReload": "Release to reload the app"
   }
 }

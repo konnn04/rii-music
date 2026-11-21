@@ -381,11 +381,7 @@ func (s *Server) handleRequestOTP(w http.ResponseWriter, r *http.Request) {
 	s.db.Exec(`INSERT INTO otp_codes(email, purpose, code_hash, expires_at, attempts, sent_at) VALUES (?,?,?,?,0,?)
 		ON CONFLICT(email, purpose) DO UPDATE SET code_hash = excluded.code_hash, expires_at = excluded.expires_at, attempts = 0, sent_at = excluded.sent_at`,
 		email, body.Purpose, s.auth.mac("otp", email, body.Purpose, code), now.Add(otpTTL).UnixMilli(), now.UnixMilli())
-	subject, what := "Mã đăng nhập RiiMusic", "đăng nhập"
-	if body.Purpose == "reset" {
-		subject, what = "Mã đặt lại mật khẩu RiiMusic", "đặt lại mật khẩu"
-	}
-	if err := s.sendMail(email, subject, otpEmail(code, what, s.cfg.PublicURL)); err != nil {
+	if err := s.sendMail(email, otpEmail(s.branding().Name, code, body.Purpose, s.cfg.PublicURL)); err != nil {
 		s.log.Error("send otp email", "err", err)
 		s.db.Exec(`DELETE FROM otp_codes WHERE email = ? AND purpose = ?`, email, body.Purpose)
 		httpError(w, http.StatusBadGateway, "Không gửi được email, thử lại sau")

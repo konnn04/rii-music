@@ -152,12 +152,12 @@ type RemoteCommand struct {
 	Target     string   `json:"target"` // device id of the playing device
 	From       string   `json:"from"`
 	Cmd        string   `json:"cmd"`
-	PositionMs int64    `json:"positionMs,omitempty"` // seek
-	Volume     float64  `json:"volume,omitempty"`     // volume
-	Index      int      `json:"index,omitempty"`      // jump / remove / move: position in "upcoming"
-	To         int      `json:"to,omitempty"`         // move
-	TrackID    string   `json:"trackId,omitempty"`    // jump / remove: the track expected at Index
-	TrackIDs   []string `json:"trackIds,omitempty"`   // playNow / queue
+	PositionMs int64    `json:"positionMs"`         // seek
+	Volume     float64  `json:"volume"`             // volume
+	Index      int      `json:"index"`              // jump / remove / move: position in "upcoming"
+	To         int      `json:"to"`                 // move
+	TrackID    string   `json:"trackId,omitempty"`  // jump / remove: the track expected at Index
+	TrackIDs   []string `json:"trackIds,omitempty"` // playNow / queue
 }
 
 var remoteCmds = map[string]bool{

@@ -26,6 +26,7 @@ import { clearStored, initOffline, useOffline } from "@/lib/offline";
 import { useFollows } from "@/lib/follows";
 import { useNet } from "@/player/net";
 import { initRoom } from "@/player/room";
+import { RoomButton, RoomStrip } from "@/components/RoomDialog";
 import { FollowedRow } from "@/components/Follow";
 
 // `header`: shown as an icon in the top bar (desktop) and the mobile header
@@ -90,9 +91,11 @@ export function AppShell() {
           </main>
           <RightPanel />
         </div>
+        <RoomStrip className="mx-2 mb-1 hidden md:flex" />
         <RemoteBanner className="mx-2 mb-1 hidden md:flex" />
         <PlayerBar />
         <div className="fixed inset-x-0 bottom-0 z-[40] md:hidden">
+          <RoomStrip className="mx-2 mb-1" />
           <RemoteBanner className="mx-2 mb-1" />
           <MiniPlayer />
           <TabBar />
@@ -422,6 +425,7 @@ function HeaderLinks() {
             </Tooltip>
           );
         })}
+      <RoomButton />
     </>
   );
 }

@@ -52,7 +52,16 @@
   "remote": {
     "playingOn": "Playing on {device}",
     "pausedOn": "Last played on {device}",
-    "playHere": "Play here"
+    "playHere": "Play here",
+    "controlTitle": "Control {device}",
+    "queueOn": "Queue on {device}",
+    "queueEmpty": "Nothing queued",
+    "volume": "Volume",
+    "seek": "Seek",
+    "expand": "Open {device} controls",
+    "moveUp": "Move up",
+    "moveDown": "Move down",
+    "removeFromQueue": "Remove from queue"
   },
   "drag": {
     "count": "{n} songs",

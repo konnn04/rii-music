@@ -1,0 +1,39 @@
+{
+  "source": "Nghe chung · {code}",
+  "closed": "Phòng nghe chung đã đóng",
+  "closedIdle": "Phòng nghe chung đã đóng vì không còn ai",
+  "listenOnly": "Bạn chỉ được nghe trong phòng này",
+  "nowController": "Bạn được điều hành phòng",
+  "nowListener": "Bạn chuyển sang chỉ nghe",
+  "title": "Nghe chung",
+  "intro": "Nghe cùng bạn bè theo thời gian thực. Tạo phòng rồi gửi mã 6 ký tự cho mọi người.",
+  "create": "Phát trạm",
+  "needSong": "Phát một bài trước đã",
+  "or": "hoặc",
+  "codePlaceholder": "Nhập mã 6 ký tự",
+  "join": "Vào phòng",
+  "copied": "Đã sao chép mã phòng",
+  "copy": "Sao chép",
+  "share": "Chia sẻ",
+  "shareText": "Vào nghe nhạc chung trên RiiMusic nhé! Mã phòng: {code}",
+  "statusConnected": "Đã kết nối",
+  "statusReconnecting": "Đang kết nối lại…",
+  "resync": "Đồng bộ lại",
+  "nowPlaying": "Đang phát",
+  "members": {
+    "one": "{n} thành viên",
+    "other": "{n} thành viên"
+  },
+  "you": "(bạn)",
+  "disconnected": "Mất kết nối",
+  "role": {
+    "host": "Chủ phòng",
+    "controller": "Được điều hành",
+    "listener": "Chỉ nghe"
+  },
+  "close": "Đóng phòng",
+  "closeConfirm": "Đóng phòng nghe chung? Mọi người sẽ bị ngắt khỏi phòng.",
+  "leave": "Rời phòng",
+  "inRoom": "Đang nghe chung · {code}",
+  "open": "Mở"
+}

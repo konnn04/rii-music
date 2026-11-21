@@ -1,0 +1,39 @@
+{
+  "source": "Listening together · {code}",
+  "closed": "The listening room was closed",
+  "closedIdle": "The listening room closed: nobody was left",
+  "listenOnly": "You can only listen in this room",
+  "nowController": "You can now control the room",
+  "nowListener": "You are now a listener",
+  "title": "Listen together",
+  "intro": "Listen with friends in real time. Create a room and share the 6-character code.",
+  "create": "Start room",
+  "needSong": "Play a song first",
+  "or": "or",
+  "codePlaceholder": "6-character code",
+  "join": "Join room",
+  "copied": "Room code copied",
+  "copy": "Copy",
+  "share": "Share",
+  "shareText": "Join my listening room on RiiMusic! Code: {code}",
+  "statusConnected": "Connected",
+  "statusReconnecting": "Reconnecting…",
+  "resync": "Resync",
+  "nowPlaying": "Now playing",
+  "members": {
+    "one": "{n} member",
+    "other": "{n} members"
+  },
+  "you": "(you)",
+  "disconnected": "Disconnected",
+  "role": {
+    "host": "Host",
+    "controller": "Controller",
+    "listener": "Listener"
+  },
+  "close": "Close room",
+  "closeConfirm": "Close this room? Everyone will be disconnected.",
+  "leave": "Leave room",
+  "inRoom": "Listening together · {code}",
+  "open": "Open"
+}

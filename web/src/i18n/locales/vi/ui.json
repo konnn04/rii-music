@@ -52,7 +52,16 @@
   "remote": {
     "playingOn": "Đang phát trên {device}",
     "pausedOn": "Vừa nghe trên {device}",
-    "playHere": "Phát ở đây"
+    "playHere": "Phát ở đây",
+    "controlTitle": "Điều khiển {device}",
+    "queueOn": "Hàng đợi trên {device}",
+    "queueEmpty": "Không có bài nào trong hàng đợi",
+    "volume": "Âm lượng",
+    "seek": "Tua",
+    "expand": "Mở điều khiển {device}",
+    "moveUp": "Đưa lên",
+    "moveDown": "Đưa xuống",
+    "removeFromQueue": "Bỏ khỏi hàng đợi"
   },
   "drag": {
     "count": "{n} bài",

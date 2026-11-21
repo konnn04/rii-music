@@ -7,6 +7,11 @@ import { Button, IconButton, PlayButton } from "./ui/Button";
 import { Cover } from "./ui/Cover";
 import { Dialog } from "./ui/Dialog";
 import { Slider } from "./ui/Slider";
+import { Icon } from "./ui/Icon";
+import type { Track } from "@/lib/api";
+import { DndContext, KeyboardSensor, PointerSensor, TouchSensor, closestCenter, useSensor, useSensors, type DragEndEvent } from "@dnd-kit/core";
+import { SortableContext, sortableKeyboardCoordinates, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 import { toast } from "./ui/Toast";
 
 /** Remote control sheet for the device that plays (opened from the player bar / mini player). */
@@ -182,54 +187,7 @@ export function RemoteSheet() {
               {t("ui.remote.queueOn", { device: s.deviceName })}
             </div>
             {queueItems.length > 0 ? (
-              <div className="flex flex-col gap-0.5">
-                {queueItems.map(({ id, index, track }) => (
-                  <div
-                    key={`${id}-${index}`}
-                    className="state-layer flex items-center gap-2 rounded-control px-1.5 py-1"
-                  >
-                    <button
-                      type="button"
-                      onClick={() => void remoteCommand({ cmd: "jump", index, trackId: id })}
-                      className="focus-ring flex min-w-0 flex-1 items-center gap-2.5 rounded-xs text-left"
-                    >
-                      <Cover trackId={track.id} hasCover={track.hasCover} size={40} />
-                      <div className="min-w-0 flex-1">
-                        <div className="truncate text-label text-fg">{track.title}</div>
-                        <div className="truncate text-caption text-fg-muted">{track.artist}</div>
-                      </div>
-                    </button>
-                    <div className="flex shrink-0 items-center">
-                      <IconButton
-                        icon="chevron-down"
-                        label={t("ui.remote.moveUp")}
-                        size={16}
-                        tooltip={false}
-                        disabled={index === 0}
-                        className="!size-8 [&_svg]:rotate-180"
-                        onClick={() => void remoteCommand({ cmd: "move", index, to: index - 1, trackId: id })}
-                      />
-                      <IconButton
-                        icon="chevron-down"
-                        label={t("ui.remote.moveDown")}
-                        size={16}
-                        tooltip={false}
-                        disabled={index === queueItems.length - 1}
-                        className="!size-8"
-                        onClick={() => void remoteCommand({ cmd: "move", index, to: index + 1, trackId: id })}
-                      />
-                      <IconButton
-                        icon="close"
-                        label={t("ui.remote.removeFromQueue")}
-                        size={16}
-                        tooltip={false}
-                        className="!size-8"
-                        onClick={() => void remoteCommand({ cmd: "remove", index, trackId: id })}
-                      />
-                    </div>
-                  </div>
-                ))}
-              </div>
+              <RemoteQueue items={queueItems} />
             ) : (
               <p className="py-3 text-center text-body-sm text-fg-muted">{t("ui.remote.queueEmpty")}</p>
             )}
@@ -237,5 +195,74 @@ export function RemoteSheet() {
         </div>
       </Dialog>
     </>
+  );
+}
+
+type QueueItem = { id: string; index: number; track: Track };
+
+/** The other device's upcoming songs: drag to reorder (same as the local queue), tap to play, ✕ to remove. */
+function RemoteQueue({ items }: { items: QueueItem[] }) {
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 200, tolerance: 8 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
+  );
+  const key = (it: QueueItem) => `${it.index}:${it.id}`;
+  const onEnd = (e: DragEndEvent) => {
+    if (!e.over || e.active.id === e.over.id) return;
+    const from = items.find((it) => key(it) === e.active.id);
+    const to = items.find((it) => key(it) === e.over!.id);
+    if (from && to) void remoteCommand({ cmd: "move", index: from.index, to: to.index, trackId: from.id });
+  };
+  return (
+    <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onEnd}>
+      <SortableContext items={items.map(key)} strategy={verticalListSortingStrategy}>
+        <div className="flex flex-col gap-0.5">
+          {items.map((it) => (
+            <RemoteQueueRow key={key(it)} id={key(it)} item={it} />
+          ))}
+        </div>
+      </SortableContext>
+    </DndContext>
+  );
+}
+
+function RemoteQueueRow({ id, item }: { id: string; item: QueueItem }) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id });
+  const { track, index } = item;
+  return (
+    <div
+      ref={setNodeRef}
+      style={{ transform: CSS.Translate.toString(transform), transition }}
+      className={`flex h-14 items-center gap-2 rounded-control pl-1 pr-1 ${isDragging ? "relative z-10 bg-surface-3 shadow-float" : "state-layer"}`}
+    >
+      <span
+        {...attributes}
+        {...listeners}
+        className="focus-ring flex size-9 shrink-0 cursor-grab touch-none items-center justify-center rounded-xs text-fg-muted"
+        aria-label={t("player.queue.drag", { title: track.title })}
+      >
+        <Icon name="grip" size={20} />
+      </span>
+      <button
+        type="button"
+        onClick={() => void remoteCommand({ cmd: "jump", index, trackId: item.id })}
+        className="focus-ring flex min-w-0 flex-1 items-center gap-2.5 rounded-xs text-left"
+      >
+        <Cover trackId={track.id} hasCover={track.hasCover} size={40} />
+        <div className="min-w-0 flex-1">
+          <div className="truncate text-label text-fg">{track.title}</div>
+          <div className="truncate text-caption text-fg-muted">{track.artist}</div>
+        </div>
+      </button>
+      <IconButton
+        icon="close"
+        label={t("ui.remote.removeFromQueue")}
+        size={18}
+        tooltip={false}
+        className="!size-10"
+        onClick={() => void remoteCommand({ cmd: "remove", index, trackId: item.id })}
+      />
+    </div>
   );
 }

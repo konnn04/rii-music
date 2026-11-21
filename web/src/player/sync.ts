@@ -179,6 +179,12 @@ export function remoteCommand(c: RemoteCmd) {
   if (c.cmd === "seek") Object.assign(patch, { positionMs: c.positionMs, receivedAt: now });
   if (c.cmd === "volume") patch.volume = c.volume;
   if (c.cmd === "remove") patch.upcoming = s.upcoming.filter((_, i) => i !== c.index);
+  if (c.cmd === "move") {
+    const up = [...s.upcoming];
+    const [moved] = up.splice(c.index, 1);
+    if (moved) up.splice(c.to, 0, moved);
+    patch.upcoming = up;
+  }
   useRemote.setState({ session: { ...s, ...patch } });
   return api("/api/playback/command", { method: "POST", json: { ...c, target: s.deviceId, from: deviceId } }).catch(() => {});
 }

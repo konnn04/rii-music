@@ -167,7 +167,7 @@ function QueueRow({ e }: { e: QueueEntry }) {
     <div
       ref={setNodeRef}
       style={{ transform: CSS.Translate.toString(transform), transition }}
-      className={`group flex h-14 items-center gap-2 rounded-control pl-1 pr-1 ${isDragging ? "relative z-10 bg-surface-3 shadow-float" : "hover:bg-white/5"}`}
+      className={`group flex h-14 items-center gap-2 rounded-control pl-1 pr-1 ${isDragging ? "" : "cv-row"} ${isDragging ? "relative z-10 bg-surface-3 shadow-float" : "hover:bg-white/5"}`}
     >
       <span {...attributes} {...listeners} className="focus-ring flex size-9 shrink-0 cursor-grab touch-none items-center justify-center rounded-xs text-np-fg-muted" aria-label={t("player.queue.drag", { title: e.track.title })}>
         <Icon name="grip" size={20} />

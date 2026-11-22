@@ -49,7 +49,18 @@
     "visualizerHint": "Nền Đang phát và Lời bài hát đập theo nhịp bass: nhạc càng lớn màu loang càng mạnh, đoạn nhỏ thì dịu lại.",
     "visualizerSimple": "Cần tắt Chế độ đơn giản (ở mục Phát nhạc) để đọc được âm thanh.",
     "uiScale": "Cỡ giao diện",
-    "uiScaleHint": "Phóng to hoặc thu nhỏ chữ và khoảng cách trên thiết bị này."
+    "uiScaleHint": "Phóng to hoặc thu nhỏ chữ và khoảng cách trên thiết bị này.",
+    "lite": "Chế độ nhẹ",
+    "liteHint": "Tắt hiệu ứng nền, làm mờ và chuyển động để máy yếu phát nhạc mượt hơn.",
+    "liteAuto": "Tự động",
+    "liteOn": "Bật",
+    "liteOff": "Tắt",
+    "liteOnBecause": {
+      "device": "Đang bật vì thiết bị này cấu hình thấp.",
+      "jank": "Đang bật vì máy bị giật khi phát nhạc.",
+      "motion": "Đang bật vì thiết bị yêu cầu giảm chuyển động.",
+      "manual": "Đang bật."
+    }
   },
   "shortcuts": {
     "title": "Phím tắt (PC)",

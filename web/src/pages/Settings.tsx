@@ -21,6 +21,7 @@ import { clearStored, setOffline, useOffline } from "@/lib/offline";
 import { useIsMobile } from "@/lib/useMedia";
 import { UI_SCALES, getUiScale, setUiScale } from "@/lib/uiScale";
 import { undoDislike, useDisliked } from "@/lib/dislike";
+import { setLiteMode, useLite, type LiteMode } from "@/lib/lite";
 
 export function SettingsPage() {
   const { data } = useSettings();
@@ -122,6 +123,7 @@ export function SettingsPage() {
             on={data.visualizer}
             set={(v) => set({ visualizer: v })}
           />
+          <LiteRow />
         </Group>
 
         <DiscordPresence />
@@ -303,6 +305,28 @@ function AccountSettings() {
       </form>
       <p className="py-3 text-caption text-fg-subtle">{t("settings.account.privacyNote")}</p>
     </Group>
+  );
+}
+
+/** Chế độ nhẹ: fewer effects on weak devices (auto-detected by default). */
+function LiteRow() {
+  const lite = useLite();
+  const hint =
+    lite.active && lite.mode === "auto"
+      ? t(`settings.appearance.liteOnBecause.${lite.reason || "device"}`)
+      : t("settings.appearance.liteHint");
+  return (
+    <Row label={t("settings.appearance.lite")} hint={hint}>
+      <Segmented
+        value={lite.mode}
+        options={[
+          ["auto", t("settings.appearance.liteAuto")],
+          ["on", t("settings.appearance.liteOn")],
+          ["off", t("settings.appearance.liteOff")],
+        ]}
+        onChange={(v) => setLiteMode(v as LiteMode)}
+      />
+    </Row>
   );
 }
 

@@ -113,7 +113,7 @@ export function HistoryPage() {
         ) : (
           <ul className="flex flex-col px-2 md:px-0">
             {history.data.slice(0, 100).map((h, i) => (
-              <li key={i}>
+              <li key={i} className="cv-row">
                 <button
                   className="focus-ring flex h-14 w-full items-center gap-3 rounded-control px-2 text-left hover:bg-surface-1"
                   onClick={() => usePlayer.getState().playList([h.track], 0, { type: "history", name: t("history.recent.sourceName") })}

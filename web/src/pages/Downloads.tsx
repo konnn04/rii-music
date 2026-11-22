@@ -201,7 +201,7 @@ function JobRow({ j }: { j: Job }) {
   const displayTitle = j.title ? tsv(j.title) : j.url.startsWith("ytsearch1:") ? t("downloads.job.searchPrefix", { query: j.url.slice("ytsearch1:".length) }) : j.url;
   const stageText = j.stage ? tsv(j.stage) : undefined;
   return (
-    <li className="flex items-start gap-3 rounded-card bg-surface-1 p-3">
+    <li className="cv-job flex items-start gap-3 rounded-card bg-surface-1 p-3">
       {j.trackId && (j.status === "done" || j.status === "skipped") ? (
         <button className="focus-ring rounded-xs" onClick={playTrack} aria-label={t("downloads.job.play", { title: displayTitle })}>
           <Cover trackId={j.trackId} size={48} />

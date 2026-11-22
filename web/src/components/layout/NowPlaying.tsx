@@ -13,6 +13,7 @@ import { usePulse } from "./Pulse";
 import { ArtistLinks } from "@/components/ArtistLinks";
 import { NowPlayingMenuButton } from "../NowPlayingMenu";
 import { COVER_VT, withCoverTransition } from "@/lib/viewTransition";
+import { useLite } from "@/lib/lite";
 
 /** Dark scope with the cover blurred behind a scrim and the accent taken from the cover. */
 export function NowPlayingSurface({ children, className = "", style }: { children: ReactNode; className?: string; style?: CSSProperties }) {
@@ -24,11 +25,13 @@ export function NowPlayingSurface({ children, className = "", style }: { childre
   const vars = accent && followCover ? ({ "--np-accent": accent, "--np-accent-soft": `color-mix(in srgb, ${accent} 16%, transparent)` } as CSSProperties) : {};
   const positioned = className.split(/\s+/).some((c) => c === "fixed" || c === "absolute");
   const root = useRef<HTMLDivElement>(null);
-  const fx = settings?.visualizer ?? true;
+  const lite = useLite((l) => l.active);
+  // Lite mode: no bass pulse and no blurred cover (both cost a lot on weak devices).
+  const fx = (settings?.visualizer ?? true) && !lite;
   usePulse(root, fx);
   return (
     <div ref={root} data-now-playing className={`isolate overflow-hidden bg-[#0E0F12] text-fg ${positioned ? "" : "relative"} ${className}`} style={{ ...vars, ...style }}>
-      {track?.hasCover && (
+      {track?.hasCover && !lite && (
         <img
           key={track.id}
           src={coverUrl(track.id)}

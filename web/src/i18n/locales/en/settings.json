@@ -49,7 +49,18 @@
     "visualizerHint": "Now Playing and lyrics backgrounds pulse with the bass: the louder the music, the more the colour spreads; quiet parts stay calm.",
     "visualizerSimple": "Turn off Simple mode (under Playback) so the sound can be read.",
     "uiScale": "Interface size",
-    "uiScaleHint": "Scale text and spacing up or down on this device."
+    "uiScaleHint": "Scale text and spacing up or down on this device.",
+    "lite": "Lite mode",
+    "liteHint": "Turns off background effects, blur and motion so weak devices play smoothly.",
+    "liteAuto": "Auto",
+    "liteOn": "On",
+    "liteOff": "Off",
+    "liteOnBecause": {
+      "device": "On: this device has modest hardware.",
+      "jank": "On: frames dropped while music played.",
+      "motion": "On: the device asks for reduced motion.",
+      "manual": "On."
+    }
   },
   "shortcuts": {
     "title": "Keyboard shortcuts (PC)",

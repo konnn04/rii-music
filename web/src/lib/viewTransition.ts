@@ -8,7 +8,7 @@ type VTDocument = Document & { startViewTransition?: (cb: () => void) => { finis
 
 export function withCoverTransition(update: () => void) {
   const doc = document as VTDocument;
-  if (!doc.startViewTransition || matchMedia("(prefers-reduced-motion: reduce)").matches) {
+  if (!doc.startViewTransition || matchMedia("(prefers-reduced-motion: reduce)").matches || document.documentElement.dataset.lite) {
     update();
     return;
   }

@@ -51,6 +51,39 @@
   #root {
     height: 100%;
   }
+  /* Long lists that aren't virtualised: the browser skips laying out and
+     painting items far off screen (like a virtual list, without the code). */
+  .cv-card {
+    content-visibility: auto;
+    contain-intrinsic-size: auto 220px;
+  }
+  .cv-row {
+    content-visibility: auto;
+    contain-intrinsic-size: auto 56px;
+  }
+  .cv-job {
+    content-visibility: auto;
+    contain-intrinsic-size: auto 88px;
+  }
+
+  /* Lite mode (weak devices, lib/lite.ts): no blur, almost no animation; spinners still spin. */
+  [data-lite] *,
+  [data-lite] *::before,
+  [data-lite] *::after {
+    backdrop-filter: none !important;
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 1ms !important;
+    scroll-behavior: auto !important;
+  }
+  [data-lite] .animate-spin {
+    animation-duration: 1s !important;
+    animation-iteration-count: infinite !important;
+  }
+  [data-lite] .shadow-float {
+    box-shadow: 0 1px 4px rgb(0 0 0 / 0.35) !important;
+  }
+
   /* No browser pull-to-refresh (a full reload): the app has its own (PullToRefresh). */
   html {
     overscroll-behavior-y: none;
@@ -196,5 +229,42 @@ html[data-accent] [data-now-playing] {
   animation-duration: 260ms;
 }
 html.cover-vt .np-sheet {
+  animation: none !important;
+}
+
+/* Mascot evolution & celebration (Vani) */
+@keyframes vani-twinkle {
+  0%, 100% { opacity: 0.35; transform: scale(0.85); }
+  50% { opacity: 1; transform: scale(1.15); }
+}
+@keyframes vani-halo {
+  0%, 100% { opacity: 0.65; transform: scale(0.98); }
+  50% { opacity: 1; transform: scale(1.03); }
+}
+@keyframes vani-sparkle {
+  0%, 100% { transform: scale(1) rotate(0deg); }
+  50% { transform: scale(1.2) rotate(12deg); }
+}
+@keyframes vani-confetti {
+  0% { opacity: 0; transform: translateY(4px) scale(0.5); }
+  40% { opacity: 1; transform: translateY(-3px) scale(1.1); }
+  100% { opacity: 0.85; transform: translateY(0) scale(1); }
+}
+.vani-twinkle { transform-box: fill-box; transform-origin: center; animation: vani-twinkle 2.2s ease-in-out infinite; }
+.vani-halo { transform-box: fill-box; transform-origin: center; animation: vani-halo 3.4s ease-in-out infinite; }
+.vani-sparkle { animation: vani-sparkle 1.4s ease-in-out 3; }
+.vani-confetti > span { animation: vani-confetti 600ms ease-out both; }
+.vani-confetti > span:nth-child(2) { animation-delay: 90ms; }
+.vani-confetti > span:nth-child(3) { animation-delay: 180ms; }
+@media (prefers-reduced-motion: reduce) {
+  .vani-twinkle, .vani-halo, .vani-sparkle, .vani-confetti > span { animation: none !important; }
+}
+html[data-lite] .vani-body,
+html[data-lite] .vani-note,
+html[data-lite] .vani-blink,
+html[data-lite] .vani-twinkle,
+html[data-lite] .vani-halo,
+html[data-lite] .vani-sparkle,
+html[data-lite] .vani-confetti > span {
   animation: none !important;
 }

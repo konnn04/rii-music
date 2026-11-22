@@ -82,6 +82,28 @@ Files: `rooms.go`, `web/src/player/room.ts`, `roomFlag.ts`.
 
 In-memory rooms with a 6-character code (no 0/O/1/I). One slot per account; roles host / controller / listener (joiners are listeners; the host changes roles). State `{queue, index, positionMs, playing, updatedAt, rev, by}` is set by the host or controllers (their local player changes are sent, debounced) and broadcast as SSE `room` events with the server time (`now`) so clients correct clock skew; members load the queue, seek and play/pause, and correct drift over 2.5 s every 10 s. Listeners' local changes are undone. Heartbeat every 20 s; silent for 60 s = disconnected; a room closes when the host leaves or closes it, or after 5 minutes with nobody connected. `/api/rooms/mine` rejoins after a reload. Members may stream the room's songs even without them in their library (`canAccess` → `roomCanAccess`).
 
+## Streaming API
+
+Files: `stream.go`.
+
+`GET /api/stream/{videoId}` resolves the best audio format with yt-dlp (`--print` of url, ext, codec, bitrate, duration, title, artist; names refined with YouTube Music `next`), caches the googlevideo URL for 4 h (they last about 6 h and are bound to the server's IP, so clients must go through the proxy), coalesces concurrent lookups of the same video, and proxies the bytes with the client's Range header; a 403/410 from YouTube re-resolves once. A video already in the caller's library is served from disk. Meant for bots; the web app keeps downloading into the library.
+
+## Listening streak
+
+Files: `streak.go`, `web/src/components/Mascot.tsx`.
+
+A day counts with at least 10 minutes of listening (`listen_events.played_ms`, days in the client's time zone from `tz`). `current` includes today once done and stays alive through yesterday while today is open (`atRisk`). Vani's stage comes from the best streak (thresholds 0, 3, 7, 14, 30, 60, 100 days) so it never goes down.
+
+## Lite mode and long lists
+
+Files: `web/src/lib/lite.ts`, `styles/app.css`.
+
+`<html data-lite>` turns off blur, the bass pulse, the blurred cover background, view transitions and most animations. Auto mode turns it on for low-end hardware (cores / `deviceMemory`), `prefers-reduced-motion`, or when more than one frame in five takes over 60 ms during 8 s of playback. Track lists are virtualised (`@tanstack/react-virtual` in `TrackList`); card grids, the queue, history and download rows use `content-visibility: auto` (`.cv-card`, `.cv-row`, `.cv-job`).
+
+## Admin limits
+
+`ServerSettings`: `autoplayTarget` (queue top-up, 10), `autoplayDownloads` (new songs per autoplay top-up, 6), `autoDlPerRun` (auto-download per run, 10), `playlistMax` (songs per playlist / album link, 200). The first two reach the player through `Settings.limits` (filled on read, never stored per user).
+
 ## Sound effects
 
 Files: `web/src/player/fx.ts`.

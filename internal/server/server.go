@@ -38,6 +38,7 @@ type Server struct {
 	np       nowPlayingState
 	playback playbackState
 	rooms    roomHub
+	streams  streamCache
 	autodl   *autoDL
 	logs     *LogBuffer
 }
@@ -159,6 +160,9 @@ func (s *Server) Handler() http.Handler {
 	api("POST /api/playback/command", s.handlePlaybackCommand)
 	api("POST /api/devices", s.handleDeviceSeen)
 	api("GET /api/devices", s.handleListDevices)
+	api("GET /api/streak", s.handleStreak)
+	api("GET /api/stream/{videoId}", s.handleStreamProxy)
+	api("GET /api/stream/{videoId}/info", s.handleStreamInfo)
 	api("POST /api/rooms", s.handleCreateRoom)
 	api("GET /api/rooms/mine", s.handleMyRoom)
 	api("GET /api/rooms/{code}", s.handleGetRoom)

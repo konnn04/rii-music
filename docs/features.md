@@ -9,6 +9,8 @@
 - Sleep timer: 5–90 minutes with a fade-out, or "at the end of this song".
 - Sound settings on the device: 10-band EQ with presets, bass boost, exciter, headphone crossfeed, stereo width, limiter.
 - Visuals: bass-reactive background, 12 accent colours or the cover's colour, cover transition from the mini player to Now Playing.
+- Lite mode (Settings → Appearance): fewer effects (no bass pulse, blur, cover transition, most animations) so weak devices play smoothly; on automatically for low-end hardware, reduced-motion devices, or when frames drop during playback.
+- Right-click (or long-press) any card on Home or in the Library: play, shuffle, play next, add to the queue, add to a playlist.
 - On phones and tablets the page always opens at 100 % volume (the hardware buttons control it); computers keep the last volume. UI scale setting on phones.
 
 ## Devices and listening together
@@ -39,16 +41,17 @@
 - "Không thích" (don't like) a song or an artist: never suggested again; managed in Settings.
 - Songs played to the end in the last 3 hours are not repeated in radio, mixes or autoplay; nothing already in the queue is suggested.
 - Optional auto-download of songs you are likely to like, within your storage limit.
+- Listening streak: days in a row with at least 10 minutes of music. Vani, the mascot, grows through 7 stages with your best streak (sprout, cherry, DJ sunglasses, star, crown, cosmic halo) and never shrinks back.
 - Song language comes from the title, the artist and the lyrics (romanised Japanese included), so recommendations don't mix languages.
 
 ## Accounts and administration
 
 - Sign in with a password or a one-time code by email; password reset by code. Emails are HTML with a plain-text part; code emails start their subject with the code so mail apps recognise it.
-- Admin: users and storage limits, system status and logs, yt-dlp updates, download format, site name / logo / description, Discord application id.
+- Admin: suggestion and download limits (songs autoplay keeps queued and downloads, auto-download per run, songs per playlist link), users and storage limits, system status and logs, yt-dlp updates, download format, site name / logo / description, Discord application id.
 - Share a song by link: signed-out visitors get a 30-second preview.
 - Interface in Vietnamese and English.
 
 ## Integrations
 
 - Discord "Listening to…" status with a one-line agent, nothing to install ([discord.md](discord.md)).
-- HTTP API with personal tokens, OpenAPI docs and a one-file TypeScript client ([api.md](api.md)).
+- HTTP API with personal tokens, OpenAPI docs and a one-file TypeScript client ([api.md](api.md)), including streaming any YouTube video's audio without downloading it (for bots).

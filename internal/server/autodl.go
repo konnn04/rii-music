@@ -22,7 +22,6 @@ import (
 const (
 	autoDLInterval  = 6 * time.Hour
 	autoDLFirstWait = 2 * time.Minute
-	autoDLMaxPerRun = 8
 	autoDLMaxActive = 4                   // don't stack runs while earlier downloads are still going
 	staleAutoAfter  = 14 * 24 * time.Hour // unplayed auto-downloads may be rotated out after this
 )
@@ -154,7 +153,7 @@ func (s *Server) autoDownloadOnce(ctx context.Context, uid string) {
 	if count > 0 {
 		avg = max(2<<20, used/int64(count))
 	}
-	n := min(autoDLMaxPerRun, int((limit-used-int64(active)*avg)/avg))
+	n := min(s.serverSettings().AutoDLPerRun, int((limit-used-int64(active)*avg)/avg))
 	if n <= 0 {
 		// Full: make room by rotating out auto-downloads that were never played.
 		k := s.evictStaleAuto(ctx, uid, 3)

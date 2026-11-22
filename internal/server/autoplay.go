@@ -38,6 +38,7 @@ func (s *Server) handleAutoplay(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	nExt, _ := strconv.Atoi(r.URL.Query().Get("ext"))
+	nExt = min(nExt, s.serverSettings().AutoplayDownloads) // admin's limit
 	nExt = max(0, min(nExt, 6))
 	ctx, cancel := context.WithTimeout(r.Context(), 20*time.Second)
 	defer cancel()

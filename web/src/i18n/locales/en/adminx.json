@@ -24,5 +24,18 @@
     "pause": "Pause",
     "resume": "Resume",
     "empty": "No matching log lines yet."
+  },
+  "limits": {
+    "title": "Suggestions and downloads",
+    "tip": "Applies to every user.",
+    "saved": "Saved",
+    "autoplayTarget": "Autoplay songs kept in the queue",
+    "autoplayTargetHint": "When the queue runs low it is topped up to this many ({min}–{max}, default 10).",
+    "autoplayDownloads": "New songs downloaded per autoplay top-up",
+    "autoplayDownloadsHint": "\"Free\" autoplay mode downloads songs you don't have yet ({min}–{max}, 0 = none, default 6).",
+    "autoDlPerRun": "Auto-download songs per run",
+    "autoDlPerRunHint": "Every 6 hours, within each user's storage limit ({min}–{max}, default 10).",
+    "playlistMax": "Max songs per playlist / album link",
+    "playlistMaxHint": "The rest of a longer playlist is skipped ({min}–{max}, default 200)."
   }
 }

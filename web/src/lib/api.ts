@@ -74,6 +74,8 @@ export type Lyrics = {
   choice: "auto" | "mine" | "community";
 };
 export type Settings = {
+  /** The admin's limits (read-only). */
+  limits?: { autoplayTarget: number; autoplayDownloads: number };
   crossfadeSec: number;
   gaplessAlbum: boolean;
   normalize: boolean;
@@ -89,7 +91,16 @@ export type Settings = {
   discordPresence: boolean;
   language: "vi" | "en";
 };
-export type ServerSettings = { audioFormat: "m4a" | "opus"; bitrate: number; discordAppId: string; agentUrl: string };
+export type ServerSettings = {
+  audioFormat: "m4a" | "opus";
+  bitrate: number;
+  discordAppId: string;
+  agentUrl: string;
+  autoplayTarget: number;
+  autoplayDownloads: number;
+  autoDlPerRun: number;
+  playlistMax: number;
+};
 export type Branding = { name: string; description: string; logoUrl: string; customLogo: boolean };
 export type APIToken = { id: string; kind: "api" | "agent"; name: string; prefix: string; createdAt: number; lastUsedAt: number };
 export type WebList = { id: string; title: string; subtitle: string; thumbnail: string; tracks: WebResult[]; saved?: string };

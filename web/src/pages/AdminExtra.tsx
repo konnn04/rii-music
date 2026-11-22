@@ -122,6 +122,53 @@ export function DiscordCard() {
   );
 }
 
+/** Suggestions and downloads: how much autoplay queues / downloads, auto-download per run, playlist size. */
+export function LimitsCard() {
+  const srv = useQuery({ queryKey: ["admin", "settings"], queryFn: () => api<ServerSettings>("/api/admin/settings") });
+  const [draft, setDraft] = useState<Partial<ServerSettings>>({});
+  if (!srv.data) return null;
+  const v = { ...srv.data, ...draft };
+  const field = (key: "autoplayTarget" | "autoplayDownloads" | "autoDlPerRun" | "playlistMax", min: number, max: number) => (
+    <label className="flex flex-col gap-1.5 text-body-sm">
+      <span>{t(`adminx.limits.${key}`)}</span>
+      <input
+        className="input h-11 w-32 tabular"
+        type="number"
+        inputMode="numeric"
+        min={min}
+        max={max}
+        value={v[key]}
+        onChange={(e) => setDraft((d) => ({ ...d, [key]: Number(e.target.value) }))}
+      />
+      <span className="text-caption text-fg-muted">{t(`adminx.limits.${key}Hint`, { min, max })}</span>
+    </label>
+  );
+  const save = async () => {
+    try {
+      const st = await api<ServerSettings>("/api/admin/settings", { method: "PUT", json: v });
+      queryClient.setQueryData(["admin", "settings"], st);
+      queryClient.invalidateQueries({ queryKey: ["settings"] });
+      setDraft({});
+      toast(t("adminx.limits.saved"), "success");
+    } catch (e) {
+      toast((e as Error).message, "error");
+    }
+  };
+  return (
+    <Card title={t("adminx.limits.title")} icon="radio" tip={t("adminx.limits.tip")}>
+      {field("autoplayTarget", 5, 50)}
+      {field("autoplayDownloads", 0, 20)}
+      {field("autoDlPerRun", 1, 50)}
+      {field("playlistMax", 1, 1000)}
+      <div className="flex justify-end">
+        <Button variant="primary" disabled={Object.keys(draft).length === 0} onClick={save}>
+          {t("common.save")}
+        </Button>
+      </div>
+    </Card>
+  );
+}
+
 type LogRec = { seq: number; time: number; level: string; msg: string; attrs?: Record<string, string> };
 const levelColor: Record<string, string> = { DEBUG: "text-fg-subtle", INFO: "text-fg-muted", WARN: "text-warning", ERROR: "text-danger" };
 

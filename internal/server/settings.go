@@ -10,10 +10,12 @@ import (
 
 // Settings are one user's preferences.
 type Settings struct {
-	CrossfadeSec float64 `json:"crossfadeSec"` // 0–12
-	GaplessAlbum bool    `json:"gaplessAlbum"` // no crossfade between consecutive tracks of one album
-	Normalize    bool    `json:"normalize"`    // apply per-track gain
-	Theme        string  `json:"theme"`        // dark | light | system
+	// Limits set by the admin, filled in on read (never stored here).
+	Limits       *PlayLimits `json:"limits,omitempty"`
+	CrossfadeSec float64     `json:"crossfadeSec"` // 0–12
+	GaplessAlbum bool        `json:"gaplessAlbum"` // no crossfade between consecutive tracks of one album
+	Normalize    bool        `json:"normalize"`    // apply per-track gain
+	Theme        string      `json:"theme"`        // dark | light | system
 	// Accent colour: one of 12 hues (accentNames) or "song" (taken from the cover).
 	Accent string `json:"accent"`
 	// Music effect: Now Playing / lyrics background pulses with the bass.
@@ -86,7 +88,15 @@ func (s *Server) loadSettings(uid string) Settings {
 }
 
 func (s *Server) handleGetSettings(w http.ResponseWriter, r *http.Request) {
-	writeJSON(w, http.StatusOK, s.loadSettings(userOf(r).ID))
+	writeJSON(w, http.StatusOK, s.settingsView(userOf(r).ID))
+}
+
+// settingsView: the user's settings plus the admin's limits (read-only).
+func (s *Server) settingsView(uid string) Settings {
+	st := s.loadSettings(uid)
+	srv := s.serverSettings()
+	st.Limits = &PlayLimits{AutoplayTarget: srv.AutoplayTarget, AutoplayDownloads: srv.AutoplayDownloads}
+	return st
 }
 
 func (s *Server) handlePutSettings(w http.ResponseWriter, r *http.Request) {
@@ -97,11 +107,13 @@ func (s *Server) handlePutSettings(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	st.sanitize()
+	st.Limits = nil // admin's, not stored per user
 	b, _ := json.Marshal(st)
 	if _, err := s.db.Exec(`UPDATE users SET settings_json = ? WHERE id = ?`, string(b), uid); err != nil {
 		s.internalError(w, r, err)
 		return
 	}
+	st = s.settingsView(uid)
 	s.hub.Publish(uid, "settings", st)
 	if st.AutoDownload && !prev.AutoDownload {
 		s.autodl.kickNow(uid) // start right away when switched on
@@ -117,6 +129,24 @@ type ServerSettings struct {
 	// after "Listening to") and where users download the desktop agent.
 	DiscordAppID string `json:"discordAppId"`
 	AgentURL     string `json:"agentUrl"`
+	// Suggestions and downloads (admin → "Gợi ý và tải").
+	AutoplayTarget    int `json:"autoplayTarget"`    // songs autoplay keeps queued (5–50, 10)
+	AutoplayDownloads int `json:"autoplayDownloads"` // new songs autoplay downloads per top-up (0–20, 6)
+	AutoDLPerRun      int `json:"autoDlPerRun"`      // songs auto-download fetches per run (1–50, 10)
+	PlaylistMax       int `json:"playlistMax"`       // songs taken from one playlist / album link (1–1000, 200)
+}
+
+// PlayLimits: the admin's limits the player needs, sent with the user's settings.
+type PlayLimits struct {
+	AutoplayTarget    int `json:"autoplayTarget"`
+	AutoplayDownloads int `json:"autoplayDownloads"`
+}
+
+func clampDefault(v, lo, hi, def int) int {
+	if v == 0 && lo > 0 {
+		return def
+	}
+	return min(hi, max(lo, v))
 }
 
 func (st *ServerSettings) sanitize() {
@@ -133,6 +163,12 @@ func (st *ServerSettings) sanitize() {
 		st.DiscordAppID = ""
 	}
 	st.AgentURL = strings.TrimSpace(st.AgentURL)
+	st.AutoplayTarget = clampDefault(st.AutoplayTarget, 5, 50, 10)
+	if st.AutoplayDownloads < 0 || st.AutoplayDownloads > 20 {
+		st.AutoplayDownloads = 6
+	}
+	st.AutoDLPerRun = clampDefault(st.AutoDLPerRun, 1, 50, 10)
+	st.PlaylistMax = clampDefault(st.PlaylistMax, 1, 1000, 200)
 	if st.AgentURL != "" && !strings.HasPrefix(st.AgentURL, "https://") && !strings.HasPrefix(st.AgentURL, "http://") {
 		st.AgentURL = ""
 	}
@@ -194,7 +230,7 @@ func (s *Server) handleAgentFile(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) serverSettings() ServerSettings {
-	st := ServerSettings{AudioFormat: "m4a", Bitrate: 192}
+	st := ServerSettings{AudioFormat: "m4a", Bitrate: 192, AutoplayDownloads: 6}
 	var raw string
 	if err := s.db.QueryRow(`SELECT value_json FROM settings WHERE key = 'server'`).Scan(&raw); err == nil {
 		json.Unmarshal([]byte(raw), &st)

@@ -24,5 +24,18 @@
     "pause": "Tạm dừng",
     "resume": "Tiếp tục",
     "empty": "Chưa có dòng log nào khớp."
+  },
+  "limits": {
+    "title": "Gợi ý và tải",
+    "tip": "Áp dụng cho mọi người dùng.",
+    "saved": "Đã lưu",
+    "autoplayTarget": "Số bài tự động gợi ý giữ trong danh sách phát",
+    "autoplayTargetHint": "Khi sắp hết, danh sách phát được thêm cho đủ số này ({min}–{max}, mặc định 10).",
+    "autoplayDownloads": "Số bài mới tự tải mỗi lần gợi ý",
+    "autoplayDownloadsHint": "Chế độ gợi ý “mở rộng”: tải bài chưa có về để chen vào ({min}–{max}, 0 = không tải, mặc định 6).",
+    "autoDlPerRun": "Số bài “Tự động tải nhạc” mỗi lượt",
+    "autoDlPerRunHint": "Mỗi 6 giờ, trong giới hạn dung lượng của từng người ({min}–{max}, mặc định 10).",
+    "playlistMax": "Số bài tối đa mỗi link playlist / album",
+    "playlistMaxHint": "Phần còn lại của playlist dài sẽ bị bỏ qua ({min}–{max}, mặc định 200)."
   }
 }

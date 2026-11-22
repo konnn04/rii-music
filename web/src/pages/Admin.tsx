@@ -12,7 +12,7 @@ import { Icon, type IconName } from "@/components/ui/Icon";
 import { Cover } from "@/components/ui/Cover";
 import { Empty, ErrorState, Spinner } from "@/components/ui/misc";
 import { toast } from "@/components/ui/Toast";
-import { BrandingCard, DiscordCard, LogsPanel } from "./AdminExtra";
+import { BrandingCard, DiscordCard, LimitsCard, LogsPanel } from "./AdminExtra";
 
 type UsersResp = { users: AdminUser[]; defaultStorageMb: number; mailConfigured: boolean };
 type System = {
@@ -655,6 +655,7 @@ function SystemTab() {
 
       <BrandingCard />
       <DiscordCard />
+      <LimitsCard />
       <LogsPanel />
 
       <section className="rounded-card bg-surface-1 p-4 md:col-span-2">

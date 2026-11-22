@@ -530,8 +530,11 @@ func (d *Downloader) expandPlaylist(ctx context.Context, j *Job) error {
 	if err != nil {
 		return err
 	}
-	n := 0
+	n, max := 0, d.s.serverSettings().PlaylistMax
 	for _, e := range res.Entries {
+		if n >= max {
+			break // admin's limit per playlist / album link
+		}
 		if !videoIDRe.MatchString(e.ID) || e.Title == "[Private video]" || e.Title == "[Deleted video]" {
 			continue
 		}

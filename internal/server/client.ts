@@ -84,6 +84,14 @@ export class RiiMusic {
   like(id: string, liked = true) {
     return this.request(liked ? "PUT" : "DELETE", `/api/likes/${id}`);
   }
+  /** A YouTube video's title, artist, duration and format, for streaming without downloading. */
+  streamInfo(videoId: string) {
+    return this.request<{ videoId: string; title: string; artist: string; durationMs: number; mime: string; streamUrl: string; libraryTrack: string }>("GET", `/api/stream/${videoId}/info`);
+  }
+  /** URL of the audio, proxied by the server (send the same Authorization header; Range works). */
+  streamUrl(videoId: string) {
+    return `${this.base}/api/stream/${videoId}`;
+  }
   follows() {
     return this.request("GET", "/api/follows");
   }

@@ -99,5 +99,22 @@
     "refreshing": "Đang làm mới…",
     "reloadPage": "Kéo để tải lại toàn bộ",
     "releaseReload": "Thả để tải lại toàn bộ"
+  },
+  "menu": {
+    "play": "Phát",
+    "shuffle": "Phát ngẫu nhiên",
+    "playNext": "Phát tiếp theo",
+    "addToQueue": "Thêm vào hàng đợi",
+    "addToPlaylist": "Thêm vào playlist",
+    "open": "Mở",
+    "addedNext": {
+      "one": "Đã thêm {n} bài vào sau bài đang phát",
+      "other": "Đã thêm {n} bài vào sau bài đang phát"
+    },
+    "addedQueue": {
+      "one": "Đã thêm {n} bài vào cuối danh sách phát",
+      "other": "Đã thêm {n} bài vào cuối danh sách phát"
+    },
+    "empty": "Chưa có bài nào"
   }
 }

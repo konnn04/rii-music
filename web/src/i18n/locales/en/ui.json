@@ -99,5 +99,22 @@
     "refreshing": "Refreshing…",
     "reloadPage": "Pull to reload the app",
     "releaseReload": "Release to reload the app"
+  },
+  "menu": {
+    "play": "Play",
+    "shuffle": "Shuffle play",
+    "playNext": "Play next",
+    "addToQueue": "Add to queue",
+    "addToPlaylist": "Add to playlist",
+    "open": "Open",
+    "addedNext": {
+      "one": "Added {n} song to play next",
+      "other": "Added {n} songs to play next"
+    },
+    "addedQueue": {
+      "one": "Added {n} song to the end of the queue",
+      "other": "Added {n} songs to the end of the queue"
+    },
+    "empty": "No songs yet"
   }
 }

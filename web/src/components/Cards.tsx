@@ -1,12 +1,14 @@
-import type { ReactNode } from "react";
-import { Link } from "@tanstack/react-router";
-import type { Album, Artist, Mix, Playlist, Track } from "@/lib/api";
+import type { HTMLAttributes, ReactNode, Ref, RefAttributes } from "react";
+import { Link, useNavigate } from "@tanstack/react-router";
+import { api, type Album, type Artist, type Mix, type Playlist, type Track } from "@/lib/api";
 import { usePlayback, usePlayer, type Source } from "@/player/store";
 import { engine } from "@/player/engine";
 import { Collage, Cover } from "./ui/Cover";
 import { Icon } from "./ui/Icon";
 import { t, tn, tsv } from "@/i18n";
 import { ArtistLinks } from "@/components/ArtistLinks";
+import { TrackContextMenu } from "./TrackMenu";
+import { CollectionContextMenu } from "./CollectionMenu";
 
 /** Horizontal scroller on mobile, wrapping grid from md up. */
 export function Shelf({ children, grid = true }: { children: ReactNode; grid?: boolean }) {
@@ -21,16 +23,39 @@ export function Shelf({ children, grid = true }: { children: ReactNode; grid?: b
   );
 }
 
-function CardFrame({ children, to, params, label }: { children: ReactNode; to?: string; params?: Record<string, string>; label: string }) {
-  const cls = "group focus-ring flex w-[140px] shrink-0 snap-start flex-col gap-2 rounded-card p-0 md:w-auto md:p-2 md:-m-2 md:hover:bg-surface-1 transition-colors duration-fast";
+function CardFrame({
+  children,
+  to,
+  params,
+  label,
+  className,
+  ...rest
+}: {
+  children: ReactNode;
+  to?: string;
+  params?: Record<string, string>;
+  label: string;
+} & Omit<HTMLAttributes<HTMLElement>, "children"> & { ref?: Ref<HTMLElement> }) {
+  const base = "cv-card group focus-ring flex w-[140px] shrink-0 snap-start flex-col gap-2 rounded-card p-0 md:w-auto md:p-2 md:-m-2 md:hover:bg-surface-1 transition-colors duration-fast";
+  const cls = className ? `${base} ${className}` : base;
   if (to) {
     return (
-      <Link to={to} params={params as never} className={cls} aria-label={label}>
+      <Link
+        {...(rest as HTMLAttributes<HTMLAnchorElement> & RefAttributes<HTMLAnchorElement>)}
+        to={to}
+        params={params as never}
+        className={cls}
+        aria-label={label}
+      >
         {children}
       </Link>
     );
   }
-  return <div className={cls}>{children}</div>;
+  return (
+    <div {...(rest as HTMLAttributes<HTMLDivElement> & RefAttributes<HTMLDivElement>)} className={cls}>
+      {children}
+    </div>
+  );
 }
 
 function HoverPlay({ onPlay, playing }: { onPlay: () => void; playing?: boolean }) {
@@ -61,62 +86,94 @@ export function TrackCard({ track, tracks, index, source }: { track: Track; trac
   const playing = usePlayback((s) => s.isPlaying) && isCur;
   const play = () => (isCur ? engine.toggle() : usePlayer.getState().playList(tracks, index, source, { shuffle: false, oneLang: true }));
   return (
-    <div className="group flex w-[140px] shrink-0 snap-start flex-col gap-2 md:-m-2 md:w-auto md:rounded-card md:p-2 md:hover:bg-surface-1">
-      <button className="focus-ring relative rounded-card text-left" onClick={play} aria-label={t("ui.card.playAria", { title: track.title })}>
-        <Cover trackId={track.id} hasCover={track.hasCover} size="100%" rounded="rounded-card" className="aspect-square !h-auto" />
-        <HoverPlay onPlay={play} playing={playing} />
-      </button>
-      <div className="min-w-0">
-        <div className={`truncate text-label ${isCur ? "text-accent" : ""}`}>{track.title}</div>
-        <ArtistLinks artist={track.artist} className="block truncate text-body-sm text-fg-muted" />
+    <TrackContextMenu track={track}>
+      <div className="group flex w-[140px] shrink-0 snap-start flex-col gap-2 md:-m-2 md:w-auto md:rounded-card md:p-2 md:hover:bg-surface-1">
+        <button className="focus-ring relative rounded-card text-left" onClick={play} aria-label={t("ui.card.playAria", { title: track.title })}>
+          <Cover trackId={track.id} hasCover={track.hasCover} size="100%" rounded="rounded-card" className="aspect-square !h-auto" />
+          <HoverPlay onPlay={play} playing={playing} />
+        </button>
+        <div className="min-w-0">
+          <div className={`truncate text-label ${isCur ? "text-accent" : ""}`}>{track.title}</div>
+          <ArtistLinks artist={track.artist} className="block truncate text-body-sm text-fg-muted" />
+        </div>
       </div>
-    </div>
+    </TrackContextMenu>
   );
 }
 
 export function AlbumCard({ album }: { album: Album }) {
+  const navigate = useNavigate();
+  const source: Source = { type: "album", id: `${album.artist}\u0000${album.name}`, name: album.name };
+  const load = () =>
+    api<{ name: string; artist: string; tracks: Track[] }>(
+      `/api/album?artist=${encodeURIComponent(album.artist)}&name=${encodeURIComponent(album.name)}`,
+    ).then((r) => r.tracks);
   return (
-    <CardFrame to="/album/$artist/$name" params={{ artist: album.artist, name: album.name }} label={t("ui.card.albumAria", { name: album.name })}>
-      <Cover trackId={album.coverTrackId} hasCover={!!album.coverTrackId} size="100%" rounded="rounded-card" className="aspect-square !h-auto" />
-      <div className="min-w-0">
-        <div className="truncate text-label">{album.name}</div>
-        <div className="truncate text-body-sm text-fg-muted">{album.artist || t("ui.card.variousArtists")}</div>
-      </div>
-    </CardFrame>
+    <CollectionContextMenu
+      load={load}
+      source={source}
+      onOpen={() => navigate({ to: "/album/$artist/$name", params: { artist: album.artist, name: album.name } })}
+    >
+      <CardFrame to="/album/$artist/$name" params={{ artist: album.artist, name: album.name }} label={t("ui.card.albumAria", { name: album.name })}>
+        <Cover trackId={album.coverTrackId} hasCover={!!album.coverTrackId} size="100%" rounded="rounded-card" className="aspect-square !h-auto" />
+        <div className="min-w-0">
+          <div className="truncate text-label">{album.name}</div>
+          <div className="truncate text-body-sm text-fg-muted">{album.artist || t("ui.card.variousArtists")}</div>
+        </div>
+      </CardFrame>
+    </CollectionContextMenu>
   );
 }
 
 export function ArtistCard({ artist }: { artist: Pick<Artist, "name" | "coverTrackId"> & { trackCount?: number } }) {
+  const navigate = useNavigate();
+  const source: Source = { type: "artist", id: artist.name, name: artist.name };
+  const load = () => api<{ name: string; tracks: Track[] }>(`/api/artist?name=${encodeURIComponent(artist.name)}`).then((r) => r.tracks);
   return (
-    <CardFrame to="/artist/$name" params={{ name: artist.name }} label={t("ui.card.artistAria", { name: artist.name })}>
-      <Cover trackId={artist.coverTrackId} hasCover={!!artist.coverTrackId} size="100%" rounded="rounded-full" className="aspect-square !h-auto" />
-      <div className="min-w-0 text-center">
-        <div className="truncate text-label">{artist.name}</div>
-        <div className="truncate text-body-sm text-fg-muted">{artist.trackCount != null ? tn("common.songs", artist.trackCount) : t("ui.card.artistLabel")}</div>
-      </div>
-    </CardFrame>
+    <CollectionContextMenu
+      load={load}
+      source={source}
+      onOpen={() => navigate({ to: "/artist/$name", params: { name: artist.name } })}
+    >
+      <CardFrame to="/artist/$name" params={{ name: artist.name }} label={t("ui.card.artistAria", { name: artist.name })}>
+        <Cover trackId={artist.coverTrackId} hasCover={!!artist.coverTrackId} size="100%" rounded="rounded-full" className="aspect-square !h-auto" />
+        <div className="min-w-0 text-center">
+          <div className="truncate text-label">{artist.name}</div>
+          <div className="truncate text-body-sm text-fg-muted">{artist.trackCount != null ? tn("common.songs", artist.trackCount) : t("ui.card.artistLabel")}</div>
+        </div>
+      </CardFrame>
+    </CollectionContextMenu>
   );
 }
 
 export function PlaylistCard({ p }: { p: Playlist }) {
+  const navigate = useNavigate();
   const displayName = tsv(p.name);
+  const source: Source = { type: "playlist", id: p.id, name: displayName };
+  const load = () => api<{ playlist: Playlist; tracks: Track[] }>(`/api/playlists/${encodeURIComponent(p.id)}`).then((r) => r.tracks);
   return (
-    <CardFrame to="/playlist/$id" params={{ id: p.id }} label={t("ui.card.playlistAria", { name: displayName })}>
-      {p.id === "liked" ? (
-        <div className="flex aspect-square w-full items-center justify-center rounded-card bg-linear-to-br from-accent-soft to-surface-3 text-accent">
-          <Icon name="heart-filled" size={48} />
+    <CollectionContextMenu
+      load={load}
+      source={source}
+      onOpen={() => navigate({ to: "/playlist/$id", params: { id: p.id } })}
+    >
+      <CardFrame to="/playlist/$id" params={{ id: p.id }} label={t("ui.card.playlistAria", { name: displayName })}>
+        {p.id === "liked" ? (
+          <div className="flex aspect-square w-full items-center justify-center rounded-card bg-linear-to-br from-accent-soft to-surface-3 text-accent">
+            <Icon name="heart-filled" size={48} />
+          </div>
+        ) : (
+          <Collage ids={p.coverTrackIds} size="100%" className="aspect-square !h-auto" />
+        )}
+        <div className="min-w-0">
+          <div className="truncate text-label">{displayName}</div>
+          <div className="truncate text-body-sm text-fg-muted">
+            {p.kind === "smart" ? `${t("common.nav.smart")} · ` : ""}
+            {tn("common.songs", p.trackCount)}
+          </div>
         </div>
-      ) : (
-        <Collage ids={p.coverTrackIds} size="100%" className="aspect-square !h-auto" />
-      )}
-      <div className="min-w-0">
-        <div className="truncate text-label">{displayName}</div>
-        <div className="truncate text-body-sm text-fg-muted">
-          {p.kind === "smart" ? `${t("common.nav.smart")} · ` : ""}
-          {tn("common.songs", p.trackCount)}
-        </div>
-      </div>
-    </CardFrame>
+      </CardFrame>
+    </CollectionContextMenu>
   );
 }
 
@@ -130,20 +187,22 @@ export function MixCard({ mix, i }: { mix: Mix; i: number }) {
   const play = () => (playing ? engine.toggle() : usePlayer.getState().playList(mix.tracks, 0, src, { shuffle: false }));
   const hue = mixHues[i % mixHues.length];
   return (
-    <div className="group flex w-[160px] shrink-0 snap-start flex-col gap-2 md:-m-2 md:w-auto md:rounded-card md:p-2 md:hover:bg-surface-1">
-      <button className="focus-ring relative rounded-card" onClick={play} aria-label={t("ui.card.playAria", { title: mixName })}>
-        <Collage ids={mix.tracks.filter((tr) => tr.hasCover).map((tr) => tr.id)} size="100%" className="aspect-square !h-auto" />
-        <span
-          className="absolute left-2 top-2 rounded-xs px-2 py-0.5 text-overline uppercase"
-          style={{ background: `hsl(${hue} 60% 74%)`, color: "#0E0F12" }}
-        >
-          {mixName}
-        </span>
-        <HoverPlay onPlay={play} playing={playing} />
-      </button>
-      <div className="min-w-0">
-        <div className="line-clamp-2 text-body-sm text-fg-muted">{mixReason}</div>
+    <CollectionContextMenu load={() => Promise.resolve(mix.tracks)} source={src}>
+      <div className="group flex w-[160px] shrink-0 snap-start flex-col gap-2 md:-m-2 md:w-auto md:rounded-card md:p-2 md:hover:bg-surface-1">
+        <button className="focus-ring relative rounded-card" onClick={play} aria-label={t("ui.card.playAria", { title: mixName })}>
+          <Collage ids={mix.tracks.filter((tr) => tr.hasCover).map((tr) => tr.id)} size="100%" className="aspect-square !h-auto" />
+          <span
+            className="absolute left-2 top-2 rounded-xs px-2 py-0.5 text-overline uppercase"
+            style={{ background: `hsl(${hue} 60% 74%)`, color: "#0E0F12" }}
+          >
+            {mixName}
+          </span>
+          <HoverPlay onPlay={play} playing={playing} />
+        </button>
+        <div className="min-w-0">
+          <div className="line-clamp-2 text-body-sm text-fg-muted">{mixReason}</div>
+        </div>
       </div>
-    </div>
+    </CollectionContextMenu>
   );
 }

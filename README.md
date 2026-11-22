@@ -19,6 +19,12 @@ One Go binary serves the web app and the API; data lives in PostgreSQL, music fi
 
 See [docs/features.md](docs/features.md) for the full list.
 
+
+
+https://github.com/user-attachments/assets/0675e293-3449-4528-9492-48c28b9be3c9
+
+
+
 ## Quick start
 
 ```bash

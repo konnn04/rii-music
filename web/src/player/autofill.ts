@@ -6,15 +6,19 @@
 //    artists, from /api/recs/autoplay) are downloaded in the background and
 //    slotted into the queue as soon as they are ready, a few tracks ahead.
 
-import { api, type Job, type Track } from "@/lib/api";
+import { api, type Job, type Settings, type Track } from "@/lib/api";
+import { queryClient } from "@/lib/queries";
 import { usePlayback, usePlayer } from "./store";
 import { isOffline } from "./net";
 import { roomRole } from "./roomFlag";
 
 const LOW_WATER = 5; // refill when fewer upcoming tracks than this
-const TARGET = 10; // each refill tops the queue up to at least this many
 const EXT_MIN = 2;
-const EXT_MAX = 6; // new songs downloaded when the library has too few matches
+// The admin sets both (Quản trị → Gợi ý và tải); these are the defaults.
+const limits = () => {
+  const l = queryClient.getQueryData<Settings>(["settings"])?.limits;
+  return { target: l?.autoplayTarget ?? 10, extMax: l?.autoplayDownloads ?? 6 };
+};
 
 let inflight = false;
 let lastSeed = ""; // one refill per seed entry, so an empty answer isn't retried in a loop
@@ -42,7 +46,9 @@ function upcomingCount() {
 async function refill() {
   const s = usePlayer.getState();
   const cur = s.current;
-  if (s.autoplayMode === "off" || !cur || s.repeat !== "off" || inflight || lastSeed === cur.uid) return;
+  // Repeat one keeps the queue filling (it only loops the current song); repeat all
+  // loops the queue itself, so nothing is added then.
+  if (s.autoplayMode === "off" || !cur || s.repeat === "all" || inflight || lastSeed === cur.uid) return;
   if (upcomingCount() >= LOW_WATER) return;
   if (isOffline()) return; // no radio or downloads without the server
   if (roomRole() === "listener") return; // the room decides what plays
@@ -57,12 +63,13 @@ async function refill() {
     // out songs finished in the last 3 hours).
     const skip = new Set([...now.context, ...now.manual].map((e) => e.track.id));
     skip.add(cur.track.id);
-    const want = Math.max(TARGET - upcomingCount(), LOW_WATER);
+    const { target, extMax } = limits();
+    const want = Math.max(target - upcomingCount(), LOW_WATER);
     const pick = radio.tracks.filter((t) => !skip.has(t.id)).slice(0, want);
     if (pick.length) now.appendAuto(pick);
 
     // Free mode: download new songs too, more of them when the library is short.
-    const extN = Math.min(EXT_MAX, Math.max(EXT_MIN, want - pick.length)) - pending.size;
+    const extN = Math.min(extMax, Math.max(Math.min(EXT_MIN, extMax), want - pick.length)) - pending.size;
     const ext =
       s.autoplayMode === "free" && extN > 0
         ? await api<{ external: ExtSuggestion[] }>(`/api/recs/autoplay?seed=${encodeURIComponent(cur.track.id)}&ext=${extN}`).catch(() => ({ external: [] as ExtSuggestion[] }))

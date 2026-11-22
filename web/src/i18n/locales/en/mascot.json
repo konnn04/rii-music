@@ -30,5 +30,31 @@
   "saved": "Saved “{name}”",
   "howLongQ": "How long have I listened?",
   "howLongA": "{today} minutes today, {week} minutes in the last 7 days.",
-  "newMusic": "Find new music"
+  "newMusic": "Find new music",
+  "streak": {
+    "days": {
+      "one": "{n} day streak",
+      "other": "{n} days streak"
+    },
+    "atRisk": "Listen {left} more min to keep your streak!",
+    "start": "Start a listening streak today!",
+    "ask": "My listening streak?",
+    "loading": "Let me check my notebook…",
+    "answer": "You're on a {current}-day streak (best: {best} days). I'm currently {stage}!",
+    "nextStage": "{days} more days until I evolve into {next}!",
+    "maxStage": "I've reached my final form — you're amazing!",
+    "chartLabel": "Last 7 days: reached the {goal}-minute goal on {met} of {days} days, {total} minutes total.",
+    "goal": "{n}m goal",
+    "minUnit": "min"
+  },
+  "stage": {
+    "0": "Vanilla Bean",
+    "1": "Little Vani",
+    "2": "Music Buff Vani",
+    "3": "DJ Vani",
+    "4": "Star Vani",
+    "5": "Legendary Vani",
+    "6": "Cosmic Vani",
+    "up": "Vani grew into {name}!"
+  }
 }

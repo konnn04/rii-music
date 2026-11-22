@@ -30,5 +30,31 @@
   "saved": "Đã lưu “{name}”",
   "howLongQ": "Mình nghe bao lâu rồi?",
   "howLongA": "Hôm nay {today} phút, 7 ngày qua {week} phút.",
-  "newMusic": "Tìm nhạc mới"
+  "newMusic": "Tìm nhạc mới",
+  "streak": {
+    "days": {
+      "one": "{n} ngày liên tiếp",
+      "other": "{n} ngày liên tiếp"
+    },
+    "atRisk": "Nghe thêm {left} phút để giữ chuỗi nhé!",
+    "start": "Bắt đầu chuỗi nghe hôm nay nhé!",
+    "ask": "Chuỗi nghe của mình?",
+    "loading": "Đợi mình xem sổ tay chút nhé…",
+    "answer": "Bạn đang giữ chuỗi {current} ngày (kỷ lục {best} ngày). Mình đang ở dạng {stage} nè!",
+    "nextStage": "Còn {days} ngày nữa là mình tiến hoá thành {next} đó!",
+    "maxStage": "Mình đã đạt dạng tối thượng rồi, đỉnh quá đi!",
+    "chartLabel": "Biểu đồ 7 ngày qua: đạt mục tiêu {goal} phút trong {met}/{days} ngày, tổng {total} phút.",
+    "goal": "Mục tiêu {n} phút",
+    "minUnit": "phút"
+  },
+  "stage": {
+    "0": "Hạt vani",
+    "1": "Vani nhí",
+    "2": "Vani sành nhạc",
+    "3": "Vani DJ",
+    "4": "Vani ngôi sao",
+    "5": "Vani huyền thoại",
+    "6": "Vani vũ trụ",
+    "up": "Vani đã lớn thành {name}!"
+  }
 }

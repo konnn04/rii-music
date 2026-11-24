@@ -1,13 +1,11 @@
 name: Desktop
 
-# Every push / merge to main builds and publishes the desktop app (like the
-# server's release.yml); the desktop branch and pull requests only build.
+# Every push / merge to main (or a desktop-v* tag) builds and publishes the
+# desktop app (like the server's release.yml). PRs only run CI / test.
 on:
   push:
-    branches: [main, desktop]
+    branches: [main]
     tags: ['desktop-v*']
-    paths-ignore: ['docs/**', '**/*.md']
-  pull_request:
     paths-ignore: ['docs/**', '**/*.md']
   workflow_dispatch:
 
@@ -53,7 +51,7 @@ jobs:
             goarch: arm64
             ext: ""
             artifact_name: desktop-macos-arm64
-          - os: macos-13
+          - os: macos-15-intel
             target: x86_64-apple-darwin
             goos: darwin
             goarch: amd64

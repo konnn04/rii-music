@@ -24,7 +24,7 @@ ARG VERSION=dev
 WORKDIR /src
 COPY go.mod go.sum ./
 RUN go mod download
-COPY main.go ./
+COPY main.go desktop.go ./
 COPY internal/ ./internal/
 COPY web/embed.go ./web/
 COPY --from=web /src/web/dist ./web/dist

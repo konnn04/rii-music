@@ -1,5 +1,7 @@
 # Installation
 
+Just want to listen on one computer? The [desktop app](desktop.md) needs no server: install it and choose "Nghe trên máy này".
+
 ## Docker (recommended)
 
 Needs Docker with Compose.

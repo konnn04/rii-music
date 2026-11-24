@@ -35,5 +35,8 @@
   "closeConfirm": "Close this room? Everyone will be disconnected.",
   "leave": "Leave room",
   "inRoom": "Listening together · {code}",
-  "open": "Open"
+  "open": "Open",
+  "notify": {
+    "joined": "{name} joined the room"
+  }
 }

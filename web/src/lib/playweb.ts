@@ -12,7 +12,7 @@ import { t } from "@/i18n";
 /** video id → job id for songs waiting to play. */
 export const usePendingPlay = create<{ byVideo: Record<string, string> }>(() => ({ byVideo: {} }));
 
-async function playTrackId(id: string) {
+export async function playTrackId(id: string) {
   const tr = await api<Track>(`/api/tracks/${id}`);
   usePlayer.getState().playList([tr], 0, { type: "search", name: tr.title });
 }

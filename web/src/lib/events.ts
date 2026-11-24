@@ -9,10 +9,12 @@ import { onJobForPlay } from "./playweb";
 import { onJobForList } from "@/player/playlistFill";
 import { onRemoteCommand, onRemotePlayback, type RemoteSession } from "@/player/sync";
 import { onRoomEvent, type RoomEvent } from "@/player/room";
+import { isDesktop, notifyDesktop } from "./desktop";
 import { t, tsv } from "@/i18n";
 
 let es: EventSource | null = null;
 let libTimer: number | null = null;
+const notifiedJobs = new Set<string>();
 
 export function connectEvents() {
   if (es) return;
@@ -28,6 +30,18 @@ export function connectEvents() {
     // No "Đã tải xong" toasts: progress is live on the Tải về page and in search
     // rows. Only errors of downloads you started by hand are worth a toast.
     if (job.status === "error" && job.origin === "user" && !isAutoplayJob(job.id)) toast(t("ui.toast.downloadError", { target: job.title ? tsv(job.title) : job.url }), "error");
+    if (isDesktop() && document.hidden && job.origin === "user" && !isAutoplayJob(job.id) && (job.status === "done" || job.status === "error")) {
+      const key = `${job.id}:${job.status}`;
+      if (!notifiedJobs.has(key)) {
+        if (notifiedJobs.size >= 200) {
+          const oldest = notifiedJobs.values().next().value;
+          if (oldest !== undefined) notifiedJobs.delete(oldest);
+        }
+        notifiedJobs.add(key);
+        const title = t(job.status === "done" ? "ui.notify.downloadDoneTitle" : "ui.notify.downloadErrorTitle");
+        void notifyDesktop(title, job.title ? tsv(job.title) : job.url);
+      }
+    }
     onJobEvent(job);
     onJobForPlay(job);
     onJobForList(job); // "Phát tất cả" on a YouTube Music album / playlist

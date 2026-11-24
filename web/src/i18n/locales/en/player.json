@@ -108,5 +108,7 @@
     },
     "off": "Sleep timer off",
     "cancel": "Turn off timer"
-  }
+  },
+  "miniPlayer": "Mini player",
+  "miniOpenApp": "Open app"
 }

@@ -14,6 +14,7 @@
 import { create } from "zustand";
 import { api, ApiError, type Track } from "@/lib/api";
 import { queryClient } from "@/lib/queries";
+import { isDesktop, notifyDesktop } from "@/lib/desktop";
 import { toast } from "@/components/ui/Toast";
 import { t } from "@/i18n";
 import { usePlayback, usePlayer } from "./store";
@@ -114,6 +115,15 @@ export function onRoomEvent(ev: RoomEvent) {
     return;
   }
   if (!ev.room || (cur && ev.room.code !== cur.code)) return;
+  if (ev.type === "members" && cur && isDesktop() && document.hidden) {
+    const prevIds = new Set(cur.members.map((m) => m.userId));
+    const me = myId();
+    for (const m of ev.room.members) {
+      if (!prevIds.has(m.userId) && m.userId !== me) {
+        void notifyDesktop(t("room.title"), t("room.notify.joined", { name: m.name }));
+      }
+    }
+  }
   const wasRole = myRole();
   setRoom(ev.room, ev.tracks, ev.now);
   const role = myRole();

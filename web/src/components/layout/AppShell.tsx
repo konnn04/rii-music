@@ -27,6 +27,7 @@ import { clearStored, initOffline, useOffline } from "@/lib/offline";
 import { useFollows } from "@/lib/follows";
 import { useNet } from "@/player/net";
 import { initRoom } from "@/player/room";
+import { handleDeepLink } from "@/lib/deeplink";
 import { RoomButton, RoomStrip } from "@/components/RoomDialog";
 import { FollowedRow } from "@/components/Follow";
 import { useAppMode } from "@/lib/desktop";
@@ -59,7 +60,8 @@ export function AppShell() {
     engine.init();
     startSync(); // one player at a time across tabs and devices
     void initOffline();
-    void initRoom(); // back into a Nghe chung room after a reload
+    // Back into a Nghe chung room after a reload, then riimusic:// links (?room= / ?track=).
+    void initRoom().finally(handleDeepLink);
     connectEvents();
   }, []);
   useEffect(() => {

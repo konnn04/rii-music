@@ -23,6 +23,7 @@ impl TrayState {
 
 pub fn init_tray(app: &AppHandle, is_local_mode: bool) -> tauri::Result<()> {
     let item_open = MenuItem::with_id(app, "open", "Mở RiiMusic", true, None::<&str>)?;
+    let item_mini = MenuItem::with_id(app, "mini", "Trình phát mini", true, None::<&str>)?;
     let sep1 = PredefinedMenuItem::separator(app)?;
     let item_toggle = MenuItem::with_id(app, "toggle", "Phát / Tạm dừng", true, None::<&str>)?;
     let item_prev = MenuItem::with_id(app, "prev", "Bài trước", true, None::<&str>)?;
@@ -42,6 +43,7 @@ pub fn init_tray(app: &AppHandle, is_local_mode: bool) -> tauri::Result<()> {
         app,
         &[
             &item_open,
+            &item_mini,
             &sep1,
             &item_toggle,
             &item_prev,
@@ -65,6 +67,11 @@ pub fn init_tray(app: &AppHandle, is_local_mode: bool) -> tauri::Result<()> {
         .show_menu_on_left_click(false)
         .on_menu_event(|app, event| match event.id().as_ref() {
             "open" => show_main_window(app),
+            "mini" => {
+                if let Err(e) = crate::toggle_mini(app) {
+                    dlog!("mini player toggle failed: {e}");
+                }
+            }
             "toggle" => dispatch_player_cmd(app, "toggle"),
             "prev" => dispatch_player_cmd(app, "prev"),
             "next" => dispatch_player_cmd(app, "next"),
@@ -168,6 +175,11 @@ pub fn handle_switch_mode(app: &AppHandle) {
     }
     update_local_mode(app, false);
     update_tooltip(app, "", "", false);
+    #[cfg(windows)]
+    crate::thumbbar::update_playing(app, false);
+    if let Some(mini) = app.get_webview_window("mini") {
+        let _ = mini.close();
+    }
     // Show the setup screen at once; stop the sidecar off the UI thread (a
     // clean local shutdown takes a few seconds and would freeze the window).
     sidecar::navigate_to_setup(app);

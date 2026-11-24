@@ -23,6 +23,7 @@ Settings come from `.env` (read at start-up, path from `ENV_FILE`) or real envir
 | `YT_COOKIES_PATH` | `$DATA_DIR/cookies.txt` | YouTube cookies, when YouTube asks to confirm you are not a bot |
 | `YTDLP_PATH` | managed | Use an installed yt-dlp instead of the managed nightly build |
 | `YTDLP_GEO_COUNTRY` | | Pretend to be in a country, e.g. `VN` |
+| `YTDLP_MAX_PROCS` | `3` | Maximum concurrent yt-dlp processes |
 | `FORCE_IPV4` | `false` | IPv4 only, for yt-dlp (`--force-ipv4`) and every outbound connection (YouTube Music, LRCLIB, Deezer, SMTP…) |
 | `FFMPEG_PATH` | `ffmpeg` | |
 | `LOG_LEVEL` | `info` | `debug` logs every request |

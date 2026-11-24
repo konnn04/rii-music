@@ -16,12 +16,13 @@ type Config struct {
 	TrustProxy  bool
 	// ForceIPv4 (FORCE_IPV4): outbound connections and yt-dlp use IPv4 only,
 	// for hosts whose IPv6 is broken or blocked by YouTube.
-	ForceIPv4   bool
-	FFmpeg      string
-	MaxJobs     int
-	MaxDuration int // seconds; longer videos are refused
-	DevCORS     string
-	PublicURL   string // https://… used in links inside emails
+	ForceIPv4     bool
+	FFmpeg        string
+	MaxJobs       int
+	YTDLPMaxProcs int
+	MaxDuration   int // seconds; longer videos are refused
+	DevCORS       string
+	PublicURL     string // https://… used in links inside emails
 
 	// First admin, created when the database has no users yet.
 	AdminEmail    string
@@ -56,16 +57,17 @@ func (c Config) Local() bool { return c.Mode == "local" }
 
 func LoadConfig() Config {
 	c := Config{
-		Addr:        listenHost() + ":" + env("PORT", "8080"),
-		DataDir:     env("DATA_DIR", "./data"),
-		DatabaseURL: strings.TrimSpace(os.Getenv("DATABASE_URL")),
-		TrustProxy:  envBool("TRUST_PROXY", false),
-		ForceIPv4:   envBool("FORCE_IPV4", false),
-		FFmpeg:      env("FFMPEG_PATH", "ffmpeg"),
-		MaxJobs:     envInt("DOWNLOAD_CONCURRENCY", 2),
-		MaxDuration: envInt("MAX_DURATION_SEC", 3*60*60),
-		DevCORS:     os.Getenv("DEV_CORS_ORIGIN"),
-		PublicURL:   strings.TrimRight(os.Getenv("PUBLIC_URL"), "/"),
+		Addr:          listenHost() + ":" + env("PORT", "8080"),
+		DataDir:       env("DATA_DIR", "./data"),
+		DatabaseURL:   strings.TrimSpace(os.Getenv("DATABASE_URL")),
+		TrustProxy:    envBool("TRUST_PROXY", false),
+		ForceIPv4:     envBool("FORCE_IPV4", false),
+		FFmpeg:        env("FFMPEG_PATH", "ffmpeg"),
+		MaxJobs:       envInt("DOWNLOAD_CONCURRENCY", 2),
+		YTDLPMaxProcs: envInt("YTDLP_MAX_PROCS", 3),
+		MaxDuration:   envInt("MAX_DURATION_SEC", 3*60*60),
+		DevCORS:       os.Getenv("DEV_CORS_ORIGIN"),
+		PublicURL:     strings.TrimRight(os.Getenv("PUBLIC_URL"), "/"),
 
 		AdminEmail:       strings.TrimSpace(os.Getenv("ADMIN_EMAIL")),
 		AdminPassword:    os.Getenv("ADMIN_PASSWORD"),

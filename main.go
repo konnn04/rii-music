@@ -131,6 +131,7 @@ func run(log *slog.Logger, logBuf *server.LogBuffer) error {
 		RemoteEJS:  os.Getenv("YTDLP_REMOTE_EJS") != "false",
 		GeoCountry: os.Getenv("YTDLP_GEO_COUNTRY"),
 		ForceIPv4:  cfg.ForceIPv4,
+		MaxProcs:   cfg.YTDLPMaxProcs,
 	}, log.With("component", "ytdlp"))
 
 	webFS := web.Dist()

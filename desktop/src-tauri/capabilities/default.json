@@ -4,7 +4,7 @@
   "description": "Default capability for RiiMusic main window and local sidecar origin",
   "windows": ["main", "mini"],
   "remote": {
-    "urls": ["http://127.0.0.1:*"]
+    "urls": ["http://127.0.0.1:*", "http://127.0.0.1:*/*"]
   },
   "permissions": [
     "core:default",

@@ -15,6 +15,8 @@ import { useFx } from "@/player/fx";
 import { COVER_VT, withCoverTransition } from "@/lib/viewTransition";
 import { ctl, openRemoteSheet, useRemoteView, useViewPlaying, useViewTime, useViewTrack } from "@/player/view";
 import { DevicesButton } from "@/components/DevicePicker";
+import { isDesktop, toggleMiniPlayer } from "@/lib/desktop";
+import { toast } from "../ui/Toast";
 
 /** Fixed bottom player for tablet and desktop. */
 export function PlayerBar() {
@@ -110,6 +112,12 @@ function PlayerMore() {
               <Icon name="sliders" size={20} className={fxOn ? "text-accent" : "text-fg-muted"} />
               {t("sound.title")}
             </DropdownMenu.Item>
+            {isDesktop() && (
+              <DropdownMenu.Item className="menu-item" onSelect={() => void toggleMiniPlayer().catch((e: Error) => toast(e.message, "error"))}>
+                <Icon name="mix" size={20} className="text-fg-muted" />
+                {t("player.miniPlayer")}
+              </DropdownMenu.Item>
+            )}
             <DropdownMenu.Sub>
               <DropdownMenu.SubTrigger className="menu-item">
                 <Icon name="moon" size={20} className={sleep.active ? "text-accent" : "text-fg-muted"} />

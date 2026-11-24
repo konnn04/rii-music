@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { api, type Settings } from "@/lib/api";
+import { api, coverUrl, type Settings } from "@/lib/api";
 import { queryClient } from "@/lib/queries";
 import { engine } from "@/player/engine";
 import { usePlayback, usePlayer } from "@/player/store";
@@ -25,6 +25,9 @@ type DesktopSetupState = {
 type TauriGlobal = {
   core?: {
     invoke: <T = unknown>(cmd: string, args?: Record<string, unknown>) => Promise<T>;
+  };
+  event?: {
+    listen: <T = unknown>(event: string, handler: (event: { payload: T }) => void) => Promise<() => void>;
   };
   autostart?: {
     isEnabled: () => Promise<boolean>;
@@ -197,19 +200,21 @@ export function initDesktop(): void {
     const playing = usePlayback.getState().isPlaying;
     const title = track?.title ?? "";
     const artist = track?.artist ?? "";
-    const key = `${title}\0${artist}\0${playing ? 1 : 0}`;
+    const cover = track ? coverUrl(track.id) : "";
+    const key = `${title}\0${artist}\0${cover}\0${playing ? 1 : 0}`;
     if (key === lastKey) return;
     lastKey = key;
     if (timer !== null) window.clearTimeout(timer);
     timer = window.setTimeout(() => {
       timer = null;
-      window.__TAURI__?.core?.invoke("now_playing", { title, artist, playing }).catch(() => {});
+      window.__TAURI__?.core?.invoke("now_playing", { title, artist, playing, cover }).catch(() => {});
     }, 300);
   };
 
   usePlayer.subscribe((s, prev) => {
     if (
       s.current?.uid !== prev.current?.uid ||
+      s.current?.track.id !== prev.current?.track.id ||
       s.current?.track.title !== prev.current?.track.title ||
       s.current?.track.artist !== prev.current?.track.artist
     ) {
@@ -292,6 +297,12 @@ export async function pickDesktopFolder(title: string, defaultPath?: string): Pr
     return picked ?? null;
   }
   return null;
+}
+
+/** Toggle the floating desktop mini player window. */
+export async function toggleMiniPlayer(): Promise<boolean> {
+  if (!isDesktop() || !window.__TAURI__?.core) return false;
+  return window.__TAURI__.core.invoke<boolean>("toggle_mini_player");
 }
 
 export async function openDesktopPath(path: string): Promise<void> {

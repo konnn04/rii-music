@@ -35,5 +35,8 @@
   "closeConfirm": "Đóng phòng nghe chung? Mọi người sẽ bị ngắt khỏi phòng.",
   "leave": "Rời phòng",
   "inRoom": "Đang nghe chung · {code}",
-  "open": "Mở"
+  "open": "Mở",
+  "notify": {
+    "joined": "{name} đã vào phòng"
+  }
 }

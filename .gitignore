@@ -9,3 +9,5 @@ web/dist/*
 .prepare
 web/dist
 *.exe~
+rii-test.exe
+rii-*.exe   

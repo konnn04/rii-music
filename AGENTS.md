@@ -94,6 +94,7 @@ Rules worth repeating here:
 - Test anything destructive (eviction, reset, cleanup) against a separate database and data dir on another port, e.g. `DATABASE_URL=…/rii_scratch DATA_DIR=/tmp/copy PORT=8081 ENV_FILE=/nonexistent ./rii_music`.
 - The live server may be in use while you work: when cleaning up test data there, delete only the exact ids you created.
 - Files use LF line endings (`.gitattributes`). On Windows, write files in binary/`newline=""` mode when scripting, and run Python with `PYTHONUTF8=1`.
+- Branches: features on `feat/*`, merged into `dev` (beta testing), then `dev` → `main` by pull request; never push to `main` directly (it publishes releases). See [docs/releases.md](docs/releases.md).
 - Commit in small steps with clear messages. Keep someone else's uncommitted edits out of your commits unless asked.
 - Renames: data and protocol names (`X-RiiMusic`, `rii_` tokens, `RIIMUSIC_*` env vars, `rii-*` storage keys) are part of the contract with existing installs and clients; changing them logs everyone out and breaks tokens.
 

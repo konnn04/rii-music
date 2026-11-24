@@ -15,12 +15,18 @@ import (
 
 const maxKaraokeModelBytes = 200 << 20 // 200 MB
 
-// karaokeModels maps the ids the web app asks for (?m=) to UVR's file names.
+// karaokeModels maps the ids the web app asks for (?m=) to file names: UVR's
+// MDX-Net models (from karaokeModelBase) and sherpa-onnx's Spleeter export.
 var karaokeModels = map[string]string{
-	"kara":  "UVR_MDXNET_KARA.onnx",
-	"kara2": "UVR_MDXNET_KARA_2.onnx",
-	"hq3":   "UVR-MDX-NET-Inst_HQ_3.onnx",
+	"kara":                   "UVR_MDXNET_KARA.onnx",
+	"kara2":                  "UVR_MDXNET_KARA_2.onnx",
+	"hq3":                    "UVR-MDX-NET-Inst_HQ_3.onnx",
+	"spleeter-vocals":        "spleeter-2stems-int8-vocals.onnx",
+	"spleeter-accompaniment": "spleeter-2stems-int8-accompaniment.onnx",
 }
+
+// karaokeSpleeterBase hosts the Spleeter files (as vocals.int8.onnx / accompaniment.int8.onnx).
+var karaokeSpleeterBase = "https://huggingface.co/csukuangfj/sherpa-onnx-spleeter-2stems-int8/resolve/main/"
 
 // karaokeModelBase is where the models are downloaded from; tests may override it.
 var karaokeModelBase = "https://github.com/TRvlvr/model_repo/releases/download/all_public_uvr_models/"
@@ -36,6 +42,9 @@ var (
 )
 
 func karaokeModelURL(file string) string {
+	if rest, ok := strings.CutPrefix(file, "spleeter-2stems-int8-"); ok {
+		return karaokeSpleeterBase + strings.TrimSuffix(rest, ".onnx") + ".int8.onnx"
+	}
 	base := karaokeModelBase
 	if u := strings.TrimSpace(os.Getenv("KARAOKE_MODEL_BASE_URL")); u != "" {
 		base = u
@@ -43,7 +52,7 @@ func karaokeModelURL(file string) string {
 	return strings.TrimSuffix(base, "/") + "/" + file
 }
 
-// handleKaraokeModel serves an MDX-Net ONNX model (?m=kara|kara2|hq3, default
+// handleKaraokeModel serves a separation model (?m=kara|kara2|hq3|spleeter-vocals|spleeter-accompaniment, default
 // hq3 for older clients), downloading it once on demand.
 func (s *Server) handleKaraokeModel(w http.ResponseWriter, r *http.Request) {
 	id := r.URL.Query().Get("m")

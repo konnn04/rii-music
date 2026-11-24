@@ -169,6 +169,9 @@ func TestKaraokeModelChoice(t *testing.T) {
 	if rec.Code != http.StatusBadRequest {
 		t.Fatalf("bad id: %d", rec.Code)
 	}
+	if got := karaokeModelURL("spleeter-2stems-int8-vocals.onnx"); got != karaokeSpleeterBase+"vocals.int8.onnx" {
+		t.Fatalf("spleeter url: %s", got)
+	}
 	if len(paths) != 1 {
 		t.Fatalf("upstream hits: %v", paths)
 	}

@@ -30,6 +30,9 @@
   "nothingPlaying": "Nothing is playing.",
   "plainScrolling": "Unsynced lyrics · slow auto-scroll",
   "countdown": "Get ready: {n}",
+  "lyrics": {
+    "follow": "Highlight as it plays"
+  },
   "settingsHint": "Separated AI instrumentals cached in this browser for instant playback.",
   "clearCache": "Clear karaoke cache",
   "cleared": "Cleared karaoke cache ({size}).",
@@ -41,6 +44,10 @@
   "model": {
     "label": "Vocal separation model (AI)",
     "hint": "Lighter models are faster and suit weak computers; bigger ones separate more cleanly. Changing the model separates each song again once.",
+    "spleeter": {
+      "name": "Ultra light: Spleeter",
+      "desc": "About 7× faster than KARA, keeps up even on weak computers. Rougher; some vocals may remain."
+    },
     "kara": {
       "name": "Light: KARA",
       "desc": "Fastest, easiest on the computer. Removes the lead vocal, keeps backing vocals."

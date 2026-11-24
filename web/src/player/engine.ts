@@ -15,6 +15,10 @@ import { FxChain } from "./fx";
 import { t } from "@/i18n";
 import { useOffline } from "@/lib/offline";
 import { isOffline, noteNetworkFailure, useNet } from "./net";
+import { useKaraoke } from "@/karaoke/store";
+import { instrumentalUrl } from "@/karaoke/source";
+import { VocalRemover } from "@/karaoke/quick";
+import { createPitch, type PitchShifter } from "@/karaoke/pitch";
 
 const PRELOAD_BEFORE = 15; // seconds before the end to load the next track
 const FADE = 0.2; // pause/play/seek fade, seconds
@@ -46,6 +50,12 @@ class Engine {
   private active = 0;
   private ctx: AudioContext | null = null;
   private master: GainNode | null = null;
+  private fx: FxChain | null = null;
+  private remover: VocalRemover | null = null;
+  private pitch: PitchShifter | null = null;
+  private pitchLoading = false;
+  private pitchWired = false;
+  private karaokeSwapToken = 0;
   private analyser: AnalyserNode | null = null;
   private freq: Uint8Array<ArrayBuffer> | null = null;
   private wave: Float32Array<ArrayBuffer> | null = null;
@@ -111,6 +121,15 @@ class Engine {
     usePlayback.subscribe((s, prev) => {
       if (s.isPlaying !== prev.isPlaying) this.reportNowPlaying();
     });
+    useKaraoke.subscribe((s, prev) => {
+      if (s.mode !== prev.mode) {
+        this.refreshKaraokeSource();
+        return;
+      }
+      if (s.vocal !== prev.vocal || s.key !== prev.key) {
+        this.applyKaraoke();
+      }
+    });
     window.addEventListener("pagehide", () => this.savePosition(true));
   }
 
@@ -162,9 +181,11 @@ class Engine {
     try {
       const ctx = new AudioContext({ latencyHint: "playback" });
       const master = ctx.createGain();
+      const remover = new VocalRemover(ctx);
       // Sound settings (EQ, exciter, crossfeed…) sit between the volume and the speakers.
       const fx = new FxChain(ctx);
-      master.connect(fx.input);
+      master.connect(remover.input);
+      remover.output.connect(fx.input);
       fx.output.connect(ctx.destination);
       // Music effect: tapped after loudness normalisation but before the
       // volume knob, so it follows the song's own dynamics, not the slider.
@@ -184,11 +205,115 @@ class Engine {
       }
       this.ctx = ctx;
       this.master = master;
+      this.remover = remover;
+      this.fx = fx;
+      this.pitchWired = false;
       this.applyMaster();
+      this.applyKaraoke();
       this.slots.forEach((s) => this.applyNorm(s));
     } catch (e) {
       console.warn("Web Audio unavailable, using simple mode", e);
       this.simple = true;
+    }
+  }
+
+  // ── karaoke ──────────────────────────────────────────────────────────
+
+  private srcFor(id: string): string {
+    return (useKaraoke.getState().mode === "ai" && instrumentalUrl(id)) || streamUrl(id);
+  }
+
+  private applyKaraoke() {
+    if (this.simple || !this.ctx || !this.remover || !this.fx) return;
+    const k = useKaraoke.getState();
+    const curId = usePlayer.getState().current?.track.id ?? null;
+    const hasInst = curId !== null && instrumentalUrl(curId) !== null;
+    const removerOn = k.mode === "quick" || (k.mode === "ai" && !hasInst);
+    this.remover.setEnabled(removerOn);
+    this.remover.setVocal(k.vocal);
+
+    const key = k.mode === "off" ? 0 : k.key;
+    if (key === 0) {
+      if (this.pitch) this.pitch.set(0);
+      if (this.pitchWired) this.wirePitch(false);
+      return;
+    }
+    if (this.pitch) {
+      this.pitch.set(key);
+      if (!this.pitchWired) this.wirePitch(true);
+      return;
+    }
+    if (!this.pitchLoading) {
+      this.pitchLoading = true;
+      const ctx = this.ctx;
+      void createPitch(ctx).then((p) => {
+        this.pitchLoading = false;
+        if (!p || this.ctx !== ctx) return;
+        this.pitch = p;
+        this.applyKaraoke();
+      });
+    }
+  }
+
+  private wirePitch(on: boolean) {
+    if (!this.remover || !this.fx) return;
+    this.remover.output.disconnect();
+    this.pitch?.node.disconnect();
+    if (on && this.pitch) {
+      this.remover.output.connect(this.pitch.node);
+      this.pitch.node.connect(this.fx.input);
+      this.pitchWired = true;
+    } else {
+      this.remover.output.connect(this.fx.input);
+      this.pitchWired = false;
+    }
+  }
+
+  /** Swap the active slot's source when karaoke mode or instrumental availability changes. */
+  refreshKaraokeSource() {
+    this.applyKaraoke();
+    const cur = usePlayer.getState().current;
+    if (!cur) return;
+    const slot = this.slots[this.active];
+    if (slot.uid === cur.uid && slot.el.src) {
+      const desired = this.srcFor(cur.track.id);
+      const desiredHref = new URL(desired, location.href).href;
+      if (slot.el.src !== desiredHref) {
+        const el = slot.el;
+        const wasPlaying = !el.paused;
+        const pos = el.currentTime || usePlayback.getState().position;
+        const uid = cur.uid;
+        const token = ++this.karaokeSwapToken;
+        const pauseToken = this.pauseToken;
+        el.src = desired;
+        el.addEventListener(
+          "loadedmetadata",
+          () => {
+            if (this.karaokeSwapToken !== token || slot.uid !== uid) return;
+            if (pos > 0 && isFinite(el.duration)) {
+              el.currentTime = Math.min(pos, Math.max(0, el.duration - 0.25));
+            } else if (pos > 0) {
+              el.currentTime = pos;
+            }
+            if (wasPlaying && this.pauseToken === pauseToken) {
+              el.play().catch((e) => this.playRejected(e));
+            }
+          },
+          { once: true },
+        );
+        el.load();
+      }
+    }
+    const other = this.slots[1 - this.active];
+    if (other.uid && other.el.src) {
+      const entry = this.entryFor(other.uid);
+      if (entry) {
+        const desired = this.srcFor(entry.track.id);
+        if (other.el.src !== new URL(desired, location.href).href) {
+          other.el.src = desired;
+          other.el.load();
+        }
+      }
     }
   }
 
@@ -334,7 +459,7 @@ class Engine {
 
   private preload(slot: Slot, entry: QueueEntry) {
     slot.uid = entry.uid;
-    slot.el.src = streamUrl(entry.track.id);
+    slot.el.src = this.srcFor(entry.track.id);
     slot.el.load();
     this.rampFade(slot, 0, 0);
     this.applyNorm(slot);
@@ -458,6 +583,7 @@ class Engine {
       return;
     }
     this.offlineSkips = 0;
+    this.applyKaraoke();
 
     this.updateMediaSession(entry);
     this.updateAccent(entry);
@@ -506,7 +632,7 @@ class Engine {
       other.el.removeAttribute("src");
     }
     cur.uid = entry.uid;
-    cur.el.src = streamUrl(entry.track.id);
+    cur.el.src = this.srcFor(entry.track.id);
     this.applyNorm(cur);
     if (autoplay) {
       this.rampFade(cur, 1, 0);
@@ -553,7 +679,7 @@ class Engine {
     this.pauseToken++;
     if (slot.uid !== p.current.uid || !slot.el.src) {
       slot.uid = p.current.uid;
-      slot.el.src = streamUrl(p.current.track.id);
+      slot.el.src = this.srcFor(p.current.track.id);
       this.applyNorm(slot);
     }
     if (!this.listen) this.beginListen(p.current);
@@ -641,7 +767,7 @@ class Engine {
     if (!p.current) return;
     const slot = this.slots[this.active];
     slot.uid = p.current.uid;
-    slot.el.src = streamUrl(p.current.track.id);
+    slot.el.src = this.srcFor(p.current.track.id);
     this.applyNorm(slot);
     this.updateMediaSession(p.current);
     this.updateAccent(p.current);
@@ -754,3 +880,7 @@ class Engine {
 }
 
 export const engine = new Engine();
+
+export function refreshKaraokeSource(): void {
+  engine.refreshKaraokeSource();
+}

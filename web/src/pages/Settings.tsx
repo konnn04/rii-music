@@ -8,7 +8,7 @@ import { queryClient, useMe, useSaveSettings, useSettings } from "@/lib/queries"
 import { t, tn, tsv } from "@/i18n";
 import { Button } from "@/components/ui/Button";
 import { Dialog } from "@/components/ui/Dialog";
-import { toast } from "@/components/ui/Toast";
+import { notify, toast } from "@/components/ui/Toast";
 import { engine, isIOS } from "@/player/engine";
 import { Slider } from "@/components/ui/Slider";
 import { Spinner } from "@/components/ui/misc";
@@ -24,6 +24,7 @@ import { undoDislike, useDisliked } from "@/lib/dislike";
 import { setLiteMode, useLite, type LiteMode } from "@/lib/lite";
 import { getDesktopAutostart, isDesktop, openDesktopPath, pickDesktopFolder, setDesktopAutostart, useAppMode, checkDesktopUpdate, installDesktopUpdate, type DesktopUpdate } from "@/lib/desktop";
 import { browserDeviceName, customDeviceName, deviceName, setCustomDeviceName } from "@/player/sync";
+import { clearInstrumentals } from "@/karaoke/separate";
 
 export function SettingsPage() {
   const { data } = useSettings();
@@ -89,6 +90,7 @@ export function SettingsPage() {
           <Row label={t("sound.title")} hint={t("sound.settingsHint")}>
             <SoundButton variant="button" />
           </Row>
+          <KaraokeCacheRow />
         </Group>
 
         <AutoDownloadSettings data={data} set={set} />
@@ -144,6 +146,7 @@ export function SettingsPage() {
               ["Shift + ← / →", t("settings.shortcuts.prevNext")],
               ["M", t("settings.shortcuts.mute")],
               ["L", t("settings.shortcuts.lyrics")],
+              ["K", t("karaoke.shortcutToggle")],
               ["Q", t("settings.shortcuts.queue")],
               ["/", t("common.nav.search")],
             ].map(([k, v]) => (
@@ -159,6 +162,32 @@ export function SettingsPage() {
         <AboutCard />
       </div>
     </div>
+  );
+}
+
+function KaraokeCacheRow() {
+  const [busy, setBusy] = useState(false);
+  const clear = async () => {
+    setBusy(true);
+    try {
+      const bytes = await clearInstrumentals();
+      notify({
+        icon: "mic",
+        kind: "success",
+        text: bytes > 0 ? t("karaoke.cleared", { size: fmtBytes(bytes) }) : t("karaoke.clearedEmpty"),
+      });
+    } catch (e) {
+      toast((e as Error).message, "error");
+    } finally {
+      setBusy(false);
+    }
+  };
+  return (
+    <Row label={t("karaoke.title")} hint={t("karaoke.settingsHint")}>
+      <Button variant="ghost" icon="trash" loading={busy} onClick={() => void clear()}>
+        {t("karaoke.clearCache")}
+      </Button>
+    </Row>
   );
 }
 

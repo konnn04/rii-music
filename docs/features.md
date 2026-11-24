@@ -6,6 +6,7 @@
 - Drag-and-drop queue, "play next", save the queue as a playlist. The queue separates what you picked from autoplay suggestions.
 - Synced lyrics from LRCLIB, with offset adjustment, picking another version or pasting your own; full-screen lyrics (key `L`).
 - Lock-screen and notification controls (Media Session); installable as an app (PWA).
+- **Karaoke** (key `K`, or ⋯ → Karaoke): big synced lyrics with a fill per line and a countdown, key shift −6…+6 semitones. Vocals: **Nhanh** (quick) removes centre vocals live, with a vocal level slider; **AI** separates the vocals in the browser with an MDX-Net model (downloads ~65 MB once, then a few minutes per song — much faster with WebGPU), and caches the instrumental on the device (Settings → Sound clears it).
 - Sleep timer: 5–90 minutes with a fade-out, or "at the end of this song".
 - Sound settings on the device: 10-band EQ with presets, bass boost, exciter, headphone crossfeed, stereo width, limiter.
 - Visuals: bass-reactive background, 12 accent colours or the cover's colour, cover transition from the mini player to Now Playing.

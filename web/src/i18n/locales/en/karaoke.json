@@ -1,0 +1,38 @@
+{
+  "title": "Karaoke",
+  "open": "Open karaoke",
+  "close": "Close karaoke",
+  "mode": "Mode",
+  "modes": {
+    "off": "Off",
+    "quick": "Quick",
+    "ai": "AI"
+  },
+  "modeTip": "Quick: live vocal remover in the browser, works instantly on most stereo songs but may leave some vocals.\nAI: separates vocals with an AI model in this browser — the first time downloads ~65 MB and takes a few minutes per song, then it is cached.",
+  "vocal": "Vocal level",
+  "vocalAiHint": "AI instrumental already has vocals removed.",
+  "key": "Key",
+  "keyDown": "Lower key by 1 semitone",
+  "keyUp": "Raise key by 1 semitone",
+  "keyReset": "Reset key to 0",
+  "keyOriginal": "Original",
+  "simpleModeHint": "Turn off Simple mode (Settings → Playback) to use Quick mode and key shift.",
+  "phase": {
+    "model": "Downloading AI model…",
+    "decode": "Decoding audio…",
+    "separate": "Separating vocals with AI…",
+    "save": "Saving instrumental…",
+    "done": "AI instrumental ready",
+    "error": "Vocal separation failed"
+  },
+  "aiReady": "AI instrumental ready",
+  "noSynced": "No synced lyrics for this song yet.",
+  "nothingPlaying": "Nothing is playing.",
+  "plainScrolling": "Unsynced lyrics · slow auto-scroll",
+  "countdown": "Get ready: {n}",
+  "settingsHint": "Separated AI instrumentals cached in this browser for instant playback.",
+  "clearCache": "Clear karaoke cache",
+  "cleared": "Cleared karaoke cache ({size}).",
+  "clearedEmpty": "No cached karaoke data to clear.",
+  "shortcutToggle": "Toggle Karaoke"
+}

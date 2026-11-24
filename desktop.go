@@ -21,6 +21,7 @@ import (
 	embeddedpostgres "github.com/fergusstrange/embedded-postgres"
 
 	"rii_music/internal/clientproxy"
+	"rii_music/internal/ffmpegdl"
 	"rii_music/internal/server"
 	"rii_music/internal/vault"
 )
@@ -122,6 +123,18 @@ func prepareLocal(log *slog.Logger) (func(), error) {
 		return nil, fmt.Errorf("PostgreSQL: %w", err)
 	}
 	os.Setenv("DATABASE_URL", fmt.Sprintf("postgres://rii:%s@127.0.0.1:%d/rii_music?sslmode=disable", pw, port))
+
+	// ffmpeg: the one on PATH, else a static build downloaded once into the app dir.
+	if os.Getenv("FFMPEG_PATH") == "" {
+		ctx, cancel := context.WithTimeout(context.Background(), 30*time.Minute)
+		ff, err := ffmpegdl.Ensure(ctx, filepath.Join(dataDir, "bin"), func(step string) { log.Info(step) })
+		cancel()
+		if err != nil {
+			log.Error("ffmpeg unavailable: downloads will fail until it is installed", "err", err)
+		} else {
+			os.Setenv("FFMPEG_PATH", ff)
+		}
+	}
 	return func() {
 		if err := pg.Stop(); err != nil {
 			log.Warn("stop local database", "err", err)

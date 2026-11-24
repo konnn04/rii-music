@@ -29,6 +29,7 @@ import { useNet } from "@/player/net";
 import { initRoom } from "@/player/room";
 import { RoomButton, RoomStrip } from "@/components/RoomDialog";
 import { FollowedRow } from "@/components/Follow";
+import { useAppMode } from "@/lib/desktop";
 
 // `header`: shown as an icon in the top bar (desktop) and the mobile header
 // instead of the sidebar / tab bar; tablets (no top bar) keep it in the sidebar.
@@ -475,6 +476,8 @@ export async function logout() {
 }
 
 export function LogoutButton() {
+  const mode = useAppMode();
+  if (mode === "local") return null;
   return <IconButton icon="logout" label={t("common.nav.logout")} size={20} onClick={logout} />;
 }
 

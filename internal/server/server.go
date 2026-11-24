@@ -246,7 +246,7 @@ func (s *Server) handleHealth(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		msg = err.Error()
 	}
-	writeJSON(w, http.StatusOK, map[string]any{"ok": true, "version": Version, "ytdlp": ready, "ytdlpError": msg})
+	writeJSON(w, http.StatusOK, map[string]any{"ok": true, "version": Version, "ytdlp": ready, "ytdlpError": msg, "mode": s.cfg.Mode})
 }
 
 // ── middleware ──────────────────────────────────────────────────────────

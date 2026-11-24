@@ -162,5 +162,20 @@
     "song": "Song",
     "remove": "Remove",
     "removed": "“{name}” removed from your dislikes"
+  },
+  "desktop": {
+    "title": "Desktop app",
+    "autostart": "Launch at startup",
+    "musicDir": "Music folder",
+    "musicDirHint": "Music is encrypted and can only be played by RiiMusic.",
+    "changeDir": "Change folder…",
+    "confirmMoveTitle": "Move all music to this folder?",
+    "confirmMoveDesc": "Your music will be moved to: {path}",
+    "confirmMoveBtn": "Move",
+    "moving": "Moving: {done}/{total}",
+    "movedToast": "Music folder moved",
+    "dataDir": "Data folder",
+    "openDir": "Open",
+    "switchModeHint": "Switch mode (Local / server) from the RiiMusic icon in the system tray."
   }
 }

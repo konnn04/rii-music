@@ -177,7 +177,7 @@ async fn start_internal_impl(app: AppHandle, cfg: DesktopConfig, is_restart: boo
         ));
     }
 
-    let mut cmd = match app.shell().sidecar("binaries/rii_music") {
+    let mut cmd = match app.shell().sidecar("rii_music") {
         Ok(c) => c,
         Err(e) => {
             fail_to_setup(&app, format!("Không tìm thấy sidecar rii_music: {e}"));

@@ -50,18 +50,19 @@ pub fn default_music_dir(app: &AppHandle) -> String {
     "RiiMusic".to_string()
 }
 
-pub fn config_path(app: &AppHandle) -> Result<PathBuf, String> {
-    let dir = app
-        .path()
-        .app_config_dir()
-        .map_err(|e| format!("Không lấy được thư mục cấu hình: {e}"))?;
-    Ok(dir.join("desktop.json"))
-}
-
+// Everything of the app (settings, database, covers, tools, keys) lives in
+// one "RiiMusic" folder: %LOCALAPPDATA%\RiiMusic on Windows,
+// ~/.local/share/RiiMusic on Linux, ~/Library/Application Support/RiiMusic on
+// macOS. Songs live in the music folder (Music/RiiMusic by default).
 pub fn data_dir(app: &AppHandle) -> Result<PathBuf, String> {
     app.path()
-        .app_local_data_dir()
+        .local_data_dir()
+        .map(|d| d.join("RiiMusic"))
         .map_err(|e| format!("Không lấy được thư mục dữ liệu: {e}"))
+}
+
+pub fn config_path(app: &AppHandle) -> Result<PathBuf, String> {
+    Ok(data_dir(app)?.join("desktop.json"))
 }
 
 pub fn load_config(app: &AppHandle) -> DesktopConfig {

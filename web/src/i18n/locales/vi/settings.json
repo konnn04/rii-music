@@ -162,5 +162,20 @@
     "song": "Bài hát",
     "remove": "Bỏ",
     "removed": "Đã bỏ “{name}” khỏi danh sách không thích"
+  },
+  "desktop": {
+    "title": "Ứng dụng máy tính",
+    "autostart": "Mở cùng máy tính",
+    "musicDir": "Thư mục nhạc",
+    "musicDirHint": "Nhạc được mã hoá, chỉ RiiMusic phát được.",
+    "changeDir": "Đổi thư mục…",
+    "confirmMoveTitle": "Chuyển toàn bộ nhạc sang thư mục này?",
+    "confirmMoveDesc": "Nhạc sẽ được chuyển sang: {path}",
+    "confirmMoveBtn": "Chuyển",
+    "moving": "Đang chuyển: {done}/{total}",
+    "movedToast": "Đã chuyển xong thư mục nhạc",
+    "dataDir": "Thư mục dữ liệu",
+    "openDir": "Mở",
+    "switchModeHint": "Đổi chế độ (Local / máy chủ) từ biểu tượng RiiMusic ở khay hệ thống."
   }
 }

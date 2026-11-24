@@ -43,6 +43,7 @@
 - Optional auto-download of songs you are likely to like, within your storage limit.
 - Listening streak: days in a row with at least 10 minutes of music. Vani, the mascot, grows through 7 stages with your best streak (sprout, cherry, DJ sunglasses, star, crown, cosmic halo) and never shrinks back.
 - Song language comes from the title, the artist and the lyrics (romanised Japanese included), so recommendations don't mix languages.
+- Recommendations keep to the style of what plays (genres from Last.fm and Deezer, folded into styles such as bolero, V-pop, rap, EDM, lofi) and to its kind: after a regular song, no hour-long lofi mixes, BGM, karaoke or medleys. New users with small libraries get more new songs. The genres of the current song show in the Now Playing panel; admins can re-tag the whole library ("Đồng bộ lại") and see the progress. Last.fm and Deezer quotas are respected: on a limit the server pauses and resumes by itself.
 
 ## Accounts and administration
 

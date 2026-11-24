@@ -82,6 +82,17 @@ Files: `rooms.go`, `web/src/player/room.ts`, `roomFlag.ts`.
 
 In-memory rooms with a 6-character code (no 0/O/1/I). One slot per account; roles host / controller / listener (joiners are listeners; the host changes roles). State `{queue, index, positionMs, playing, updatedAt, rev, by}` is set by the host or controllers (their local player changes are sent, debounced) and broadcast as SSE `room` events with the server time (`now`) so clients correct clock skew; members load the queue, seek and play/pause, and correct drift over 2.5 s every 10 s. Listeners' local changes are undone. Heartbeat every 20 s; silent for 60 s = disconnected; a room closes when the host leaves or closes it, or after 5 minutes with nobody connected. `/api/rooms/mine` rejoins after a reload. Members may stream the room's songs even without them in their library (`canAccess` → `roomCanAccess`).
 
+## Styles, kinds and discovery
+
+Files: `genre.go`, `enrich_admin.go`, `stats.go` (radio), `autoplay.go`, `web/src/player/autofill.ts`.
+
+- **Styles.** Genre tags (Deezer album genres; Last.fm track tags, else the artist's top tags) fold into buckets (bolero, vpop, rap, rnb, edm, rock, indie, ballad, lofi, acoustic, jazz, instrumental, kpop, jpop, cpop, latin, country, weak pop) as a normalised vector (`styleOf`). A song without tags borrows its artist's style from their other songs (`librarySongStyles`). Radio multiplies scores by `styleFactor` and drops clearly different styles (`styleConflict`) when at least 5 close songs remain; autoplay leaves out similar artists of another style (Last.fm artist tags, cached).
+- **Kinds.** `kindOf` marks mixes, lofi, BGM, karaoke, instrumental, nonstop, liên khúc, slowed, "N hours"… (`specialRe`) and songs over 9 minutes. After a regular song, neither kind follows, nor anything longer than twice the seed (or seed + 4 min); after lofi / a long mix, anything goes.
+- **Discovery.** `/api/radio?autoplay=1` returns only real matches (no random filler) plus `discover`: how many new songs to look for — 70 % of the autoplay target under 50 library songs, 50 % under 150, 35 % under 400, else 20 %, capped by the admin's `autoplayDownloads`. In "free" mode the client leaves that room for new songs.
+- **Clearing the queue** (✕ on every row) re-arms autoplay for the same song.
+- **Rate limits.** `extClient.getJSON` pauses a host on HTTP 429/503 (honouring `Retry-After`), Last.fm `{"error": 29|26}` and Deezer `{"error":{"code":4}}`: 30 s doubling to 30 min; calls during the pause fail fast with `errRateLimited`. The enrichment worker leaves the song pending (not failed) and wakes up when the pause ends.
+- **Resync.** Admin → "Thể loại và ngôn ngữ" → "Đồng bộ lại" (`POST /api/admin/enrich/resync`) puts every song back in the tagging queue (cached lookups dropped) and recomputes languages from titles and stored lyrics; `GET /api/admin/enrich` reports progress and pauses.
+
 ## Streaming API
 
 Files: `stream.go`.

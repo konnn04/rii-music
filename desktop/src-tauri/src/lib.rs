@@ -291,8 +291,9 @@ fn set_autostart(app: AppHandle, enabled: bool) -> Result<(), String> {
     Ok(())
 }
 
+// Commands below are async so they run off the main (UI) thread.
 #[tauri::command]
-fn now_playing(
+async fn now_playing(
     app: AppHandle,
     title: String,
     artist: String,
@@ -318,7 +319,7 @@ fn now_playing(
 }
 
 #[tauri::command]
-fn mini_state(app: AppHandle) -> NowPlayingState {
+async fn mini_state(app: AppHandle) -> NowPlayingState {
     app.state::<AppState>()
         .now_playing
         .lock()
@@ -327,7 +328,7 @@ fn mini_state(app: AppHandle) -> NowPlayingState {
 }
 
 #[tauri::command]
-fn mini_cmd(app: AppHandle, cmd: String) {
+async fn mini_cmd(app: AppHandle, cmd: String) {
     match cmd.as_str() {
         "toggle" | "next" | "prev" => tray::dispatch_player_cmd(&app, &cmd),
         "show" => tray::show_main_window(&app),
@@ -357,6 +358,7 @@ pub fn toggle_mini(app: &AppHandle) -> Result<bool, String> {
         .skip_taskbar(true)
         .build()
         .map_err(|e| format!("Không mở được trình phát mini: {e}"))?;
+    dlog!("mini player opened at {port}");
     Ok(true)
 }
 

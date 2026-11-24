@@ -36,5 +36,6 @@
   "clearedEmpty": "Không có dữ liệu karaoke nào trong bộ nhớ.",
   "shortcutToggle": "Mở / đóng Karaoke",
   "cpu": "CPU (chậm, trình duyệt không có WebGPU)",
-  "inRoom": "Đang Nghe chung: tắt Nghe chung để dùng karaoke."
+  "inRoom": "Đang Nghe chung: tắt Nghe chung để dùng karaoke.",
+  "holding": "Bài đã hết: chờ AI tách xong sẽ phát lại bài này để hát (chưa chuyển bài)."
 }

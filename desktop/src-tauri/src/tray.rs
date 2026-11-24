@@ -158,7 +158,6 @@ pub fn dispatch_player_cmd(app: &AppHandle, cmd: &str) {
 
 pub fn handle_switch_mode(app: &AppHandle) {
     if let Some(state) = app.try_state::<AppState>() {
-        state.sidecar.stop();
         if let Ok(mut err) = state.last_error.lock() {
             *err = None;
         }
@@ -169,6 +168,14 @@ pub fn handle_switch_mode(app: &AppHandle) {
     }
     update_local_mode(app, false);
     update_tooltip(app, "", "", false);
+    // Show the setup screen at once; stop the sidecar off the UI thread (a
+    // clean local shutdown takes a few seconds and would freeze the window).
     sidecar::navigate_to_setup(app);
     show_main_window(app);
+    let app = app.clone();
+    std::thread::spawn(move || {
+        if let Some(state) = app.try_state::<AppState>() {
+            state.sidecar.stop();
+        }
+    });
 }

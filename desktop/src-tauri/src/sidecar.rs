@@ -58,22 +58,26 @@ impl SidecarManager {
     }
 
     pub fn stop(&self) {
-        if let Ok(mut inner) = self.inner.lock() {
-            inner.intentional_stop = true;
-            inner.starting = false;
-            let port = inner.port.take();
-            let token = inner.token.take();
-            inner.generation = inner.generation.wrapping_add(1);
-            if let Some(child) = inner.child.take() {
-                // Local mode: ask for a clean exit first so the embedded
-                // PostgreSQL stops properly; kill only if it doesn't go.
-                if let (Some(port), Some(token)) = (port, token) {
-                    if request_shutdown(port, &token) {
-                        wait_port_closed(port, std::time::Duration::from_secs(15));
-                    }
-                }
-                let _ = child.kill();
+        // Take what we need, then release the lock: the clean shutdown below
+        // can take seconds and nothing else may wait on the state meanwhile.
+        let (child, port, token) = match self.inner.lock() {
+            Ok(mut inner) => {
+                inner.intentional_stop = true;
+                inner.starting = false;
+                inner.generation = inner.generation.wrapping_add(1);
+                (inner.child.take(), inner.port.take(), inner.token.take())
             }
+            Err(_) => return,
+        };
+        if let Some(child) = child {
+            // Local mode: ask for a clean exit first so the embedded
+            // PostgreSQL stops properly; kill only if it doesn't go.
+            if let (Some(port), Some(token)) = (port, token) {
+                if request_shutdown(port, &token) {
+                    wait_port_closed(port, std::time::Duration::from_secs(15));
+                }
+            }
+            let _ = child.kill();
         }
     }
 }
@@ -374,19 +378,30 @@ async fn start_internal_impl(app: AppHandle, cfg: DesktopConfig, is_restart: boo
     }
 }
 
-pub fn navigate_to_setup(app: &AppHandle) {
+/// The bundled setup page (ui/index.html): the URL captured at start when it
+/// is the app's own origin, else the platform's fixed app URL.
+fn setup_page(app: &AppHandle) -> Option<Url> {
     let state = app.state::<AppState>();
-    let base = state.setup_url.lock().ok().and_then(|g| g.clone());
-    if let (Some(window), Some(mut url)) = (app.get_webview_window("main"), base) {
+    let captured = state.setup_url.lock().ok().and_then(|g| g.clone());
+    if let Some(u) = captured {
+        let own = u.scheme() == "tauri" || u.host_str() == Some("tauri.localhost");
+        if own {
+            return Some(u);
+        }
+    }
+    let fixed = if cfg!(any(windows, target_os = "android")) { "http://tauri.localhost/index.html" } else { "tauri://localhost/index.html" };
+    Url::parse(fixed).ok()
+}
+
+pub fn navigate_to_setup(app: &AppHandle) {
+    if let (Some(window), Some(mut url)) = (app.get_webview_window("main"), setup_page(app)) {
         url.set_fragment(None);
         let _ = window.navigate(url);
     }
 }
 
 pub fn navigate_to_splash(app: &AppHandle) {
-    let state = app.state::<AppState>();
-    let base = state.setup_url.lock().ok().and_then(|g| g.clone());
-    if let (Some(window), Some(mut url)) = (app.get_webview_window("main"), base) {
+    if let (Some(window), Some(mut url)) = (app.get_webview_window("main"), setup_page(app)) {
         url.set_fragment(Some("starting"));
         let _ = window.navigate(url);
     }

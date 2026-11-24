@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState, type DragEvent as ReactDragEvent, type ReactNode } from "react";
+import { lazy, Suspense, useCallback, useEffect, useRef, useState, type DragEvent as ReactDragEvent, type ReactNode } from "react";
 import { Link, Outlet, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useIsDesktop } from "@/lib/useMedia";
 import { queryClient, useJobs, useMe, usePlaylists, useSettings, useToggleLike } from "@/lib/queries";
@@ -30,6 +30,9 @@ import { initRoom } from "@/player/room";
 import { RoomButton, RoomStrip } from "@/components/RoomDialog";
 import { FollowedRow } from "@/components/Follow";
 import { useAppMode } from "@/lib/desktop";
+import { useKaraoke } from "@/karaoke/store";
+
+const KaraokeView = lazy(() => import("@/karaoke/KaraokeView"));
 
 // `header`: shown as an icon in the top bar (desktop) and the mobile header
 // instead of the sidebar / tab bar; tablets (no top bar) keep it in the sidebar.
@@ -54,6 +57,7 @@ export function AppShell() {
   const desktop = useIsDesktop();
   const settings = useSettings();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const karaokeOpen = useKaraoke((s) => s.open);
 
   useEffect(() => {
     engine.init();
@@ -61,6 +65,11 @@ export function AppShell() {
     void initOffline();
     void initRoom(); // back into a Nghe chung room after a reload
     connectEvents();
+    // Karaoke AI mode: separate the current song when needed (loaded on demand).
+    void import("@/karaoke/separate").then((k) => {
+      k.startKaraokeAuto();
+      void k.loadCachedInstrumentals();
+    });
   }, []);
   useEffect(() => {
     if (!settings.data) return;
@@ -106,6 +115,11 @@ export function AppShell() {
       </div>
       {!desktop && <MobileNowPlaying />}
       <LyricsFullscreen />
+      {karaokeOpen && (
+        <Suspense fallback={null}>
+          <KaraokeView />
+        </Suspense>
+      )}
       <OfflineBanner />
       <GlobalDialogs />
       {settings.data && !settings.data.onboarded && <Onboarding />}

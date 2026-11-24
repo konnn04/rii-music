@@ -1,0 +1,38 @@
+{
+  "title": "Karaoke",
+  "open": "Mở karaoke",
+  "close": "Đóng karaoke",
+  "mode": "Chế độ",
+  "modes": {
+    "off": "Tắt",
+    "quick": "Nhanh",
+    "ai": "AI"
+  },
+  "modeTip": "Nhanh: tách giọng trực tiếp trong trình duyệt, dùng được ngay cho hầu hết bài stereo nhưng có thể còn lẫn chút giọng.\nAI: tách nhạc nền bằng mô hình AI ngay trên trình duyệt — lần đầu tải ~65 MB và mất vài phút mỗi bài, sau đó được lưu sẵn.",
+  "vocal": "Giọng hát",
+  "vocalAiHint": "Bản nhạc nền AI đã tách sẵn giọng hát.",
+  "key": "Tông nhạc",
+  "keyDown": "Giảm 1 bán cung",
+  "keyUp": "Tăng 1 bán cung",
+  "keyReset": "Đặt tông về 0",
+  "keyOriginal": "Gốc",
+  "simpleModeHint": "Cần tắt Chế độ đơn giản (Cài đặt → Phát nhạc) để dùng chế độ Nhanh và đổi tông.",
+  "phase": {
+    "model": "Đang tải mô hình AI…",
+    "decode": "Đang giải mã âm thanh…",
+    "separate": "Đang tách giọng bằng AI…",
+    "save": "Đang lưu nhạc nền…",
+    "done": "Đã sẵn sàng bản nhạc nền AI",
+    "error": "Tách giọng thất bại"
+  },
+  "aiReady": "Nhạc nền AI sẵn sàng",
+  "noSynced": "Bài này chưa có lời đồng bộ theo nhịp.",
+  "nothingPlaying": "Chưa phát bài nào.",
+  "plainScrolling": "Lời chưa đồng bộ · tự cuộn chậm",
+  "countdown": "Chuẩn bị hát: {n}",
+  "settingsHint": "Nhạc nền AI đã tách được lưu trong trình duyệt này để phát lại ngay.",
+  "clearCache": "Xoá bộ nhớ karaoke",
+  "cleared": "Đã xoá bộ nhớ karaoke ({size}).",
+  "clearedEmpty": "Không có dữ liệu karaoke nào trong bộ nhớ.",
+  "shortcutToggle": "Mở / đóng Karaoke"
+}

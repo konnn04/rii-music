@@ -15,6 +15,7 @@ import { useFx } from "@/player/fx";
 import { COVER_VT, withCoverTransition } from "@/lib/viewTransition";
 import { ctl, openRemoteSheet, useRemoteView, useViewPlaying, useViewTime, useViewTrack } from "@/player/view";
 import { DevicesButton } from "@/components/DevicePicker";
+import { openKaraoke, useKaraoke } from "@/karaoke/store";
 
 /** Fixed bottom player for tablet and desktop. */
 export function PlayerBar() {
@@ -83,6 +84,7 @@ export function PlayerBar() {
 function PlayerMore() {
   const current = usePlayer((s) => s.current);
   const fxOn = useFx((s) => s.enabled);
+  const karaokeOn = useKaraoke((s) => s.mode !== "off");
   const sleep = useSleepState();
   const [sound, setSound] = useState(false);
   return (
@@ -95,7 +97,7 @@ function PlayerMore() {
             className="focus-ring state-layer relative inline-flex size-10 shrink-0 items-center justify-center rounded-full text-fg-muted hover:text-fg"
           >
             <Icon name="more" size={20} />
-            {(fxOn || sleep.active) && <span aria-hidden className="absolute right-2 top-2 size-1.5 rounded-full bg-accent" />}
+            {(fxOn || karaokeOn || sleep.active) && <span aria-hidden className="absolute right-2 top-2 size-1.5 rounded-full bg-accent" />}
           </button>
         </DropdownMenu.Trigger>
         <DropdownMenu.Portal>
@@ -106,6 +108,10 @@ function PlayerMore() {
                 <DropdownMenu.Separator className="my-1 h-px bg-line" />
               </>
             )}
+            <DropdownMenu.Item className="menu-item" onSelect={() => openKaraoke(true)}>
+              <Icon name="mic" size={20} className={karaokeOn ? "text-accent" : "text-fg-muted"} />
+              {t("karaoke.title")}
+            </DropdownMenu.Item>
             <DropdownMenu.Item className="menu-item" onSelect={() => setSound(true)}>
               <Icon name="sliders" size={20} className={fxOn ? "text-accent" : "text-fg-muted"} />
               {t("sound.title")}

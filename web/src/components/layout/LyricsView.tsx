@@ -12,7 +12,7 @@ import { Icon } from "../ui/Icon";
 import { toast } from "../ui/Toast";
 import { useNet } from "@/player/net";
 
-type Line = { t: number; text: string };
+export type Line = { t: number; text: string };
 
 export function parseLRC(lrc: string): Line[] {
   const out: Line[] = [];
@@ -31,7 +31,7 @@ export function parseLRC(lrc: string): Line[] {
   return out.sort((a, b) => a.t - b.t);
 }
 
-function activeIndex(lines: Line[], at: number) {
+export function activeIndex(lines: Line[], at: number) {
   let active = -1;
   for (let i = 0; i < lines.length; i++) {
     if (lines[i].t <= at + 0.15) active = i;

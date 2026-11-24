@@ -10,12 +10,14 @@ import { notify } from "./ui/Toast";
 import { useTrackActions, type Action } from "./dialogs";
 import { useSleepState } from "./SleepButton";
 import { SoundDialog } from "./SoundDialog";
+import { openKaraoke, useKaraoke } from "@/karaoke/store";
 
-/** Single ⋯ button for the mobile Now Playing header: track actions, sound settings and sleep timer. */
+/** Single ⋯ button for the mobile Now Playing header: track actions, karaoke, sound settings and sleep timer. */
 export function NowPlayingMenuButton({ track }: { track: Track }) {
   const [open, setOpen] = useState(false);
   const [soundOpen, setSoundOpen] = useState(false);
   const fxOn = useFx((s) => s.enabled);
+  const karaokeOn = useKaraoke((s) => s.mode !== "off");
   const sleep = useSleepState();
 
   return (
@@ -29,7 +31,7 @@ export function NowPlayingMenuButton({ track }: { track: Track }) {
           className="!text-fg"
           onClick={() => setOpen(true)}
         />
-        {(fxOn || sleep.active) && (
+        {(fxOn || karaokeOn || sleep.active) && (
           <span aria-hidden className="pointer-events-none absolute right-2 top-2 size-2 rounded-full bg-np-accent" />
         )}
       </span>
@@ -37,6 +39,7 @@ export function NowPlayingMenuButton({ track }: { track: Track }) {
         <NowPlayingSheet
           track={track}
           fxOn={fxOn}
+          karaokeOn={karaokeOn}
           onClose={() => setOpen(false)}
           onOpenSound={() => setSoundOpen(true)}
         />
@@ -49,11 +52,13 @@ export function NowPlayingMenuButton({ track }: { track: Track }) {
 function NowPlayingSheet({
   track,
   fxOn,
+  karaokeOn,
   onClose,
   onOpenSound,
 }: {
   track: Track;
   fxOn: boolean;
+  karaokeOn: boolean;
   onClose: () => void;
   onOpenSound: () => void;
 }) {
@@ -91,6 +96,18 @@ function NowPlayingSheet({
         ))}
 
         <div className="my-1 h-px bg-line" role="separator" />
+
+        <button
+          type="button"
+          onClick={() => {
+            onClose();
+            openKaraoke(true);
+          }}
+          className="focus-ring state-layer flex h-14 items-center gap-4 rounded-control px-4 text-left text-body"
+        >
+          <Icon name="mic" className={karaokeOn ? "text-accent" : "text-fg-muted"} />
+          {t("karaoke.title")}
+        </button>
 
         <button
           type="button"

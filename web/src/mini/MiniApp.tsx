@@ -18,6 +18,7 @@ const invoke = <T = unknown,>(cmd: string, args?: Record<string, unknown>) => wi
 function MiniApp() {
   const [state, setState] = useState<MiniState>(empty);
   const [imgErr, setImgErr] = useState(false);
+  const [err, setErr] = useState("");
 
   useEffect(() => {
     setImgErr(false);
@@ -27,11 +28,19 @@ function MiniApp() {
     let cancelled = false;
     let unlisten: (() => void) | undefined;
 
-    void invoke<MiniState>("mini_state")
-      ?.then((s) => {
-        if (!cancelled && s) setState(s);
-      })
-      .catch(() => {});
+    // Ask the shell for the current song now and every few seconds (in case an
+    // event was missed, e.g. while the page was still loading).
+    const poll = () =>
+      void invoke<MiniState>("mini_state")
+        ?.then((s) => {
+          if (cancelled) return;
+          setErr("");
+          if (s) setState(s);
+        })
+        .catch((e: unknown) => !cancelled && setErr(String(e)));
+    poll();
+    const iv = window.setInterval(poll, 2000);
+    if (!window.__TAURI__?.core) setErr("no IPC");
 
     void window.__TAURI__?.event
       ?.listen<MiniState>("rii:np", (e) => {
@@ -45,6 +54,7 @@ function MiniApp() {
 
     return () => {
       cancelled = true;
+      window.clearInterval(iv);
       unlisten?.();
     };
   }, []);
@@ -84,8 +94,8 @@ function MiniApp() {
             <div data-tauri-drag-region className="truncate text-label leading-tight text-fg">
               {state.title || t("ui.player.nothingPlaying")}
             </div>
-            <div data-tauri-drag-region className="truncate text-caption leading-tight text-fg-muted">
-              {state.artist}
+            <div data-tauri-drag-region className="truncate text-caption leading-tight text-fg-muted" title={err || undefined}>
+              {err ? `⚠ ${err}` : state.artist}
             </div>
           </div>
 

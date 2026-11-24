@@ -207,8 +207,16 @@ export function initDesktop(): void {
     if (timer !== null) window.clearTimeout(timer);
     timer = window.setTimeout(() => {
       timer = null;
-      window.__TAURI__?.core?.invoke("now_playing", { title, artist, playing, cover }).catch(() => {});
+      window.__TAURI__?.core?.invoke("now_playing", { title, artist, playing, cover }).catch((e: unknown) => {
+        console.warn("now_playing failed", e);
+        lastKey = ""; // try again on the next change
+      });
     }, 300);
+  };
+  // The mini player just opened: send the current song again.
+  resendNowPlaying = () => {
+    lastKey = "";
+    scheduleNowPlaying();
   };
 
   usePlayer.subscribe((s, prev) => {
@@ -300,9 +308,16 @@ export async function pickDesktopFolder(title: string, defaultPath?: string): Pr
 }
 
 /** Toggle the floating desktop mini player window. */
+let resendNowPlaying = () => {};
+
 export async function toggleMiniPlayer(): Promise<boolean> {
   if (!isDesktop() || !window.__TAURI__?.core) return false;
-  return window.__TAURI__.core.invoke<boolean>("toggle_mini_player");
+  const open = await window.__TAURI__.core.invoke<boolean>("toggle_mini_player");
+  if (open) {
+    resendNowPlaying();
+    window.setTimeout(resendNowPlaying, 1500); // after the mini page has loaded
+  }
+  return open;
 }
 
 export async function openDesktopPath(path: string): Promise<void> {

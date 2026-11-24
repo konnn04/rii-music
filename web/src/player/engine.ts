@@ -122,6 +122,9 @@ class Engine {
       if (s.isPlaying !== prev.isPlaying) this.reportNowPlaying();
     });
     useKaraoke.subscribe((s, prev) => {
+      if (s.holding && (s.mode !== "ai" || s.sep !== prev.sep) && !this.karaokePending()) {
+        queueMicrotask(() => this.releaseKaraokeHold());
+      }
       if (s.mode !== prev.mode) {
         this.refreshKaraokeSource();
         return;
@@ -218,6 +221,32 @@ class Engine {
   }
 
   // ── karaoke ──────────────────────────────────────────────────────────
+
+  /** AI karaoke: the current song's instrumental is still being made. Its end then
+   *  holds the song (no crossfade, no next) so it can be sung once it is ready. */
+  private karaokePending(): boolean {
+    const k = useKaraoke.getState();
+    const cur = usePlayer.getState().current;
+    if (k.mode !== "ai" || !cur || instrumentalUrl(cur.track.id)) return false;
+    return k.sep?.trackId === cur.track.id && k.sep.phase !== "error" && k.sep.phase !== "done";
+  }
+
+  /** Stop holding: play the song again with the instrumental, or move on. */
+  private releaseKaraokeHold() {
+    const held = useKaraoke.getState().holding;
+    if (!held) return;
+    useKaraoke.setState({ holding: null });
+    const p = usePlayer.getState();
+    if (p.current?.uid !== held) return;
+    if (useKaraoke.getState().mode === "ai" && instrumentalUrl(p.current.track.id)) {
+      const el = this.slots[this.active].el;
+      el.currentTime = 0;
+      el.play().catch((e) => this.playRejected(e));
+      return;
+    }
+    this.transition = "auto";
+    if (!p.advance()) this.transition = null;
+  }
 
   private srcFor(id: string): string {
     return (useKaraoke.getState().mode === "ai" && instrumentalUrl(id)) || streamUrl(id);
@@ -438,6 +467,7 @@ class Engine {
     const p = usePlayer.getState();
     if (p.repeat === "one") return;
     if (useSleep.getState().endOfTrack) return; // sleep timer: stop at the end, no crossfade
+    if (this.karaokePending()) return; // the end will hold the song (karaoke)
     const next = p.peekNext();
     if (!next) return;
     const other = this.slots[1 - this.active];
@@ -480,6 +510,14 @@ class Engine {
       this.logListen("finish");
       usePlayback.setState({ isPlaying: false });
       this.savePosition(true);
+      return;
+    }
+    if (p.current && this.karaokePending()) {
+      // AI karaoke not ready yet: hold the song at its start instead of moving on.
+      this.logListen("finish");
+      useKaraoke.setState({ holding: p.current.uid });
+      usePlayback.setState({ isPlaying: false, position: 0 });
+      this.slots[this.active].el.currentTime = 0;
       return;
     }
     if (p.repeat === "one" && p.current) {

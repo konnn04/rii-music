@@ -28,6 +28,8 @@ export type KaraokeState = {
   open: boolean;
   sep: SepStatus | null;
   ready: Record<string, true>;
+  /** Song (uid) that ended before its AI instrumental was ready: held, not skipped. */
+  holding: string | null;
 };
 
 const STORAGE_KEY = "rii-karaoke";
@@ -73,6 +75,7 @@ export const useKaraoke = create<KaraokeState>()(() => ({
   ...loadPersisted(),
   open: false,
   sep: null,
+  holding: null,
   ready: {},
 }));
 

@@ -8,6 +8,7 @@ export type WorkerIn =
 
 export type WorkerOut =
   | { type: "progress"; phase: "model" | "separate"; progress: number }
+  | { type: "backend"; name: string }
   | { type: "done"; left: Float32Array; right: Float32Array }
   | { type: "error"; message: string };
 
@@ -94,6 +95,14 @@ async function fetchModelBytes(modelUrl: string): Promise<Uint8Array<ArrayBuffer
   return bytes;
 }
 
+/** The WebGPU adapter's name as far as the browser tells it. */
+function gpuName(): string {
+  const dev = ort.env.webgpu.device as { adapterInfo?: { vendor?: string; architecture?: string; description?: string } } | undefined;
+  const i = dev?.adapterInfo;
+  const name = i?.description || [i?.vendor, i?.architecture].filter(Boolean).join(" ");
+  return name ? `GPU · ${name}` : "GPU";
+}
+
 async function getSession(modelUrl: string): Promise<ort.InferenceSession | null> {
   if (cachedSession && cachedModelUrl === modelUrl) {
     postProgress("model", 1);
@@ -104,15 +113,17 @@ async function getSession(modelUrl: string): Promise<ort.InferenceSession | null
   if (cancelled) return null;
 
   let session: ort.InferenceSession;
+  let backend = "cpu";
   try {
-    session = await ort.InferenceSession.create(bytes, {
-      executionProviders: ["webgpu", "wasm"],
-    });
+    // Laptops with two GPUs: ask for the discrete one (the browser may still pick the
+    // integrated one, e.g. when Windows' graphics setting says "power saving").
+    ort.env.webgpu.powerPreference = "high-performance";
+    session = await ort.InferenceSession.create(bytes, { executionProviders: ["webgpu"] });
+    backend = gpuName();
   } catch {
-    session = await ort.InferenceSession.create(bytes, {
-      executionProviders: ["wasm"],
-    });
+    session = await ort.InferenceSession.create(bytes, { executionProviders: ["wasm"] });
   }
+  ctx.postMessage({ type: "backend", name: backend });
 
   cachedSession = session;
   cachedModelUrl = modelUrl;

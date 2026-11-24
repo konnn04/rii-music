@@ -140,6 +140,9 @@ export function KaraokeControls() {
             <span className="flex items-center gap-1.5">
               <Icon name="loader" size={14} className="text-np-accent" />
               {t(`karaoke.phase.${sepForTrack.phase}`)}
+              {sepForTrack.backend && (
+                <span className="text-fg-subtle">· {sepForTrack.backend === "cpu" ? t("karaoke.cpu") : sepForTrack.backend}</span>
+              )}
             </span>
             <span className="tabular">{Math.round(Math.max(0, Math.min(1, sepForTrack.progress)) * 100)}%</span>
           </div>

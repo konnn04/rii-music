@@ -15,3 +15,5 @@
 **Songs are grouped under the wrong language.** Language comes from the title, the artist's other songs and the lyrics; it settles once lyrics are found. Songs downloaded before a language fix keep their old label until they are downloaded again.
 
 **Live updates don't arrive behind a proxy.** Disable buffering for `/api/events` (Nginx: `proxy_buffering off;`).
+
+**AI karaoke uses the integrated GPU (or is slow).** The progress line shows where the model runs (`GPU · …` or `CPU`). The app asks for the high-performance GPU, but on laptops with two GPUs Windows may still hand the browser the integrated one. Set it in Windows Settings → System → Display → Graphics: add the browser (`chrome.exe` / `msedge.exe`) or, for the desktop app, `C:\Program Files (x86)\MicrosoftdgeWebView\Application\<version>\msedgewebview2.exe` → High performance, then restart the app. `CPU` means the browser has no WebGPU: a song then takes about twice its length to separate.

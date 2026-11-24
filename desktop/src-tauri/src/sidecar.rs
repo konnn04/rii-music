@@ -70,6 +70,7 @@ impl SidecarManager {
             Err(_) => return,
         };
         if let Some(child) = child {
+            dlog!("sidecar stopping");
             // Local mode: ask for a clean exit first so the embedded
             // PostgreSQL stops properly; kill only if it doesn't go.
             if let (Some(port), Some(token)) = (port, token) {
@@ -220,6 +221,7 @@ async fn start_internal_impl(app: AppHandle, cfg: DesktopConfig, is_restart: boo
         &log_path,
         &format!("--- Starting rii_music (mode={mode}, port={port}) ---"),
     );
+    dlog!("sidecar started mode={mode} port={port}");
 
     // Spawn stdout/stderr/termination reader task
     let app_for_reader = app.clone();
@@ -234,6 +236,7 @@ async fn start_internal_impl(app: AppHandle, cfg: DesktopConfig, is_restart: boo
                         let trimmed = line.trim();
                         if !trimmed.is_empty() {
                             append_log(&log_for_reader, trimmed);
+                            crate::logfile::log(&format!("[server] {trimmed}"));
                             let _ = app_for_reader.emit("sidecar-log", trimmed);
                         }
                     }
@@ -241,6 +244,7 @@ async fn start_internal_impl(app: AppHandle, cfg: DesktopConfig, is_restart: boo
                 CommandEvent::Error(err) => {
                     let msg = format!("Sidecar error: {err}");
                     append_log(&log_for_reader, &msg);
+                    dlog!("sidecar error: {err}");
                     let _ = app_for_reader.emit("sidecar-log", &msg);
                 }
                 CommandEvent::Terminated(payload) => {
@@ -249,6 +253,7 @@ async fn start_internal_impl(app: AppHandle, cfg: DesktopConfig, is_restart: boo
                         payload.code, payload.signal
                     );
                     append_log(&log_for_reader, &msg);
+                    dlog!("{msg}");
 
                     let should_restart = {
                         let state = app_for_reader.state::<AppState>();
@@ -334,6 +339,7 @@ async fn start_internal_impl(app: AppHandle, cfg: DesktopConfig, is_restart: boo
     }
 
     if !ready {
+        dlog!("sidecar health check timed out on port {port}");
         state.sidecar.stop();
         fail_to_setup(
             &app,
@@ -344,6 +350,8 @@ async fn start_internal_impl(app: AppHandle, cfg: DesktopConfig, is_restart: boo
         );
         return;
     }
+
+    dlog!("sidecar healthy on port {port}");
 
     {
         let mut inner = match state.sidecar.inner.lock() {
@@ -408,6 +416,7 @@ pub fn navigate_to_splash(app: &AppHandle) {
 }
 
 fn fail_to_setup(app: &AppHandle, message: String) {
+    dlog!("setup error: {message}");
     let state = app.state::<AppState>();
     if let Ok(mut err) = state.last_error.lock() {
         *err = Some(message.clone());

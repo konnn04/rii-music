@@ -121,6 +121,12 @@ Files: `web/src/player/fx.ts`.
 
 Web Audio chain between the master gain and the output: 10-band EQ with pre-gain, exciter (harmonic waveshaper on the 3.5 kHz+ band), bass shelf, crossfeed (bs2b-style), mid/side width, limiter. Per device in localStorage (`rii-fx`), bypassed when off. Not available in simple mode (no Web Audio).
 
+## Karaoke
+
+All on the client, in `web/src/karaoke/`. `store.ts` holds mode (`off` / `quick` / `ai`), vocal level and key (localStorage `rii-karaoke`). The engine graph becomes `master → VocalRemover (quick.ts) → [pitch worklet] → FxChain`; both are bypassed by direct connections when unused. `quick.ts`: high-passed side (L−R) plus low-passed mid, mixed with the dry signal by the vocal level. Key shift: a two-tap granular pitch shifter AudioWorklet (`public/karaoke-pitch.js`), only inserted while the key is not 0.
+
+AI mode: `separate.ts` fetches the song, resamples to 44.1 kHz stereo and runs `worker.ts` (onnxruntime-web, WebGPU with a WASM fallback) on UVR-MDX-NET-Inst_HQ_3: chunks of 261120 samples, STFT n_fft 6144 / hop 1024 / 3072 bins × 256 frames (`dsp.ts`, mixed-radix 3·2048 FFT, torch.stft conventions — `selfTest()` in `dsp.test.ts`), overlap trimmed by n_fft/2, ×1.022. The instrumental is stored as a 16-bit WAV in Cache Storage (`rii-karaoke`) and the engine plays it instead of the stream (`source.ts`, `engine.refreshKaraokeSource()`); until it is ready the quick remover stands in. The model comes from `GET /api/karaoke/model`, which downloads it once into `DATA_DIR/models/` (`KARAOKE_MODEL_URL` overrides the source) — no CORS and one copy per server; the browser caches it in `rii-karaoke-model`.
+
 ## Offline
 
 Files: `web/src/sw.ts`, `web/src/offline/idb.ts`, `web/src/lib/offline.ts`.

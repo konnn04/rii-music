@@ -33,12 +33,17 @@ type Config struct {
 	RemoteEJS  bool   // --remote-components ejs:github
 	ForceIPv4  bool   // --force-ipv4
 	GeoCountry string
+	MaxProcs   int // max concurrent yt-dlp processes; 0 = 3
 }
 
 type Client struct {
 	cfg   Config
 	log   *slog.Logger
 	ready chan struct{}
+	sem   chan struct{}
+
+	// test-only hook around process execution
+	onProc func(delta int32)
 
 	mu        sync.RWMutex
 	bin       string
@@ -48,7 +53,16 @@ type Client struct {
 }
 
 func New(cfg Config, log *slog.Logger) *Client {
-	return &Client{cfg: cfg, log: log, ready: make(chan struct{})}
+	maxProcs := cfg.MaxProcs
+	if maxProcs <= 0 {
+		maxProcs = 3
+	}
+	return &Client{
+		cfg:   cfg,
+		log:   log,
+		ready: make(chan struct{}),
+		sem:   make(chan struct{}, maxProcs),
+	}
 }
 
 const nightlyBase = "https://github.com/yt-dlp/yt-dlp-nightly-builds/releases/latest/download/"
@@ -283,7 +297,11 @@ func (c *Client) Info() (bin string, managed bool, jsRuntime string) {
 func (c *Client) Version(ctx context.Context) string {
 	ctx, cancel := context.WithTimeout(ctx, 20*time.Second)
 	defer cancel()
-	out, err := c.Run(ctx, []string{"--version"}, nil)
+	bin, err := c.Wait(ctx)
+	if err != nil {
+		return ""
+	}
+	out, err := c.exec(ctx, bin, []string{"--version"}, nil)
 	if err != nil {
 		return ""
 	}
@@ -332,8 +350,28 @@ func (c *Client) Run(ctx context.Context, args []string, onLine func(string)) (s
 	if err != nil {
 		return "", err
 	}
+	if err := ctx.Err(); err != nil {
+		return "", err
+	}
+	if c.sem != nil {
+		select {
+		case c.sem <- struct{}{}:
+			defer func() { <-c.sem }()
+		case <-ctx.Done():
+			return "", ctx.Err()
+		}
+	}
+	return c.exec(ctx, bin, args, onLine)
+}
+
+func (c *Client) exec(ctx context.Context, bin string, args []string, onLine func(string)) (string, error) {
+	if c.onProc != nil {
+		c.onProc(1)
+		defer c.onProc(-1)
+	}
 	cmd := exec.CommandContext(ctx, bin, append(c.BaseArgs(), args...)...)
 	cmd.Env = append(os.Environ(), "NO_COLOR=1", "PYTHONIOENCODING=utf-8")
+	setTree(cmd)
 	cmd.WaitDelay = 5 * time.Second
 	var stderr tailBuffer
 	cmd.Stderr = &stderr
@@ -426,10 +464,26 @@ type FlatResult struct {
 	Entries []Entry `json:"entries"`
 }
 
+var flatTimeout = 2 * time.Minute
+
 // Flat lists a playlist or search ("ytsearchN:q") without downloading anything.
 func (c *Client) Flat(ctx context.Context, target string) (*FlatResult, error) {
-	out, err := c.Run(ctx, []string{"-J", "--flat-playlist", "--", target}, nil)
+	runCtx := ctx
+	wrapped := false
+	if dl, ok := ctx.Deadline(); !ok || time.Until(dl) > flatTimeout {
+		var cancel context.CancelFunc
+		runCtx, cancel = context.WithTimeout(ctx, flatTimeout)
+		defer cancel()
+		wrapped = true
+	}
+	out, err := c.Run(runCtx, []string{"-J", "--flat-playlist", "--", target}, nil)
 	if err != nil {
+		if wrapped && ctx.Err() == nil && errors.Is(runCtx.Err(), context.DeadlineExceeded) {
+			return nil, &Error{Code: -1, Reason: "quá thời gian chờ (2 phút)"}
+		}
+		if ctx.Err() != nil {
+			return nil, ctx.Err()
+		}
 		return nil, err
 	}
 	var r FlatResult

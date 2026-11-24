@@ -1,5 +1,9 @@
+#[macro_use]
+mod logfile;
 mod config;
 mod sidecar;
+#[cfg(windows)]
+mod thumbbar;
 mod tray;
 
 use config::DesktopConfig;
@@ -7,7 +11,7 @@ use serde::Serialize;
 use sidecar::SidecarManager;
 use std::sync::Mutex;
 use std::time::Duration;
-use tauri::{AppHandle, Manager, Url, WindowEvent};
+use tauri::{AppHandle, Emitter, Manager, Url, WebviewUrl, WebviewWindowBuilder, WindowEvent};
 use tauri_plugin_autostart::{MacosLauncher, ManagerExt};
 use tauri_plugin_deep_link::DeepLinkExt;
 use tauri_plugin_dialog::DialogExt;
@@ -15,11 +19,12 @@ use tauri_plugin_global_shortcut::{Code, GlobalShortcutExt, Shortcut, ShortcutSt
 use tauri_plugin_opener::OpenerExt;
 use tauri_plugin_window_state::StateFlags;
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, Serialize)]
 pub struct NowPlayingState {
     pub title: String,
     pub artist: String,
     pub playing: bool,
+    pub cover: String,
 }
 
 pub struct AppState {
@@ -104,10 +109,31 @@ struct UpdateInfo {
 async fn check_update(app: AppHandle) -> Result<UpdateInfo, String> {
     use tauri_plugin_updater::UpdaterExt;
     let current = app.package_info().version.to_string();
-    let updater = app.updater().map_err(|e| e.to_string())?;
-    match updater.check().await.map_err(|e| e.to_string())? {
-        Some(u) => Ok(UpdateInfo { current, version: Some(u.version.clone()), notes: u.body.clone() }),
-        None => Ok(UpdateInfo { current, version: None, notes: None }),
+    let updater = app.updater().map_err(|e| {
+        dlog!("update check init failed: {e}");
+        e.to_string()
+    })?;
+    match updater.check().await {
+        Ok(Some(u)) => {
+            dlog!("update available: {current} -> {}", u.version);
+            Ok(UpdateInfo {
+                current,
+                version: Some(u.version.clone()),
+                notes: u.body.clone(),
+            })
+        }
+        Ok(None) => {
+            dlog!("update check: up to date ({current})");
+            Ok(UpdateInfo {
+                current,
+                version: None,
+                notes: None,
+            })
+        }
+        Err(e) => {
+            dlog!("update check failed: {e}");
+            Err(e.to_string())
+        }
     }
 }
 
@@ -116,15 +142,29 @@ async fn check_update(app: AppHandle) -> Result<UpdateInfo, String> {
 #[tauri::command]
 async fn install_update(app: AppHandle) -> Result<(), String> {
     use tauri_plugin_updater::UpdaterExt;
-    let updater = app.updater().map_err(|e| e.to_string())?;
-    let Some(update) = updater.check().await.map_err(|e| e.to_string())? else {
+    let updater = app.updater().map_err(|e| {
+        dlog!("update install init failed: {e}");
+        e.to_string()
+    })?;
+    let Some(update) = updater.check().await.map_err(|e| {
+        dlog!("update install check failed: {e}");
+        e.to_string()
+    })? else {
         return Err("Không có bản mới.".into());
     };
-    let bytes = update.download(|_, _| {}, || {}).await.map_err(|e| e.to_string())?;
+    dlog!("downloading update {}", update.version);
+    let bytes = update.download(|_, _| {}, || {}).await.map_err(|e| {
+        dlog!("update download failed: {e}");
+        e.to_string()
+    })?;
     if let Some(state) = app.try_state::<AppState>() {
         state.sidecar.stop();
     }
-    update.install(bytes).map_err(|e| e.to_string())?;
+    update.install(bytes).map_err(|e| {
+        dlog!("update install failed: {e}");
+        e.to_string()
+    })?;
+    dlog!("update installed, restarting");
     app.restart();
 }
 
@@ -210,6 +250,10 @@ fn save_setup(app: AppHandle, mut config: DesktopConfig) -> Result<(), String> {
 
     config::save_config(&app, &config)?;
     apply_autostart(&app, config.autostart);
+    dlog!(
+        "save_setup mode={}",
+        config.mode.as_deref().unwrap_or("unset")
+    );
 
     let is_local = config.mode.as_deref() == Some("local");
     tray::update_local_mode(&app, is_local);
@@ -248,14 +292,86 @@ fn set_autostart(app: AppHandle, enabled: bool) -> Result<(), String> {
 }
 
 #[tauri::command]
-fn now_playing(app: AppHandle, title: String, artist: String, playing: bool) {
+fn now_playing(
+    app: AppHandle,
+    title: String,
+    artist: String,
+    playing: bool,
+    cover: Option<String>,
+) {
     let state = app.state::<AppState>();
+    let snapshot = NowPlayingState {
+        title: title.clone(),
+        artist: artist.clone(),
+        playing,
+        cover: cover.unwrap_or_default(),
+    };
     if let Ok(mut np) = state.now_playing.lock() {
-        np.title = title.clone();
-        np.artist = artist.clone();
-        np.playing = playing;
+        *np = snapshot.clone();
     }
     tray::update_tooltip(&app, &title, &artist, playing);
+    #[cfg(windows)]
+    thumbbar::update_playing(&app, playing);
+    if app.get_webview_window("mini").is_some() {
+        let _ = app.emit_to("mini", "rii:np", snapshot);
+    }
+}
+
+#[tauri::command]
+fn mini_state(app: AppHandle) -> NowPlayingState {
+    app.state::<AppState>()
+        .now_playing
+        .lock()
+        .map(|g| g.clone())
+        .unwrap_or_default()
+}
+
+#[tauri::command]
+fn mini_cmd(app: AppHandle, cmd: String) {
+    match cmd.as_str() {
+        "toggle" | "next" | "prev" => tray::dispatch_player_cmd(&app, &cmd),
+        "show" => tray::show_main_window(&app),
+        _ => {}
+    }
+}
+
+pub fn toggle_mini(app: &AppHandle) -> Result<bool, String> {
+    if let Some(win) = app.get_webview_window("mini") {
+        win.close()
+            .map_err(|e| format!("Không đóng được trình phát mini: {e}"))?;
+        return Ok(false);
+    }
+    let port = app
+        .state::<AppState>()
+        .sidecar
+        .current_port()
+        .ok_or_else(|| "Máy chủ cục bộ chưa sẵn sàng.".to_string())?;
+    let url = Url::parse(&format!("http://127.0.0.1:{port}/mini"))
+        .map_err(|e| format!("URL trình phát mini không hợp lệ: {e}"))?;
+    WebviewWindowBuilder::new(app, "mini", WebviewUrl::External(url))
+        .title("RiiMusic mini")
+        .inner_size(320.0, 96.0)
+        .always_on_top(true)
+        .decorations(false)
+        .resizable(false)
+        .skip_taskbar(true)
+        .build()
+        .map_err(|e| format!("Không mở được trình phát mini: {e}"))?;
+    Ok(true)
+}
+
+#[tauri::command]
+fn toggle_mini_player(app: AppHandle) -> Result<bool, String> {
+    toggle_mini(&app)
+}
+
+#[tauri::command]
+fn open_log_dir(app: AppHandle) -> Result<(), String> {
+    let dir = config::data_dir(&app)?.join("logs");
+    let _ = std::fs::create_dir_all(&dir);
+    app.opener()
+        .open_path(dir.to_string_lossy().to_string(), None::<&str>)
+        .map_err(|e| format!("Không mở được thư mục nhật ký: {e}"))
 }
 
 #[tauri::command]
@@ -307,6 +423,7 @@ fn parse_deep_link_path(raw: &str) -> Option<String> {
 }
 
 fn handle_deep_link(app: &AppHandle, raw: &str) {
+    dlog!("deep link received: {raw}");
     let Some(rel_path) = parse_deep_link_path(raw) else {
         return;
     };
@@ -374,7 +491,11 @@ pub fn run() {
             save_setup,
             set_autostart,
             now_playing,
+            mini_state,
+            mini_cmd,
+            toggle_mini_player,
             open_music_dir,
+            open_log_dir,
             switch_mode,
             check_update,
             install_update,
@@ -382,8 +503,16 @@ pub fn run() {
         ])
         .setup(|app| {
             let handle = app.handle().clone();
+            if let Ok(dir) = config::data_dir(&handle) {
+                logfile::init(&dir);
+            }
             let cfg = config::load_config(&handle);
             let is_local = cfg.mode.as_deref() == Some("local");
+            dlog!(
+                "app start v{} mode={}",
+                app.package_info().version,
+                cfg.mode.as_deref().unwrap_or("unset")
+            );
 
             app.manage(AppState::new(cfg.clone()));
             app.manage(tray::TrayState::new());
@@ -399,6 +528,10 @@ pub fn run() {
 
             // Initialize system tray
             tray::init_tray(&handle, is_local)?;
+
+            // Initialize Windows taskbar ThumbBar buttons
+            #[cfg(windows)]
+            thumbbar::init(&handle);
 
             // Register global media shortcuts (ignore registration errors)
             for code in [
@@ -443,6 +576,9 @@ pub fn run() {
         })
         .on_window_event(|window, event| {
             if let WindowEvent::CloseRequested { api, .. } = event {
+                if window.label() != "main" {
+                    return;
+                }
                 let close_to_tray = window
                     .app_handle()
                     .try_state::<AppState>()

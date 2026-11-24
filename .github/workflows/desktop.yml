@@ -1,10 +1,11 @@
 name: Desktop
 
 # Every push / merge to main (or a desktop-v* tag) builds and publishes the
-# desktop app (like the server's release.yml). PRs only run CI / test.
+# desktop app (like the server's release.yml). Pushes to dev (beta) only build:
+# the installers are in the run's artifacts. PRs only run CI / test.
 on:
   push:
-    branches: [main]
+    branches: [main, dev]
     tags: ['desktop-v*']
     paths-ignore: ['docs/**', '**/*.md']
   workflow_dispatch:
@@ -45,7 +46,7 @@ jobs:
             goarch: amd64
             ext: .exe
             artifact_name: desktop-windows-x64
-          - os: macos-latest
+          - os: macos-14
             target: aarch64-apple-darwin
             goos: darwin
             goarch: arm64
@@ -65,6 +66,8 @@ jobs:
             artifact_name: desktop-linux-x64
 
     runs-on: ${{ matrix.os }}
+    # A stuck runner (e.g. no macOS arm64 capacity) must not hold the release forever.
+    timeout-minutes: 60
 
     steps:
       - uses: actions/checkout@v4
@@ -206,8 +209,12 @@ jobs:
 
   release:
     needs: [version, build]
-    # Publish from main (every merge / push) or from a desktop-v* tag.
-    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/desktop-v'))
+    # Publish from main (every merge / push) or from a desktop-v* tag — even when one
+    # platform failed (GitHub sometimes has no runner for it): the others still ship and
+    # latest.json simply lists the platforms that built.
+    if: >-
+      !cancelled() && needs.version.result == 'success' &&
+      github.event_name == 'push' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/desktop-v'))
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -217,6 +224,11 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           path: artifacts
+
+      - name: Need at least one platform
+        run: |
+          ls artifacts 2>/dev/null || true
+          [ -n "$(ls -A artifacts 2>/dev/null)" ] || { echo "::error::no platform built, nothing to release"; exit 1; }
 
       - name: Collect release files and generate notes
         env:

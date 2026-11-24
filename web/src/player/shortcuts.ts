@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { engine } from "./engine";
 import { usePlayer } from "./store";
+import { openKaraoke, useKaraoke } from "@/karaoke/store";
 
 const isTyping = (t: EventTarget | null) => {
   const el = t as HTMLElement | null;
@@ -9,7 +10,7 @@ const isTyping = (t: EventTarget | null) => {
 
 /**
  * Space play/pause · ←/→ seek 5 s · Shift+←/→ previous/next · M mute
- * L lyrics · Q queue · / focus search
+ * L lyrics · K karaoke · Q queue · / focus search
  */
 export function useShortcuts() {
   useEffect(() => {
@@ -41,6 +42,10 @@ export function useShortcuts() {
         case "L":
           if (desktop) p.setLyricsFull(!p.lyricsFull);
           else p.setNp(!(p.npOpen && p.npTab === "lyrics"), "lyrics");
+          break;
+        case "k":
+        case "K":
+          openKaraoke(!useKaraoke.getState().open);
           break;
         case "q":
         case "Q":

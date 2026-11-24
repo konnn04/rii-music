@@ -122,6 +122,7 @@ var apiDocs = []apiDoc{
 	{"DELETE", "/api/rooms/{code}", "Nghe chung", "Chủ phòng đóng phòng", "", nil, ``, ``},
 	{"POST", "/api/playback/command", "Phát nhạc", "Điều khiển từ xa thiết bị đang phát: play, pause, toggle, next, prev, seek, volume, jump, remove, move, playNow, queue, shuffle, repeat", "", nil, `{"target":"<deviceId>","cmd":"seek","positionMs":60000}`, ``},
 	{"GET", "/api/agent/nowplaying", "Discord", "Agent đọc bài đang phát (token loại agent)", "agent", nil, ``, `{"nowPlaying":{"title":"…"},"discordClientId":"…"}`},
+	{"GET", "/api/karaoke/model", "Karaoke", "Mô hình AI tách nhạc nền (ONNX, hỗ trợ Range)", "", nil, ``, ``},
 
 	// admin
 	{"GET", "/api/admin/users", "Admin", "Mọi tài khoản", "admin", nil, ``, ``},

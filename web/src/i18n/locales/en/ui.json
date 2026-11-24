@@ -49,6 +49,10 @@
     "addedToPlaylist": "Added to playlist",
     "addedManyToPlaylist": "Added {count} songs to playlist"
   },
+  "notify": {
+    "downloadDoneTitle": "Downloaded",
+    "downloadErrorTitle": "Download failed"
+  },
   "remote": {
     "playingOn": "Playing on {device}",
     "pausedOn": "Last played on {device}",

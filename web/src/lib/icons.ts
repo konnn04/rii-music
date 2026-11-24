@@ -19,6 +19,7 @@ export const icons = {
   "heart-filled": { d: "M12 19.5s-7.5-4.4-7.5-9.7A4.3 4.3 0 0 1 12 7.2a4.3 4.3 0 0 1 7.5 2.6c0 5.3-7.5 9.7-7.5 9.7z", fill: true, label: "Đã thích" },
   "queue": { d: "M4 6h12M4 11h12M4 16h6M14.5 14v6l5-3z", label: "Hàng đợi" },
   "lyrics": { d: "M4 6h9M4 10h9M4 14h5M17 4v10.5M17 14.5a2.5 2.5 0 1 1-5 0 2.5 2.5 0 0 1 5 0zM17 4l3 1", label: "Lời bài hát" },
+  "mic": { d: "M12 3a3 3 0 0 1 3 3v5a3 3 0 0 1-6 0V6a3 3 0 0 1 3-3zM6.5 11a5.5 5.5 0 0 0 11 0M12 16.5V21M9 21h6", label: "Karaoke" },
   "volume": { d: "M4 9.5h3l4.5-4v13l-4.5-4H4zM15 9a4 4 0 0 1 0 6M17.5 6.5a7.5 7.5 0 0 1 0 11", label: "Âm lượng" },
   "volume-mute": { d: "M4 9.5h3l4.5-4v13l-4.5-4H4zM16 10l4 4M20 10l-4 4", label: "Tắt tiếng" },
   "more": { d: "M6 10.75a1.25 1.25 0 1 1 0 2.5 1.25 1.25 0 0 1 0-2.5zM12 10.75a1.25 1.25 0 1 1 0 2.5 1.25 1.25 0 0 1 0-2.5zM18 10.75a1.25 1.25 0 1 1 0 2.5 1.25 1.25 0 0 1 0-2.5z", fill: true, label: "Thêm (ngang)" },

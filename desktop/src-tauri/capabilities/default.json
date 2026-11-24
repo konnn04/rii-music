@@ -2,12 +2,14 @@
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "default",
   "description": "Default capability for RiiMusic main window and local sidecar origin",
-  "windows": ["main"],
+  "windows": ["main", "mini"],
   "remote": {
     "urls": ["http://127.0.0.1:*"]
   },
   "permissions": [
     "core:default",
+    "core:event:default",
+    "core:window:allow-start-dragging",
     "autostart:default",
     "deep-link:default",
     "dialog:default",

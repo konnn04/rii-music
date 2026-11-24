@@ -199,6 +199,7 @@ func (s *Server) Handler() http.Handler {
 	api("POST /api/reset", s.handleReset)
 	api("GET /api/settings", s.handleGetSettings)
 	api("PUT /api/settings", s.handlePutSettings)
+	api("GET /api/karaoke/model", s.handleKaraokeModel)
 
 	// admin
 	admin := func(pattern string, h http.HandlerFunc) { mux.Handle(pattern, s.requireAdmin(h)) }

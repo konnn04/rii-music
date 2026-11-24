@@ -108,5 +108,7 @@
     },
     "off": "Đã tắt hẹn giờ ngủ",
     "cancel": "Tắt hẹn giờ"
-  }
+  },
+  "miniPlayer": "Trình phát mini",
+  "miniOpenApp": "Mở ứng dụng"
 }

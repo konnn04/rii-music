@@ -49,6 +49,10 @@
     "addedToPlaylist": "Đã thêm vào playlist",
     "addedManyToPlaylist": "Đã thêm {count} bài vào playlist"
   },
+  "notify": {
+    "downloadDoneTitle": "Đã tải xong",
+    "downloadErrorTitle": "Tải lỗi"
+  },
   "remote": {
     "playingOn": "Đang phát trên {device}",
     "pausedOn": "Vừa nghe trên {device}",

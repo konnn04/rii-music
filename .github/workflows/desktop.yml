@@ -143,8 +143,9 @@ jobs:
       - name: Build Tauri desktop app
         working-directory: desktop
         env:
-          # TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
-          # TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+          # Updater signature (.sig next to each bundle). Secrets: Settings → Secrets → Actions.
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
           CI: "true"
         run: pnpm tauri build --target ${{ matrix.target }}
 
@@ -192,6 +193,8 @@ jobs:
             desktop/src-tauri/target/${{ matrix.target }}/release/bundle/**/*.dmg
             desktop/src-tauri/target/${{ matrix.target }}/release/bundle/**/*.AppImage
             desktop/src-tauri/target/${{ matrix.target }}/release/bundle/**/*.deb
+            desktop/src-tauri/target/${{ matrix.target }}/release/bundle/**/*.sig
+            desktop/src-tauri/target/${{ matrix.target }}/release/bundle/**/*.app.tar.gz
 
   release:
     needs: [version, build]
@@ -234,6 +237,33 @@ jobs:
             done
           } > release-body.md
 
+      - name: Updater manifest (latest.json)
+        env:
+          VERSION: ${{ needs.version.outputs.version }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          base="https://github.com/${REPO}/releases/download/desktop-v${VERSION}"
+          # One updater bundle per platform: the NSIS installer (Windows), the .app.tar.gz
+          # (macOS, renamed per arch since both builds call it RiiMusic.app.tar.gz), the AppImage (Linux).
+          entry() { # platform-key artifact-dir pattern new-name
+            local f sig
+            f=$(find "artifacts/$2" -type f -name "$3" ! -name '*.sig' | head -n1 || true)
+            [ -n "$f" ] || return 0
+            sig="$f.sig"
+            [ -f "$sig" ] || { echo "no signature for $f"; return 0; }
+            cp "$f" "release-files/$4"; cp "$sig" "release-files/$4.sig"
+            jq -n --arg k "$1" --arg u "$base/$4" --rawfile s "$sig" '{($k): {url: $u, signature: $s}}'
+          }
+          {
+            entry windows-x86_64 desktop-windows-x64 '*-setup.exe' "RiiMusic_${VERSION}_x64-setup.exe"
+            entry darwin-aarch64 desktop-macos-arm64 '*.app.tar.gz' "RiiMusic_${VERSION}_aarch64.app.tar.gz"
+            entry darwin-x86_64 desktop-macos-x64 '*.app.tar.gz' "RiiMusic_${VERSION}_x64.app.tar.gz"
+            entry linux-x86_64 desktop-linux-x64 '*.AppImage' "RiiMusic_${VERSION}_amd64.AppImage"
+          } | jq -s --arg v "$VERSION" --arg d "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+                 '{version: $v, notes: "RiiMusic Desktop \($v)", pub_date: $d, platforms: (add // {})}' > release-files/latest.json
+          cat release-files/latest.json
+
       - name: Publish GitHub Release
         uses: softprops/action-gh-release@v2
         with:
@@ -242,3 +272,14 @@ jobs:
           target_commitish: ${{ github.sha }}
           body_path: release-body.md
           files: release-files/*
+
+      # The app checks this fixed address (the repo's "latest" release is the server's).
+      - name: Point desktop-latest at this version
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: desktop-latest
+          name: RiiMusic Desktop (latest)
+          target_commitish: ${{ github.sha }}
+          prerelease: true
+          body: "Update manifest for RiiMusic Desktop. Download installers from the desktop-v releases."
+          files: release-files/latest.json

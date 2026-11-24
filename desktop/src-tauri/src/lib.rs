@@ -91,6 +91,43 @@ async fn pick_music_dir(
     rx.await.map_err(|_| "Đã hủy chọn thư mục.".to_string())
 }
 
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+struct UpdateInfo {
+    current: String,
+    version: Option<String>,
+    notes: Option<String>,
+}
+
+/// Is a newer version published (signed manifest at the updater endpoint)?
+#[tauri::command]
+async fn check_update(app: AppHandle) -> Result<UpdateInfo, String> {
+    use tauri_plugin_updater::UpdaterExt;
+    let current = app.package_info().version.to_string();
+    let updater = app.updater().map_err(|e| e.to_string())?;
+    match updater.check().await.map_err(|e| e.to_string())? {
+        Some(u) => Ok(UpdateInfo { current, version: Some(u.version.clone()), notes: u.body.clone() }),
+        None => Ok(UpdateInfo { current, version: None, notes: None }),
+    }
+}
+
+/// Download and install the new version, then restart. The sidecar is stopped
+/// cleanly first (local mode: the embedded PostgreSQL must not be killed).
+#[tauri::command]
+async fn install_update(app: AppHandle) -> Result<(), String> {
+    use tauri_plugin_updater::UpdaterExt;
+    let updater = app.updater().map_err(|e| e.to_string())?;
+    let Some(update) = updater.check().await.map_err(|e| e.to_string())? else {
+        return Err("Không có bản mới.".into());
+    };
+    let bytes = update.download(|_, _| {}, || {}).await.map_err(|e| e.to_string())?;
+    if let Some(state) = app.try_state::<AppState>() {
+        state.sidecar.stop();
+    }
+    update.install(bytes).map_err(|e| e.to_string())?;
+    app.restart();
+}
+
 #[tauri::command]
 async fn check_server(url: String) -> Result<String, String> {
     let trimmed = url.trim().trim_end_matches('/');
@@ -314,7 +351,9 @@ pub fn run() {
             set_autostart,
             now_playing,
             open_music_dir,
-            switch_mode
+            switch_mode,
+            check_update,
+            install_update
         ])
         .setup(|app| {
             let handle = app.handle().clone();

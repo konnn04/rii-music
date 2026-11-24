@@ -2,6 +2,8 @@ import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { engine } from "@/player/engine";
 import { usePlayback, usePlayer } from "@/player/store";
+import { notify, toast } from "@/components/ui/Toast";
+import { t } from "@/i18n";
 
 export type AppMode = "server" | "local" | "client";
 
@@ -76,6 +78,22 @@ export function useAppMode(): AppMode {
 let initialized = false;
 
 export function initDesktop(): void {
+  // Once per launch, a little after start: tell about a new version.
+  if (isDesktop()) {
+    window.setTimeout(() => {
+      checkDesktopUpdate()
+        .then((u) => {
+          if (u?.version)
+            notify({
+              icon: "download",
+              text: t("settings.desktop.updateAvailable", { version: u.version }),
+              duration: 0,
+              action: { label: t("settings.desktop.updateNow"), onClick: () => void installDesktopUpdate().catch((e: Error) => toast(e.message, "error")) },
+            });
+        })
+        .catch(() => {});
+    }, 15_000);
+  }
   if (initialized || !isDesktop()) return;
   initialized = true;
 
@@ -119,6 +137,19 @@ export function initDesktop(): void {
   });
 
   scheduleNowPlaying();
+}
+
+export type DesktopUpdate = { current: string; version: string | null; notes: string | null };
+
+/** Ask the desktop app whether a newer version is published. */
+export async function checkDesktopUpdate(): Promise<DesktopUpdate | null> {
+  if (!isDesktop()) return null;
+  return (await window.__TAURI__?.core?.invoke("check_update")) as DesktopUpdate;
+}
+
+/** Download, install and restart into the new version. */
+export async function installDesktopUpdate(): Promise<void> {
+  await window.__TAURI__?.core?.invoke("install_update");
 }
 
 export async function notifyDesktop(title: string, body: string): Promise<void> {

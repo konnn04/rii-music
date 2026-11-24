@@ -176,6 +176,13 @@
     "movedToast": "Music folder moved",
     "dataDir": "Data folder",
     "openDir": "Open",
-    "switchModeHint": "Switch mode (Local / server) from the RiiMusic icon in the system tray."
+    "switchModeHint": "Switch mode (Local / server) from the RiiMusic icon in the system tray.",
+    "update": "Version",
+    "updateHint": "Check whether a new version is out.",
+    "checkUpdate": "Check for updates",
+    "updateNow": "Update now",
+    "upToDate": "Up to date ({version})",
+    "updateAvailable": "Version {version} is available",
+    "installing": "Downloading the update, the app will restart…"
   }
 }

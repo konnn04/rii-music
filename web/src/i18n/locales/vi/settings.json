@@ -176,6 +176,13 @@
     "movedToast": "Đã chuyển xong thư mục nhạc",
     "dataDir": "Thư mục dữ liệu",
     "openDir": "Mở",
-    "switchModeHint": "Đổi chế độ (Local / máy chủ) từ biểu tượng RiiMusic ở khay hệ thống."
+    "switchModeHint": "Đổi chế độ (Local / máy chủ) từ biểu tượng RiiMusic ở khay hệ thống.",
+    "update": "Phiên bản",
+    "updateHint": "Bấm để xem có bản mới không.",
+    "checkUpdate": "Kiểm tra cập nhật",
+    "updateNow": "Cập nhật ngay",
+    "upToDate": "Đang dùng bản mới nhất ({version})",
+    "updateAvailable": "Có bản mới {version}",
+    "installing": "Đang tải bản mới, app sẽ tự khởi động lại…"
   }
 }

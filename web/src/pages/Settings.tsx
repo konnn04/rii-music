@@ -22,14 +22,7 @@ import { useIsMobile } from "@/lib/useMedia";
 import { UI_SCALES, getUiScale, setUiScale } from "@/lib/uiScale";
 import { undoDislike, useDisliked } from "@/lib/dislike";
 import { setLiteMode, useLite, type LiteMode } from "@/lib/lite";
-import {
-  getDesktopAutostart,
-  isDesktop,
-  openDesktopPath,
-  pickDesktopFolder,
-  setDesktopAutostart,
-  useAppMode,
-} from "@/lib/desktop";
+import { getDesktopAutostart, isDesktop, openDesktopPath, pickDesktopFolder, setDesktopAutostart, useAppMode, checkDesktopUpdate, installDesktopUpdate, type DesktopUpdate } from "@/lib/desktop";
 
 export function SettingsPage() {
   const { data } = useSettings();
@@ -621,6 +614,49 @@ type LocalInfo = {
   };
 };
 
+/** "Kiểm tra cập nhật": the desktop app's own version and updates. */
+function UpdateRow() {
+  const [state, setState] = useState<{ busy: boolean; info: DesktopUpdate | null }>({ busy: false, info: null });
+  const check = async () => {
+    setState({ busy: true, info: null });
+    try {
+      const info = await checkDesktopUpdate();
+      setState({ busy: false, info });
+      if (info && !info.version) toast(t("settings.desktop.upToDate", { version: info.current }));
+    } catch (e) {
+      setState({ busy: false, info: null });
+      toast((e as Error).message, "error");
+    }
+  };
+  const install = async () => {
+    setState((s) => ({ ...s, busy: true }));
+    toast(t("settings.desktop.installing"));
+    try {
+      await installDesktopUpdate(); // the app restarts
+    } catch (e) {
+      setState((s) => ({ ...s, busy: false }));
+      toast((e as Error).message, "error");
+    }
+  };
+  const v = state.info?.version;
+  return (
+    <Row
+      label={t("settings.desktop.update")}
+      hint={v ? t("settings.desktop.updateAvailable", { version: v }) : state.info ? t("settings.desktop.upToDate", { version: state.info.current }) : t("settings.desktop.updateHint")}
+    >
+      {v ? (
+        <Button variant="primary" icon="download" loading={state.busy} onClick={install}>
+          {t("settings.desktop.updateNow")}
+        </Button>
+      ) : (
+        <Button icon="retry" loading={state.busy} onClick={check}>
+          {t("settings.desktop.checkUpdate")}
+        </Button>
+      )}
+    </Row>
+  );
+}
+
 function DesktopSettings() {
   const isLocal = useAppMode() === "local";
   const [autostart, setAutostartState] = useState(false);
@@ -700,6 +736,7 @@ function DesktopSettings() {
   return (
     <Group title={t("settings.desktop.title")} icon="devices">
       <Toggle label={t("settings.desktop.autostart")} on={autostart} set={(v) => void toggleAutostart(v)} />
+      <UpdateRow />
       {isLocal && (
         <>
           <Row

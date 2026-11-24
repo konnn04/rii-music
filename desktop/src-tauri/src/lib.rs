@@ -360,8 +360,10 @@ pub fn toggle_mini(app: &AppHandle) -> Result<bool, String> {
     Ok(true)
 }
 
+// async on purpose: building a window inside a synchronous command deadlocks
+// on Windows (WebView2), leaving a blank, frozen window.
 #[tauri::command]
-fn toggle_mini_player(app: AppHandle) -> Result<bool, String> {
+async fn toggle_mini_player(app: AppHandle) -> Result<bool, String> {
     toggle_mini(&app)
 }
 

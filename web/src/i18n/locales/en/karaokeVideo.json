@@ -1,0 +1,27 @@
+{
+  "button": "Export karaoke video",
+  "title": "Export karaoke video",
+  "resolution": "Resolution",
+  "audio": "Audio",
+  "audioOptions": {
+    "ai": "AI instrumental",
+    "quick": "Quick vocal remover",
+    "original": "Original (with vocals)"
+  },
+  "lyrics": "Show lyrics",
+  "noSyncedHint": "This song has no synced lyrics yet — the video will be exported without lyrics.",
+  "note": "Rendering runs on this device and can take a while for long songs. Keep this tab open until it finishes.",
+  "start": "Start export",
+  "download": "Download",
+  "exportAgain": "Export again",
+  "phase": {
+    "prepare": "Preparing audio and cover…",
+    "render": "Rendering video…",
+    "finalize": "Finalizing video file…"
+  },
+  "frames": "{current} / {total} frames",
+  "done": "Video ready ({size})",
+  "error": "Could not export video",
+  "errorUnsupported": "This browser does not support video encoding (WebCodecs).",
+  "errorNoAudio": "Could not load or decode the song's audio."
+}

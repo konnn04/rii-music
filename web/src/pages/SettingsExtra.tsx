@@ -8,6 +8,7 @@ import { Icon, type IconName } from "@/components/ui/Icon";
 import { Tip, resetHints } from "@/components/ui/Tips";
 import { notify, toast } from "@/components/ui/Toast";
 import { LANGS, lang, setLang, t } from "@/i18n";
+import { isDesktop } from "@/lib/desktop";
 
 function Card({ title, icon, tip, children }: { title: string; icon: IconName; tip?: string; children: React.ReactNode }) {
   return (
@@ -128,7 +129,7 @@ export function ApiTokens() {
   );
 }
 
-type DiscordInfo = { configured: boolean; agentUrl: string; server: string; downloads: { os: string; file: string; url: string; size: number }[] };
+type DiscordInfo = { configured: boolean; appId?: string; agentUrl: string; server: string; downloads: { os: string; file: string; url: string; size: number }[] };
 
 /** Discord presence: download the small agent, run one command on the computer with Discord. */
 export function DiscordPresence() {
@@ -139,6 +140,31 @@ export function DiscordPresence() {
   const on = !!settings.data?.discordPresence;
   const d = info.data;
   if (!d) return null;
+  // Desktop app: it talks to Discord on this computer itself, nothing to run.
+  if (isDesktop()) {
+    return (
+      <Card title={t("settingsx.discord.title")} icon="headphones" tip={t("settingsx.discord.desktopTip")}>
+        <div className="flex items-center gap-4 py-4">
+          <div className="min-w-0 flex-1">
+            <div className="text-body">{t("settingsx.discord.toggle")}</div>
+            <div className="text-body-sm text-fg-muted">
+              {d.configured ? t("settingsx.discord.desktopHint") : t("settingsx.discord.desktopNoAppId")}
+            </div>
+          </div>
+          <button
+            role="switch"
+            aria-checked={on}
+            aria-label={t("settingsx.discord.toggle")}
+            disabled={!d.configured}
+            onClick={() => saveSettings({ discordPresence: !on }).then(() => notify({ text: t(on ? "settingsx.discord.off" : "settingsx.discord.on"), icon: "headphones" }))}
+            className={`focus-ring relative h-7 w-12 shrink-0 rounded-full transition-colors duration-fast disabled:opacity-40 ${on ? "bg-accent" : "bg-surface-4"}`}
+          >
+            <span className={`absolute top-1 size-5 rounded-full bg-fg transition-[left] duration-fast ${on ? "left-6 !bg-fg-on-accent" : "left-1"}`} />
+          </button>
+        </div>
+      </Card>
+    );
+  }
   // The agent is a script served by this server: PowerShell (built into
   // Windows) or sh + python3. It asks for the token once and keeps it.
   const cmd = os === "windows" ? `irm ${d.server}/agent.ps1 | iex` : `curl -fsSL ${d.server}/agent.sh | sh`;

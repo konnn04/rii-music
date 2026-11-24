@@ -189,7 +189,7 @@ func isDigits(s string) bool {
 // handleDiscordInfo: what a user needs to set up presence.
 func (s *Server) handleDiscordInfo(w http.ResponseWriter, r *http.Request) {
 	st := s.serverSettings()
-	writeJSON(w, http.StatusOK, map[string]any{"configured": st.DiscordAppID != "", "agentUrl": st.AgentURL, "server": s.baseURL(r), "downloads": s.agentDownloads()})
+	writeJSON(w, http.StatusOK, map[string]any{"configured": st.DiscordAppID != "", "appId": st.DiscordAppID, "agentUrl": st.AgentURL, "server": s.baseURL(r), "downloads": s.agentDownloads()})
 }
 
 type agentDownload struct {

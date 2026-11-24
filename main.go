@@ -165,9 +165,17 @@ func run(log *slog.Logger, logBuf *server.LogBuffer) error {
 	go yt.Init(ctx)
 	srv.Start(ctx)
 
+	handler := srv.Handler()
+	if cfg.Local() {
+		// Desktop app: Discord presence straight to the Discord client on this computer.
+		mux := http.NewServeMux()
+		mux.Handle("/__rii/discord", discordrpc.NewPresence(log.With("component", "discord")).Handler())
+		mux.Handle("/", handler)
+		handler = mux
+	}
 	hs := &http.Server{
 		Addr:              cfg.Addr,
-		Handler:           srv.Handler(),
+		Handler:           handler,
 		ReadHeaderTimeout: 10 * time.Second,
 		IdleTimeout:       120 * time.Second,
 	}

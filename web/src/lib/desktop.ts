@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
-import { api } from "@/lib/api";
+import { api, type Settings } from "@/lib/api";
+import { queryClient } from "@/lib/queries";
 import { engine } from "@/player/engine";
 import { usePlayback, usePlayer } from "@/player/store";
 import { notify, toast } from "@/components/ui/Toast";
@@ -77,6 +78,69 @@ export function useAppMode(): AppMode {
 
 let initialized = false;
 
+// ── Discord: straight to the Discord client on this computer ────────────
+// The sidecar (127.0.0.1) answers /__rii/discord in both modes; no agent, no token.
+
+/** YouTube thumbnail of a song (works without a public server address). */
+function coverFor(sourceUrl: string): string {
+  const m = /[?&]v=([\w-]{11})/.exec(sourceUrl) ?? /youtu\.be\/([\w-]{11})/.exec(sourceUrl);
+  return m ? `https://i.ytimg.com/vi/${m[1]}/hqdefault.jpg` : "";
+}
+
+function startDiscord() {
+  let appId = "";
+  let lastKey = "";
+  let timer: number | null = null;
+  const loadAppId = () =>
+    api<{ appId?: string }>("/api/discord")
+      .then((d) => {
+        appId = d.appId ?? "";
+        lastKey = "";
+        send();
+      })
+      .catch(() => {});
+  const enabled = () => !!queryClient.getQueryData<Settings>(["settings"])?.discordPresence;
+  const post = (body: unknown, method = "POST") =>
+    fetch("/__rii/discord", { method, headers: { "Content-Type": "application/json", "X-RiiMusic": "1" }, body: body ? JSON.stringify(body) : undefined }).catch(() => {});
+  const send = () => {
+    if (timer !== null) window.clearTimeout(timer);
+    timer = window.setTimeout(() => {
+      timer = null;
+      const cur = usePlayer.getState().current?.track;
+      const pb = usePlayback.getState();
+      if (!enabled() || !appId || !cur) {
+        if (lastKey !== "off") void post(null, "DELETE");
+        lastKey = "off";
+        return;
+      }
+      // Re-send on song / play state changes and after seeks (5 s buckets).
+      const key = `${cur.id}|${pb.isPlaying}|${Math.round((Date.now() / 1000 - pb.position) / 5)}`;
+      if (key === lastKey) return;
+      lastKey = key;
+      void post({
+        clientId: appId,
+        playing: pb.isPlaying,
+        trackId: cur.id,
+        title: cur.title,
+        artist: cur.artist,
+        album: cur.album,
+        durationMs: Math.round((pb.duration || cur.durationMs / 1000) * 1000),
+        positionMs: Math.round(pb.position * 1000),
+        coverUrl: coverFor(cur.sourceUrl),
+      });
+    }, 400);
+  };
+  void loadAppId();
+  usePlayer.subscribe((s, prev) => s.current?.uid !== prev.current?.uid && send());
+  usePlayback.subscribe((s, prev) => (s.isPlaying !== prev.isPlaying || Math.abs(s.position - prev.position) > 3) && send());
+  // The toggle in Settings, and the admin setting the Application ID.
+  queryClient.getQueryCache().subscribe((e) => {
+    const k = e.query.queryKey[0];
+    if (k === "settings") send();
+    if (k === "discordInfo" && e.type === "updated") void loadAppId();
+  });
+}
+
 export function initDesktop(): void {
   // Once per launch, a little after start: tell about a new version.
   if (isDesktop()) {
@@ -96,6 +160,8 @@ export function initDesktop(): void {
   }
   if (initialized || !isDesktop()) return;
   initialized = true;
+
+  startDiscord();
 
   window.addEventListener("rii:cmd", (ev: Event) => {
     const cmd = (ev as CustomEvent<string>).detail;

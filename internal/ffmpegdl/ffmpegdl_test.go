@@ -265,10 +265,10 @@ func buildTestTar(t *testing.T, files map[string]string) []byte {
 func TestExtractFromTar(t *testing.T) {
 	t.Run("extracts ffmpeg and ffprobe", func(t *testing.T) {
 		raw := buildTestTar(t, map[string]string{
-			"ffmpeg-master/doc/ffmpeg":    "decoy",
-			"ffmpeg-master/bin/ffmpeg":    "linux-ffmpeg",
-			"ffmpeg-master/bin/ffprobe":   "linux-ffprobe",
-			"ffmpeg-master/LICENSE.txt":   "gpl",
+			"ffmpeg-master/doc/ffmpeg":  "decoy",
+			"ffmpeg-master/bin/ffmpeg":  "linux-ffmpeg",
+			"ffmpeg-master/bin/ffprobe": "linux-ffprobe",
+			"ffmpeg-master/LICENSE.txt": "gpl",
 		})
 		dir := t.TempDir()
 		ffDst := filepath.Join(dir, "ffmpeg.tmp")

@@ -49,6 +49,7 @@
     "prebuilt": "Dùng bản chạy sẵn (file exe) thay cho script",
     "desktopTip": "Ứng dụng RiiMusic tự báo cho Discord đang mở trên máy này: không cần chạy lệnh hay tạo token.",
     "desktopHint": "Hiện bài đang nghe trên Discord của máy này (Discord phải đang mở).",
-    "desktopNoAppId": "Chưa có Discord Application ID: đặt trong Quản trị → Discord (ở chế độ máy chủ, nhờ admin của máy chủ)."
+    "desktopNoAppId": "Chưa có Discord Application ID: đặt trong Quản trị → Discord (ở chế độ máy chủ, nhờ admin của máy chủ).",
+    "desktopAppIdHint": "Tạo ứng dụng tại discord.com/developers/applications (tên ứng dụng là chữ hiện sau “Đang nghe”), rồi dán Application ID vào đây."
   }
 }

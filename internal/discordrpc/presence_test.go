@@ -12,6 +12,7 @@ import (
 
 func TestPresenceHandler(t *testing.T) {
 	p := NewPresence(slog.New(slog.NewTextHandler(io.Discard, nil)))
+	defer p.Close()
 	h := p.Handler()
 	do := func(method, body string, header bool) int {
 		req := httptest.NewRequest(method, "/__rii/discord", strings.NewReader(body))

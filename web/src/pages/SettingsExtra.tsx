@@ -8,7 +8,7 @@ import { Icon, type IconName } from "@/components/ui/Icon";
 import { Tip, resetHints } from "@/components/ui/Tips";
 import { notify, toast } from "@/components/ui/Toast";
 import { LANGS, lang, setLang, t } from "@/i18n";
-import { isDesktop } from "@/lib/desktop";
+import { isDesktop, useAppMode } from "@/lib/desktop";
 
 function Card({ title, icon, tip, children }: { title: string; icon: IconName; tip?: string; children: React.ReactNode }) {
   return (
@@ -134,21 +134,40 @@ type DiscordInfo = { configured: boolean; appId?: string; agentUrl: string; serv
 /** Discord presence: download the small agent, run one command on the computer with Discord. */
 export function DiscordPresence() {
   const settings = useSettings();
+  const isLocal = useAppMode() === "local";
   const info = useQuery({ queryKey: ["discordInfo"], queryFn: () => api<DiscordInfo>("/api/discord") });
   const [token, setToken] = useState<string | null>(null);
+  const [appId, setAppId] = useState<string | null>(null);
+  const [savingId, setSavingId] = useState(false);
   const [os, setOs] = useState<"windows" | "unix">(/Windows/i.test(navigator.userAgent) ? "windows" : "unix");
   const on = !!settings.data?.discordPresence;
   const d = info.data;
   if (!d) return null;
   // Desktop app: it talks to Discord on this computer itself, nothing to run.
   if (isDesktop()) {
+    const curAppId = d.appId ?? "";
+    const saveAppId = async (e: React.FormEvent) => {
+      e.preventDefault();
+      setSavingId(true);
+      try {
+        await api("/api/admin/settings", { method: "PUT", json: { discordAppId: (appId ?? curAppId).trim() } });
+        setAppId(null);
+        void queryClient.invalidateQueries({ queryKey: ["discordInfo"] });
+        void queryClient.invalidateQueries({ queryKey: ["admin", "settings"] });
+        toast(t("adminx.discord.saved"), "success");
+      } catch (err) {
+        toast((err as Error).message, "error");
+      } finally {
+        setSavingId(false);
+      }
+    };
     return (
       <Card title={t("settingsx.discord.title")} icon="headphones" tip={t("settingsx.discord.desktopTip")}>
         <div className="flex items-center gap-4 py-4">
           <div className="min-w-0 flex-1">
             <div className="text-body">{t("settingsx.discord.toggle")}</div>
             <div className="text-body-sm text-fg-muted">
-              {d.configured ? t("settingsx.discord.desktopHint") : t("settingsx.discord.desktopNoAppId")}
+              {d.configured ? t("settingsx.discord.desktopHint") : t(isLocal ? "settingsx.discord.desktopAppIdHint" : "settingsx.discord.desktopNoAppId")}
             </div>
           </div>
           <button
@@ -162,6 +181,27 @@ export function DiscordPresence() {
             <span className={`absolute top-1 size-5 rounded-full bg-fg transition-[left] duration-fast ${on ? "left-6 !bg-fg-on-accent" : "left-1"}`} />
           </button>
         </div>
+        {isLocal && (
+          <form onSubmit={saveAppId} className="flex flex-col gap-2 py-4">
+            <label className="text-body-sm" htmlFor="local-discord-appid">
+              {t("adminx.discord.appId")}
+            </label>
+            <div className="flex gap-2">
+              <input
+                id="local-discord-appid"
+                className="input h-10 flex-1 font-mono"
+                inputMode="numeric"
+                value={appId ?? curAppId}
+                onChange={(e) => setAppId(e.target.value)}
+                placeholder="123456789012345678"
+              />
+              <Button type="submit" variant="primary" loading={savingId} disabled={appId === null || appId.trim() === curAppId}>
+                {t("common.save")}
+              </Button>
+            </div>
+            <p className="text-caption text-fg-muted">{t("settingsx.discord.desktopAppIdHint")}</p>
+          </form>
+        )}
       </Card>
     );
   }

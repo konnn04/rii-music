@@ -168,8 +168,10 @@ func run(log *slog.Logger, logBuf *server.LogBuffer) error {
 	handler := srv.Handler()
 	if cfg.Local() {
 		// Desktop app: Discord presence straight to the Discord client on this computer.
+		dp := discordrpc.NewPresence(log.With("component", "discord"))
+		defer dp.Close()
 		mux := http.NewServeMux()
-		mux.Handle("/__rii/discord", discordrpc.NewPresence(log.With("component", "discord")).Handler())
+		mux.Handle("/__rii/discord", dp.Handler())
 		mux.Handle("/", handler)
 		handler = mux
 	}

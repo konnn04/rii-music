@@ -1,6 +1,9 @@
 # Discord status
 
-Discord only accepts a "Listening to…" status from a program on the same computer, so a small agent runs there and asks the server what you are playing.
+Discord only accepts a "Listening to…" status from a program on the same computer.
+
+- **Desktop app (RiiMusic Desktop):** talks directly to Discord running on the same computer — just turn on **Settings → Discord status** (no script or token needed; in Local mode, paste your own Discord Application ID right there).
+- **Web browser:** run a small agent on the computer with Discord so it can ask the server what you are playing:
 
 1. The admin creates an application at [discord.com/developers](https://discord.com/developers/applications) and pastes its Application ID in Admin → Discord. The application's name is what shows after "Listening to".
 2. Each user opens Settings → Discord status, turns it on and creates a token.

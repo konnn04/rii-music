@@ -51,7 +51,9 @@ func runClient(log *slog.Logger) error {
 		fmt.Fprintf(w, `{"ok":true,"mode":"client","version":%q}`, server.Version)
 	})
 	// Discord: the web app in the desktop app reports what plays here.
-	mux.Handle("/__rii/discord", discordrpc.NewPresence(log.With("component", "discord")).Handler())
+	dp := discordrpc.NewPresence(log.With("component", "discord"))
+	defer dp.Close()
+	mux.Handle("/__rii/discord", dp.Handler())
 	mux.Handle("/", h)
 	hs := &http.Server{Addr: "127.0.0.1:" + envOr("PORT", "8080"), Handler: mux, ReadHeaderTimeout: 10 * time.Second}
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)

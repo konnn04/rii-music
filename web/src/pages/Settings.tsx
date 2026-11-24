@@ -132,7 +132,7 @@ export function SettingsPage() {
 
         {isDesktop() && <DesktopSettings />}
 
-        {!isLocal && <DiscordPresence />}
+        {(isDesktop() || !isLocal) && <DiscordPresence />}
         {!isLocal && <ApiTokens />}
         <DataSettings />
 

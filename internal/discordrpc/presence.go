@@ -35,14 +35,25 @@ type Presence struct {
 	lastErr string
 	cur     *Playing
 	wake    chan struct{}
+	stop    chan struct{}
+	done    chan struct{}
+	once    sync.Once
 }
 
 // NewPresence starts the background loop (reconnects every 15 s while Discord
 // is closed; re-sends after reconnecting).
 func NewPresence(log *slog.Logger) *Presence {
-	p := &Presence{log: log, wake: make(chan struct{}, 1)}
+	p := &Presence{log: log, wake: make(chan struct{}, 1), stop: make(chan struct{}), done: make(chan struct{})}
 	go p.loop()
 	return p
+}
+
+// Close clears any shown Discord status and closes the IPC connection.
+func (p *Presence) Close() {
+	p.once.Do(func() {
+		close(p.stop)
+		<-p.done
+	})
 }
 
 func (p *Presence) set(np *Playing) {
@@ -56,11 +67,23 @@ func (p *Presence) set(np *Playing) {
 }
 
 func (p *Presence) loop() {
+	defer func() {
+		p.mu.Lock()
+		if p.dc != nil {
+			_ = p.dc.SetActivity(nil)
+			_ = p.dc.Close()
+			p.dc, p.shown = nil, ""
+		}
+		p.mu.Unlock()
+		close(p.done)
+	}()
 	tick := time.NewTicker(15 * time.Second)
 	defer tick.Stop()
 	for {
 		p.apply()
 		select {
+		case <-p.stop:
+			return
 		case <-p.wake:
 		case <-tick.C:
 		}

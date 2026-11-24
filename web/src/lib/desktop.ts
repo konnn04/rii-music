@@ -83,22 +83,27 @@ let initialized = false;
 
 /** YouTube thumbnail of a song (works without a public server address). */
 function coverFor(sourceUrl: string): string {
-  const m = /[?&]v=([\w-]{11})/.exec(sourceUrl) ?? /youtu\.be\/([\w-]{11})/.exec(sourceUrl);
+  const m = /[?&]v=([\w-]{11})/.exec(sourceUrl) ?? /youtu\.be\/([\w-]{11})/.exec(sourceUrl) ?? /\/shorts\/([\w-]{11})/.exec(sourceUrl);
   return m ? `https://i.ytimg.com/vi/${m[1]}/hqdefault.jpg` : "";
 }
 
 function startDiscord() {
   let appId = "";
   let lastKey = "";
+  let lastLoad = 0;
   let timer: number | null = null;
-  const loadAppId = () =>
-    api<{ appId?: string }>("/api/discord")
+  const loadAppId = (force = false) => {
+    const now = Date.now();
+    if (!force && now - lastLoad < 10_000) return;
+    lastLoad = now;
+    void api<{ appId?: string }>("/api/discord")
       .then((d) => {
         appId = d.appId ?? "";
         lastKey = "";
         send();
       })
       .catch(() => {});
+  };
   const enabled = () => !!queryClient.getQueryData<Settings>(["settings"])?.discordPresence;
   const post = (body: unknown, method = "POST") =>
     fetch("/__rii/discord", { method, headers: { "Content-Type": "application/json", "X-RiiMusic": "1" }, body: body ? JSON.stringify(body) : undefined }).catch(() => {});
@@ -130,36 +135,50 @@ function startDiscord() {
       });
     }, 400);
   };
-  void loadAppId();
+  loadAppId(true);
   usePlayer.subscribe((s, prev) => s.current?.uid !== prev.current?.uid && send());
   usePlayback.subscribe((s, prev) => (s.isPlaying !== prev.isPlaying || Math.abs(s.position - prev.position) > 3) && send());
-  // The toggle in Settings, and the admin setting the Application ID.
+  // The toggle in Settings, login in client mode, and the admin setting the Application ID.
   queryClient.getQueryCache().subscribe((e) => {
     const k = e.query.queryKey[0];
-    if (k === "settings") send();
-    if (k === "discordInfo" && e.type === "updated") void loadAppId();
+    if (k === "discordInfo" && e.type === "updated") {
+      const next = (e.query.state.data as { appId?: string } | undefined)?.appId;
+      if (typeof next === "string") {
+        if (next !== appId) {
+          appId = next;
+          lastKey = "";
+          send();
+        }
+      } else {
+        loadAppId(true);
+      }
+    } else if (k === "settings") {
+      if (!appId && e.query.state.data) loadAppId();
+      send();
+    } else if (k === "me" && e.type === "updated" && e.query.state.data && !appId) {
+      loadAppId(true);
+    }
   });
 }
 
 export function initDesktop(): void {
-  // Once per launch, a little after start: tell about a new version.
-  if (isDesktop()) {
-    window.setTimeout(() => {
-      checkDesktopUpdate()
-        .then((u) => {
-          if (u?.version)
-            notify({
-              icon: "download",
-              text: t("settings.desktop.updateAvailable", { version: u.version }),
-              duration: 0,
-              action: { label: t("settings.desktop.updateNow"), onClick: () => void installDesktopUpdate().catch((e: Error) => toast(e.message, "error")) },
-            });
-        })
-        .catch(() => {});
-    }, 15_000);
-  }
   if (initialized || !isDesktop()) return;
   initialized = true;
+
+  // Once per launch, a little after start: tell about a new version.
+  window.setTimeout(() => {
+    checkDesktopUpdate()
+      .then((u) => {
+        if (u?.version)
+          notify({
+            icon: "download",
+            text: t("settings.desktop.updateAvailable", { version: u.version }),
+            duration: 0,
+            action: { label: t("settings.desktop.updateNow"), onClick: () => void installDesktopUpdate().catch((e: Error) => toast(e.message, "error")) },
+          });
+      })
+      .catch(() => {});
+  }, 15_000);
 
   startDiscord();
 

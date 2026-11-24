@@ -1,4 +1,14 @@
 import { create } from "zustand";
+import { roomRole } from "@/player/roomFlag";
+import { toast } from "@/components/ui/Toast";
+import { t } from "@/i18n";
+
+/** Karaoke and Nghe chung exclude each other: everyone in a room hears the same audio. */
+function blockedByRoom(): boolean {
+  if (!roomRole()) return false;
+  toast(t("karaoke.inRoom"), "error");
+  return true;
+}
 
 export type KaraokeMode = "off" | "quick" | "ai";
 
@@ -73,6 +83,7 @@ useKaraoke.subscribe((s, prev) => {
 });
 
 export function setKaraokeMode(m: KaraokeMode): void {
+  if (m !== "off" && blockedByRoom()) return;
   useKaraoke.setState({ mode: parseMode(m) });
 }
 
@@ -85,5 +96,6 @@ export function setKey(k: number): void {
 }
 
 export function openKaraoke(open: boolean): void {
+  if (open && blockedByRoom()) return;
   useKaraoke.setState({ open: !!open });
 }

@@ -38,5 +38,6 @@
   "open": "Open",
   "notify": {
     "joined": "{name} joined the room"
-  }
+  },
+  "karaokeOn": "Karaoke is on: turn it off to listen together."
 }

@@ -38,5 +38,6 @@
   "open": "Mở",
   "notify": {
     "joined": "{name} đã vào phòng"
-  }
+  },
+  "karaokeOn": "Đang bật karaoke: tắt karaoke (chế độ Tắt) để Nghe chung."
 }

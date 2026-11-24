@@ -5,7 +5,7 @@ import { Tip } from "@/components/ui/Tips";
 import { t } from "@/i18n";
 import { engine } from "@/player/engine";
 import { usePlayer } from "@/player/store";
-import { ensureInstrumental } from "./separate";
+import { ensureInstrumental, cancelSeparation } from "./separate";
 import { setKaraokeMode, setKey, setVocal, useKaraoke, type KaraokeMode } from "./store";
 
 const MODES: KaraokeMode[] = ["off", "quick", "ai"];
@@ -144,7 +144,16 @@ export function KaraokeControls() {
                 <span className="text-fg-subtle">· {sepForTrack.backend === "cpu" ? t("karaoke.cpu") : sepForTrack.backend}</span>
               )}
             </span>
-            <span className="tabular">{Math.round(Math.max(0, Math.min(1, sepForTrack.progress)) * 100)}%</span>
+            <span className="flex items-center gap-2">
+              <span className="tabular">{Math.round(Math.max(0, Math.min(1, sepForTrack.progress)) * 100)}%</span>
+              <button
+                type="button"
+                onClick={cancelSeparation}
+                className="focus-ring rounded-full px-2 py-0.5 text-caption text-np-fg-muted hover:bg-white/10 hover:text-fg"
+              >
+                {t("common.cancel")}
+              </button>
+            </span>
           </div>
           <div
             className="h-1.5 overflow-hidden rounded-full bg-white/15"

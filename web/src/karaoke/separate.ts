@@ -102,12 +102,21 @@ function encodeWav16(left: Float32Array, right: Float32Array, sampleRate: number
   return buf;
 }
 
+/** Where the model ran last (shown next to the progress). */
+let lastBackend: string | undefined;
+
+/** Stop the running separation and fall back to the quick vocal remover
+ *  (pressing AI again starts it over). */
+export function cancelSeparation(): void {
+  jobSeq++;
+  terminateActiveWorker();
+  useKaraoke.setState({ sep: null, mode: "quick" });
+}
+
 /**
  * Ensures an AI-separated instrumental exists for `trackId`, loading from Cache
  * Storage if available or running the ONNX Web Worker otherwise.
  */
-/** Where the model ran last (shown next to the progress). */
-let lastBackend: string | undefined;
 
 export async function ensureInstrumental(trackId: string): Promise<void> {
   if (!trackId) return;

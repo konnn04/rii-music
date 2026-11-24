@@ -35,5 +35,6 @@
   "cleared": "Đã xoá bộ nhớ karaoke ({size}).",
   "clearedEmpty": "Không có dữ liệu karaoke nào trong bộ nhớ.",
   "shortcutToggle": "Mở / đóng Karaoke",
-  "cpu": "CPU (chậm, trình duyệt không có WebGPU)"
+  "cpu": "CPU (chậm, trình duyệt không có WebGPU)",
+  "inRoom": "Đang Nghe chung: tắt Nghe chung để dùng karaoke."
 }

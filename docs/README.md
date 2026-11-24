@@ -6,6 +6,7 @@ Each page covers one topic and can be read on its own, by people and by AI assis
 | --- | --- |
 | [features.md](features.md) | Everything the app does, by area |
 | [install.md](install.md) | Docker, running from source, reverse proxy, updates, backups |
+| [desktop.md](desktop.md) | The desktop app: local and client modes, where files go, extras, logs |
 | [configuration.md](configuration.md) | Environment variables and admin settings |
 | [discord.md](discord.md) | "Listening to…" status on Discord |
 | [api.md](api.md) | Personal tokens, OpenAPI, the TypeScript client |

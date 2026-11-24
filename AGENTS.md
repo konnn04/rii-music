@@ -103,4 +103,4 @@ All of them, including the development-only ones (`WEB_DIR`, `YTDLP_JS_RUNTIME`,
 
 ## Not done yet
 
-Learned audio embeddings (e.g. CLAP) for tier 3 if a stronger server is available, a desktop wrapper (Tauri) that could consume the `riimusic:nowplaying` window event.
+Learned audio embeddings (e.g. CLAP) for tier 3 if a stronger server is available; Windows code signing for the desktop app.

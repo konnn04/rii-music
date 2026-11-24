@@ -52,6 +52,10 @@
 - Share a song by link: signed-out visitors get a 30-second preview.
 - Interface in Vietnamese and English.
 
+## Desktop app
+
+- Windows / macOS / Linux app with a local mode (no server, encrypted music folder) or as a client of a server; tray, autostart, media keys, mini player, taskbar buttons, notifications, self-update ([desktop.md](desktop.md)).
+
 ## Integrations
 
 - Discord "Listening to…" status with a one-line agent, nothing to install ([discord.md](discord.md)).

@@ -32,9 +32,12 @@ export function getSimpleMode(): boolean {
   return v === null ? isIOS : v === "1";
 }
 
+export type MediaSyncEvent = "play" | "playing" | "pause" | "seeking" | "seeked" | "ratechange";
+
 type Slot = {
   el: HTMLAudioElement;
   uid: string | null;
+  orig?: GainNode;
   fade?: GainNode;
   norm?: GainNode;
   // simple mode
@@ -56,6 +59,8 @@ class Engine {
   private pitchLoading = false;
   private pitchWired = false;
   private karaokeSwapToken = 0;
+  private karaokeCovered = false;
+  private mediaListeners = new Set<(ev: MediaSyncEvent, el: HTMLAudioElement) => void>();
   private analyser: AnalyserNode | null = null;
   private freq: Uint8Array<ArrayBuffer> | null = null;
   private wave: Float32Array<ArrayBuffer> | null = null;
@@ -200,10 +205,12 @@ class Engine {
       this.wave = new Float32Array(analyser.fftSize);
       for (const s of this.slots) {
         const src = ctx.createMediaElementSource(s.el);
+        s.orig = ctx.createGain();
         s.fade = ctx.createGain();
         s.norm = ctx.createGain();
-        src.connect(s.fade).connect(s.norm).connect(master);
+        src.connect(s.orig).connect(s.fade).connect(s.norm).connect(master);
         s.norm.connect(analyser);
+        s.orig.gain.value = 1;
         s.fade.gain.value = s.fadeVal;
       }
       this.ctx = ctx;
@@ -222,12 +229,52 @@ class Engine {
 
   // ── karaoke ──────────────────────────────────────────────────────────
 
+  /** Active slot's AudioContext, fade GainNode (stream destination), and <audio> clock. */
+  karaokeTarget(): { ctx: AudioContext; dest: AudioNode; el: HTMLMediaElement } | null {
+    if (this.simple) return null;
+    this.ensureContext();
+    if (this.simple || !this.ctx) return null;
+    const slot = this.slots[this.active];
+    if (!slot.fade) return null;
+    return { ctx: this.ctx, dest: slot.fade, el: slot.el };
+  }
+
+  /** Toggle whether the streaming AI instrumental covers the current playhead. */
+  setKaraokeCovered(covered: boolean): void {
+    this.karaokeCovered = covered;
+    this.applyKaraoke();
+  }
+
+  /** Subscribe to playback/seek/rate events on the active <audio> element. */
+  onMediaEvent(cb: (ev: MediaSyncEvent, el: HTMLAudioElement) => void): () => void {
+    this.mediaListeners.add(cb);
+    return () => {
+      this.mediaListeners.delete(cb);
+    };
+  }
+
+  private emitMedia(ev: MediaSyncEvent, el: HTMLAudioElement) {
+    for (const cb of this.mediaListeners) cb(ev, el);
+  }
+
+  private rampOrig(slot: Slot, to: number, dur = 0.06) {
+    if (!slot.orig || !this.ctx) return;
+    const g = slot.orig.gain;
+    const now = this.ctx.currentTime;
+    g.cancelScheduledValues(now);
+    g.setValueAtTime(g.value, now);
+    if (dur <= 0) g.setValueAtTime(to, now);
+    else g.linearRampToValueAtTime(to, now + dur);
+  }
+
   /** AI karaoke: the current song's instrumental is still being made. Its end then
    *  holds the song (no crossfade, no next) so it can be sung once it is ready. */
   private karaokePending(): boolean {
     const k = useKaraoke.getState();
     const cur = usePlayer.getState().current;
-    if (k.mode !== "ai" || !cur || instrumentalUrl(cur.track.id)) return false;
+    if (k.mode !== "ai" || !cur) return false;
+    if (this.simple && instrumentalUrl(cur.track.id)) return false;
+    if (!this.simple && k.ready[cur.track.id]) return false;
     return k.sep?.trackId === cur.track.id && k.sep.phase !== "error" && k.sep.phase !== "done";
   }
 
@@ -238,7 +285,9 @@ class Engine {
     useKaraoke.setState({ holding: null });
     const p = usePlayer.getState();
     if (p.current?.uid !== held) return;
-    if (useKaraoke.getState().mode === "ai" && instrumentalUrl(p.current.track.id)) {
+    const k = useKaraoke.getState();
+    const ready = this.simple ? !!instrumentalUrl(p.current.track.id) : !!k.ready[p.current.track.id];
+    if (k.mode === "ai" && ready) {
       const el = this.slots[this.active].el;
       el.currentTime = 0;
       el.play().catch((e) => this.playRejected(e));
@@ -249,17 +298,21 @@ class Engine {
   }
 
   private srcFor(id: string): string {
-    return (useKaraoke.getState().mode === "ai" && instrumentalUrl(id)) || streamUrl(id);
+    return (this.simple && useKaraoke.getState().mode === "ai" && instrumentalUrl(id)) || streamUrl(id);
   }
 
   private applyKaraoke() {
     if (this.simple || !this.ctx || !this.remover || !this.fx) return;
     const k = useKaraoke.getState();
-    const curId = usePlayer.getState().current?.track.id ?? null;
-    const hasInst = curId !== null && instrumentalUrl(curId) !== null;
-    const removerOn = k.mode === "quick" || (k.mode === "ai" && !hasInst);
+    const covered = k.mode === "ai" && this.karaokeCovered;
+    const removerOn = k.mode === "quick" || (k.mode === "ai" && !covered);
     this.remover.setEnabled(removerOn);
     this.remover.setVocal(k.vocal);
+
+    this.rampOrig(this.slots[this.active], covered ? 0 : 1);
+    if (k.mode !== "ai" || !this.crossfading) {
+      this.rampOrig(this.slots[1 - this.active], 1);
+    }
 
     const key = k.mode === "off" ? 0 : k.key;
     if (key === 0) {
@@ -301,6 +354,7 @@ class Engine {
   /** Swap the active slot's source when karaoke mode or instrumental availability changes. */
   refreshKaraokeSource() {
     this.applyKaraoke();
+    if (!this.simple) return;
     const cur = usePlayer.getState().current;
     if (!cur) return;
     const slot = this.slots[this.active];
@@ -432,14 +486,29 @@ class Engine {
     el.addEventListener("durationchange", () => {
       if (isActive() && isFinite(el.duration)) usePlayback.setState({ duration: el.duration });
     });
+    el.addEventListener("play", () => {
+      if (isActive()) this.emitMedia("play", el);
+    });
     el.addEventListener("playing", () => {
       if (!isActive()) return;
       this.errorStreak = 0;
       usePlayback.setState({ isPlaying: true, buffering: false, error: null });
       this.updatePositionState();
+      this.emitMedia("playing", el);
     });
     el.addEventListener("pause", () => {
-      if (isActive() && !this.crossfading) usePlayback.setState({ isPlaying: false });
+      if (!isActive()) return;
+      if (!this.crossfading) usePlayback.setState({ isPlaying: false });
+      this.emitMedia("pause", el);
+    });
+    el.addEventListener("seeking", () => {
+      if (isActive()) this.emitMedia("seeking", el);
+    });
+    el.addEventListener("seeked", () => {
+      if (isActive()) this.emitMedia("seeked", el);
+    });
+    el.addEventListener("ratechange", () => {
+      if (isActive()) this.emitMedia("ratechange", el);
     });
     el.addEventListener("waiting", () => isActive() && usePlayback.setState({ buffering: true }));
     el.addEventListener("canplay", () => isActive() && usePlayback.setState({ buffering: false }));
@@ -491,6 +560,7 @@ class Engine {
     slot.uid = entry.uid;
     slot.el.src = this.srcFor(entry.track.id);
     slot.el.load();
+    this.rampOrig(slot, 1, 0);
     this.rampFade(slot, 0, 0);
     this.applyNorm(slot);
   }
@@ -621,6 +691,7 @@ class Engine {
       return;
     }
     this.offlineSkips = 0;
+    if (changed) this.karaokeCovered = false;
     this.applyKaraoke();
 
     this.updateMediaSession(entry);
@@ -653,11 +724,13 @@ class Engine {
           if (this.slots[this.active] !== cur) {
             cur.el.pause();
             cur.uid = null;
+            this.rampOrig(cur, 1, 0);
           }
         }, fadeIn * 1000 + 50);
       } else {
         cur.el.pause();
         cur.uid = null;
+        this.rampOrig(cur, 1, 0);
       }
       this.beginListen(entry);
       return;

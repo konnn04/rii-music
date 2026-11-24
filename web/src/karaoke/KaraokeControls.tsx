@@ -158,7 +158,9 @@ export function KaraokeControls() {
           <div className="flex items-center justify-between gap-2 text-caption text-np-fg-muted">
             <span className="flex items-center gap-1.5">
               <Icon name="loader" size={14} className="text-np-accent" />
-              {t(`karaoke.phase.${sepForTrack.phase}`)}
+              {sepForTrack.phase === "separate" && sepForTrack.totalSegs
+                ? t("karaokeStream.separating", { done: sepForTrack.doneSegs ?? 0, total: sepForTrack.totalSegs })
+                : t(`karaoke.phase.${sepForTrack.phase}`)}
               {sepForTrack.backend && (
                 <span className="text-fg-subtle">· {sepForTrack.backend === "cpu" ? t("karaoke.cpu") : sepForTrack.backend}</span>
               )}
@@ -174,10 +176,15 @@ export function KaraokeControls() {
               </button>
             </span>
           </div>
+          {sepForTrack.inGap && <div className="text-caption text-np-fg-muted/80">{t("karaokeStream.gap")}</div>}
           <div
             className="h-1.5 overflow-hidden rounded-full bg-white/15"
             role="progressbar"
-            aria-label={t(`karaoke.phase.${sepForTrack.phase}`)}
+            aria-label={
+              sepForTrack.phase === "separate" && sepForTrack.totalSegs
+                ? t("karaokeStream.separating", { done: sepForTrack.doneSegs ?? 0, total: sepForTrack.totalSegs })
+                : t(`karaoke.phase.${sepForTrack.phase}`)
+            }
             aria-valuenow={Math.round(Math.max(0, Math.min(1, sepForTrack.progress)) * 100)}
             aria-valuemin={0}
             aria-valuemax={100}

@@ -12,6 +12,31 @@ import { engine } from "@/player/engine";
 import { usePlayback, usePlayer } from "@/player/store";
 import { KaraokeControls } from "./KaraokeControls";
 import { openKaraoke, setKey, useKaraoke } from "./store";
+import { KaraokeExportButton } from "./video/ExportButton";
+
+const FOLLOW_KEY = "rii-karaoke-follow";
+
+function readFollow(): boolean {
+  try {
+    return localStorage.getItem(FOLLOW_KEY) === "1";
+  } catch {
+    return false;
+  }
+}
+
+type WordToken = { text: string; threshold: number };
+
+function splitWords(raw: string): WordToken[] {
+  const text = raw || "♪";
+  const total = text.length;
+  const tokens: WordToken[] = [];
+  const re = /\S+\s*|\s+/g;
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(text)) !== null) {
+    tokens.push({ text: m[0], threshold: m.index / total });
+  }
+  return tokens;
+}
 
 const isTyping = (target: EventTarget | null) => {
   const el = target as HTMLElement | null;
@@ -23,6 +48,19 @@ export function KaraokeView() {
   const current = usePlayer((s) => s.current);
   const track = current?.track;
   const { data: lyrics, isLoading } = useLyrics(track?.id);
+  const [follow, setFollow] = useState(readFollow);
+
+  const toggleFollow = () => {
+    setFollow((prev) => {
+      const next = !prev;
+      try {
+        localStorage.setItem(FOLLOW_KEY, next ? "1" : "0");
+      } catch {
+        /* private mode */
+      }
+      return next;
+    });
+  };
 
   useEffect(() => {
     if (!open) return;
@@ -81,13 +119,27 @@ export function KaraokeView() {
               {t("karaoke.title")}
             </div>
           )}
-          <IconButton
-            icon="close"
-            label={t("karaoke.close")}
-            shortcut="Esc"
-            onClick={() => openKaraoke(false)}
-            className="!text-fg hover:bg-white/10"
-          />
+          <div className="flex shrink-0 items-center gap-1">
+            <IconButton
+              icon="lyrics"
+              label={t("karaoke.lyrics.follow")}
+              active={follow}
+              onClick={toggleFollow}
+              className={
+                follow
+                  ? "!text-np-accent bg-np-accent-soft hover:bg-np-accent-soft"
+                  : "!text-np-fg-muted hover:!text-fg hover:bg-white/10"
+              }
+            />
+            <KaraokeExportButton />
+            <IconButton
+              icon="close"
+              label={t("karaoke.close")}
+              shortcut="Esc"
+              onClick={() => openKaraoke(false)}
+              className="!text-fg hover:bg-white/10"
+            />
+          </div>
         </header>
 
         {/* Center lyric stage */}
@@ -100,7 +152,7 @@ export function KaraokeView() {
               <span className="text-body">{t("player.lyrics.looking")}</span>
             </div>
           ) : lines.length > 0 ? (
-            <SyncedStage lines={lines} offsetSec={offsetSec} />
+            <SyncedStage lines={lines} offsetSec={offsetSec} follow={follow} />
           ) : lyrics?.plain ? (
             <PlainStage text={lyrics.plain} />
           ) : (
@@ -133,13 +185,14 @@ function EmptyStage({ icon, message }: { icon: "mic" | "lyrics"; message: string
 }
 
 /**
- * Large centered karaoke line with smooth rAF-driven left-to-right gradient fill,
+ * Large centered karaoke line (solid accent by default, or optional word-by-word highlight),
  * previous/next context lines, and a 3-2-1 countdown before the first line.
  */
-function SyncedStage({ lines, offsetSec }: { lines: Line[]; offsetSec: number }) {
-  const fillRef = useRef<HTMLSpanElement>(null);
+function SyncedStage({ lines, offsetSec, follow }: { lines: Line[]; offsetSec: number; follow: boolean }) {
   const [active, setActive] = useState(() => activeIndex(lines, usePlayback.getState().position + offsetSec));
   const [countdown, setCountdown] = useState<number>(0);
+  const [sungWords, setSungWords] = useState<number>(0);
+  const lineWords = useMemo(() => lines.map((l) => splitWords(l.text)), [lines]);
 
   // Anchor the latest known playback position so rAF can interpolate smoothly between timeupdate events.
   const anchorRef = useRef({ pos: usePlayback.getState().position, at: performance.now(), playing: usePlayback.getState().isPlaying });
@@ -162,6 +215,7 @@ function SyncedStage({ lines, offsetSec }: { lines: Line[]; offsetSec: number })
     let raf = 0;
     let lastActive = -2;
     let lastCountdown = -1;
+    let lastSung = -1;
 
     const tick = () => {
       const a = anchorRef.current;
@@ -189,12 +243,22 @@ function SyncedStage({ lines, offsetSec }: { lines: Line[]; offsetSec: number })
         setCountdown(0);
       }
 
-      if (idx >= 0 && fillRef.current) {
-        const start = lines[idx].t;
-        const nextT = idx + 1 < lines.length ? lines[idx + 1].t : Math.max(start + 4, dur + offsetSec);
-        const span = Math.max(0.25, nextT - start);
-        const pct = Math.max(0, Math.min(100, ((at - start) / span) * 100));
-        fillRef.current.style.setProperty("--kp", `${pct.toFixed(2)}%`);
+      if (follow) {
+        let sung = 0;
+        if (idx >= 0) {
+          const start = lines[idx].t;
+          const nextT = idx + 1 < lines.length ? lines[idx + 1].t : Math.max(start + 4, dur + offsetSec);
+          const span = Math.max(0.25, nextT - start);
+          const progress = Math.max(0, Math.min(1, (at - start) / span));
+          const words = lineWords[idx];
+          while (sung < words.length && progress >= words[sung].threshold) {
+            sung++;
+          }
+        }
+        if (sung !== lastSung) {
+          lastSung = sung;
+          setSungWords(sung);
+        }
       }
 
       raf = requestAnimationFrame(tick);
@@ -202,7 +266,7 @@ function SyncedStage({ lines, offsetSec }: { lines: Line[]; offsetSec: number })
 
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
-  }, [lines, offsetSec]);
+  }, [lines, lineWords, offsetSec, follow]);
 
   const seekTo = (line: Line) => {
     engine.seek(Math.max(0, line.t - offsetSec));
@@ -227,22 +291,28 @@ function SyncedStage({ lines, offsetSec }: { lines: Line[]; offsetSec: number })
         )}
       </div>
 
-      {/* Current line (very large, left-to-right gradient clip fill) or 3-2-1 countdown */}
+      {/* Current line (solid accent by default, or word-by-word highlight) or 3-2-1 countdown */}
       <div className="flex min-h-[clamp(4.5rem,12vh,8rem)] items-center justify-center px-2">
         {curLine ? (
-          <p className="text-[clamp(2.2rem,5vw,4rem)] font-bold leading-[1.18] tracking-[-0.02em]">
-            <span
-              ref={fillRef}
+          follow ? (
+            <p key={active} className="text-[clamp(2.2rem,5vw,4rem)] font-bold leading-[1.18] tracking-[-0.02em]">
+              {lineWords[active].map((w, i) => (
+                <span
+                  key={i}
+                  className={`transition-colors duration-[120ms] ${i < sungWords ? "text-np-accent" : "text-fg/35"}`}
+                >
+                  {w.text}
+                </span>
+              ))}
+            </p>
+          ) : (
+            <p
               key={active}
-              className="bg-clip-text box-decoration-clone text-transparent"
-              style={{
-                backgroundImage:
-                  "linear-gradient(90deg, var(--np-accent) 0%, var(--np-accent) var(--kp, 0%), rgba(242, 243, 245, 0.34) var(--kp, 0%), rgba(242, 243, 245, 0.34) 100%)",
-              }}
+              className="text-[clamp(2.2rem,5vw,4rem)] font-bold leading-[1.18] tracking-[-0.02em] text-np-accent"
             >
               {curLine.text || "♪"}
-            </span>
-          </p>
+            </p>
+          )
         ) : countdown > 0 ? (
           <div className="flex items-center gap-4" role="status" aria-label={t("karaoke.countdown", { n: countdown })}>
             {[1, 2, 3].map((dot) => {

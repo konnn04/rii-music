@@ -1,0 +1,27 @@
+{
+  "button": "Xuất video karaoke",
+  "title": "Xuất video karaoke",
+  "resolution": "Độ phân giải",
+  "audio": "Âm thanh",
+  "audioOptions": {
+    "ai": "Nhạc nền AI",
+    "quick": "Khử giọng nhanh",
+    "original": "Bản gốc (có lời)"
+  },
+  "lyrics": "Hiện lời bài hát",
+  "noSyncedHint": "Bài này chưa có lời đồng bộ theo nhịp — video sẽ xuất không có lời.",
+  "note": "Video được dựng ngay trên thiết bị này và có thể mất khá lâu với bài dài. Hãy giữ nguyên tab này cho đến khi xong.",
+  "start": "Bắt đầu xuất",
+  "download": "Tải về",
+  "exportAgain": "Xuất lại",
+  "phase": {
+    "prepare": "Đang chuẩn bị âm thanh và ảnh bìa…",
+    "render": "Đang dựng video…",
+    "finalize": "Đang hoàn tất tệp video…"
+  },
+  "frames": "{current} / {total} khung hình",
+  "done": "Đã tạo xong video ({size})",
+  "error": "Không thể xuất video",
+  "errorUnsupported": "Trình duyệt này không hỗ trợ mã hoá video (WebCodecs).",
+  "errorNoAudio": "Không thể tải hoặc giải mã âm thanh của bài hát."
+}

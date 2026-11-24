@@ -4,13 +4,13 @@
 export class VocalRemover {
   readonly input: GainNode;
   readonly output: GainNode;
-  private ctx: AudioContext;
+  private ctx: BaseAudioContext;
   private dryGain: GainNode;
   private wetGain: GainNode;
   private enabled = false;
   private vocal = 0;
 
-  constructor(ctx: AudioContext) {
+  constructor(ctx: BaseAudioContext) {
     this.ctx = ctx;
 
     this.input = ctx.createGain();

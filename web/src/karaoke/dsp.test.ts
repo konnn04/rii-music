@@ -47,6 +47,7 @@ export function selfTest(): string[] {
 
   // STFT → ISTFT round trip of a band-limited signal (all energy below dimF).
   for (const m of Object.values(MODELS)) {
+    if (m.kind !== "mdx") continue;
     const d = new Mdx(m);
     const x = new Float32Array(d.chunk);
     for (let i = 0; i < x.length; i++) x[i] = 0.5 * Math.sin(i * 0.031) + 0.3 * Math.sin(i * 0.47 + 1);

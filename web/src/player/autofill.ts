@@ -56,7 +56,9 @@ async function refill() {
   inflight = true;
   lastSeed = cur.uid;
   try {
-    const radio = await api<{ tracks: Track[] }>(`/api/radio?seed=${encodeURIComponent(cur.track.id)}`).catch(() => ({ tracks: [] as Track[] }));
+    // autoplay=1: only songs that really fit (no random filler); "discover" = how
+    // many new songs to look for (more for a small library, see discoverCount).
+    const radio = await api<{ tracks: Track[]; discover?: number }>(`/api/radio?autoplay=1&seed=${encodeURIComponent(cur.track.id)}`).catch(() => ({ tracks: [] as Track[], discover: 0 }));
     const now = usePlayer.getState();
     if (now.autoplayMode === "off") return;
     // Nothing already in the queue, played or upcoming (the server also leaves
@@ -65,11 +67,13 @@ async function refill() {
     skip.add(cur.track.id);
     const { target, extMax } = limits();
     const want = Math.max(target - upcomingCount(), LOW_WATER);
-    const pick = radio.tracks.filter((t) => !skip.has(t.id)).slice(0, want);
+    // Free mode keeps room for new songs: library songs fill the rest.
+    const discover = s.autoplayMode === "free" ? Math.min(extMax, radio.discover ?? 0) : 0;
+    const pick = radio.tracks.filter((t) => !skip.has(t.id)).slice(0, Math.max(want - discover, 2));
     if (pick.length) now.appendAuto(pick);
 
     // Free mode: download new songs too, more of them when the library is short.
-    const extN = Math.min(extMax, Math.max(Math.min(EXT_MIN, extMax), want - pick.length)) - pending.size;
+    const extN = Math.min(extMax, Math.max(Math.min(EXT_MIN, extMax), discover, want - pick.length)) - pending.size;
     const ext =
       s.autoplayMode === "free" && extN > 0
         ? await api<{ external: ExtSuggestion[] }>(`/api/recs/autoplay?seed=${encodeURIComponent(cur.track.id)}&ext=${extN}`).catch(() => ({ external: [] as ExtSuggestion[] }))
@@ -134,6 +138,10 @@ export function startAutofill() {
   started = true;
   usePlayer.subscribe((s, prev) => {
     if (s.autoplayMode !== prev.autoplayMode) lastSeed = "";
+    // The queue was cleared (✕ or "Xoá hàng đợi"): suggest again for the same song.
+    const before = prev.manual.length + Math.max(0, prev.context.length - prev.pos - 1);
+    const after = s.manual.length + Math.max(0, s.context.length - s.pos - 1);
+    if (s.current?.uid === prev.current?.uid && after < before && after < LOW_WATER) lastSeed = "";
     if (
       s.current?.uid !== prev.current?.uid ||
       s.context.length !== prev.context.length ||

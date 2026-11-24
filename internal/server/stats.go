@@ -502,6 +502,12 @@ func (s *Server) handleRadio(w http.ResponseWriter, r *http.Request) {
 	for _, a := range splitArtists(seed.Artist) {
 		seedArtists[looseName(a)] = true
 	}
+	// Autoplay asks with autoplay=1: only real matches (no random filler), so
+	// there is room for new songs.
+	forAutoplay := r.URL.Query().Get("autoplay") == "1"
+	seedKind := kindOf(seed.Title, seed.DurationMs)
+	styles := librarySongStyles(rc.all)
+	seedStyle := styles[seed.ID]
 	related := map[string]float64{}
 	for _, a := range splitArtists(seed.Artist) {
 		list, _ := s.ext.Similar(r.Context(), a, false)
@@ -540,6 +546,31 @@ func (s *Server) handleRadio(w http.ResponseWriter, r *http.Request) {
 	for id := range score {
 		if !sameLang(seedLang, rc.lang[id]) {
 			delete(score, id)
+			continue
+		}
+		// Same kind (no lofi mixes after a 4-minute song) and close style
+		// (no V-pop after bolero), when the genres are known.
+		if t, ok := rc.byID[id]; ok {
+			if !kindCompatible(seedKind, kindOf(t.Title, t.DurationMs)) {
+				delete(score, id)
+				continue
+			}
+			score[id] *= styleFactor(seedStyle, styles[id])
+		}
+	}
+	// A clearly different style (bolero → V-pop) is left out entirely as long
+	// as enough songs of a close style remain.
+	close := 0
+	for id := range score {
+		if !styleConflict(seedStyle, styles[id]) {
+			close++
+		}
+	}
+	if close >= 5 {
+		for id := range score {
+			if styleConflict(seedStyle, styles[id]) {
+				delete(score, id)
+			}
 		}
 	}
 	rng := rand.New(rand.NewPCG(uint64(time.Now().UnixNano()), hashSeed(seed.ID)))
@@ -564,15 +595,17 @@ func (s *Server) handleRadio(w http.ResponseWriter, r *http.Request) {
 			out = append(out, tr)
 		}
 	}
-	// Small library or no signal yet: pad with the rest, shuffled.
-	if len(out) < 20 {
+	// Small library or no signal yet: pad with the rest, shuffled (not for
+	// autoplay, which fills the gap with new songs instead).
+	if len(out) < 20 && !forAutoplay {
 		in := map[string]bool{}
 		for _, t := range out {
 			in[t.ID] = true
 		}
 		rest := []Track{}
 		for _, t := range rc.all {
-			if !in[t.ID] && !rc.taste.trackDisliked(t) && sameLang(seedLang, rc.lang[t.ID]) {
+			if !in[t.ID] && !rc.taste.trackDisliked(t) && sameLang(seedLang, rc.lang[t.ID]) &&
+				kindCompatible(seedKind, kindOf(t.Title, t.DurationMs)) && !styleConflict(seedStyle, styles[t.ID]) {
 				rest = append(rest, t)
 			}
 		}
@@ -586,5 +619,5 @@ func (s *Server) handleRadio(w http.ResponseWriter, r *http.Request) {
 	}
 	// Nothing played to the end in the last 3 hours (the seed stays first).
 	out = append([]Track{out[0]}, rc.taste.dropRecent(out[1:], 10)...)
-	writeJSON(w, http.StatusOK, map[string]any{"name": "Radio: " + seed.Title, "tracks": out})
+	writeJSON(w, http.StatusOK, map[string]any{"name": "Radio: " + seed.Title, "tracks": out, "discover": s.discoverCount(len(rc.all))})
 }

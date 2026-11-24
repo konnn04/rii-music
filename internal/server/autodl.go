@@ -195,7 +195,7 @@ func (s *Server) autoDownloadOnce(ctx context.Context, uid string) {
 		}
 	}
 	rng := rand.New(rand.NewPCG(uint64(time.Now().UnixNano()), hashSeed(uid)))
-	for _, e := range s.externalFromArtists(ctx, rc, arts, n, rng, "") {
+	for _, e := range s.externalFromArtists(ctx, rc, arts, n, rng, "", nil) {
 		target, err := normalizeInput(e.URL)
 		if err != nil {
 			continue

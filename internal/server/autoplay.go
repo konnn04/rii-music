@@ -68,8 +68,34 @@ type artW struct {
 	w            float64
 }
 
+// discoverCount: how many new songs autoplay should look for per top-up. Small
+// libraries get more (a new user hasn't heard much yet), big ones fewer; the
+// admin's limit caps it.
+func (s *Server) discoverCount(librarySize int) int {
+	srv := s.serverSettings()
+	share := 0.2
+	switch {
+	case librarySize < 50:
+		share = 0.7
+	case librarySize < 150:
+		share = 0.5
+	case librarySize < 400:
+		share = 0.35
+	}
+	return min(srv.AutoplayDownloads, int(math.Ceil(float64(srv.AutoplayTarget)*share)))
+}
+
 func (s *Server) autoplayExternal(ctx context.Context, rc *recCtx, seed *Track, n int) []AutoExt {
 	rng := rand.New(rand.NewPCG(uint64(time.Now().UnixNano()), hashSeed(seed.ID)))
+	// The seed's style (its tags, else its artist's) keeps new songs close:
+	// similar artists of another style (bolero → EDM) are left out.
+	seedStyle := librarySongStyles(rc.all)[seed.ID]
+	if seedStyle == nil {
+		if tags, _ := s.ext.ArtistTags(ctx, firstArtist(seed.Artist), true); len(tags) > 0 {
+			seedStyle = styleOf(tags)
+		}
+	}
+	seedKind := kindOf(seed.Title, seed.DurationMs)
 	// Candidate artists: the seed's own (weight 1) and similar ones (their match).
 	var arts []artW
 	seen := map[string]bool{}
@@ -87,20 +113,38 @@ func (s *Server) autoplayExternal(ctx context.Context, rc *recCtx, seed *Track, 
 				continue
 			}
 			seen[kx] = true
+			if seedStyle != nil {
+				if tags, err := s.ext.ArtistTags(ctx, x.Name, false); err == nil && styleConflict(seedStyle, styleOf(tags)) {
+					continue // another style altogether
+				}
+			}
 			arts = append(arts, artW{x.Name, "Giống " + a, 0.3 + 0.6*x.Match})
 		}
 	}
 	if len(arts) == 0 {
 		return nil
 	}
-	return s.externalFromArtists(ctx, rc, arts, n, rng, rc.lang[seed.ID])
+	accept := func(title string, durSec float64) bool {
+		return kindCompatible(seedKind, kindOf(title, int64(durSec*1000)))
+	}
+	return s.externalFromArtists(ctx, rc, arts, n, rng, rc.lang[seed.ID], accept)
+}
+
+// regularSong: the default filter for new songs (auto-download): no mixes,
+// lofi, karaoke or tracks over 9 minutes.
+func regularSong(title string, durSec float64) bool {
+	k := kindOf(title, int64(durSec*1000))
+	return !k.special && !k.long
 }
 
 // externalFromArtists samples artists by weight, takes top tracks the library
 // lacks and resolves them to YouTube Music songs; at most n results.
 // wantLang: only songs in that language (autoplay keeps the seed's); ""
 // means any language the user listens to.
-func (s *Server) externalFromArtists(ctx context.Context, rc *recCtx, arts []artW, n int, rng *rand.Rand, wantLang string) []AutoExt {
+func (s *Server) externalFromArtists(ctx context.Context, rc *recCtx, arts []artW, n int, rng *rand.Rand, wantLang string, accept func(title string, durSec float64) bool) []AutoExt {
+	if accept == nil {
+		accept = regularSong
+	}
 	// What we already have, by title+artist and by YouTube id. Titles are
 	// compared loosely: the library holds "MV ĐỪNG NHƯ THÓI QUEN" where the
 	// suggestion says "Đừng Như Thói Quen".
@@ -219,6 +263,9 @@ func (s *Server) externalFromArtists(ctx context.Context, rc *recCtx, arts []art
 				}
 				if !looseMatch(r.Artist, c.artist) || !looseMatch(baseTitle(r.Title), baseTitle(c.title)) || r.Duration <= 0 || r.Duration > float64(s.cfg.MaxDuration) {
 					continue
+				}
+				if !accept(r.Title, r.Duration) {
+					return // a mix / lofi / far longer than what plays
 				}
 				if l := textutil.DetectLang(r.Title, r.Artist); (wantLang != "" && !sameLang(wantLang, l)) || (wantLang == "" && !rc.langWanted(l)) {
 					return // another language than the user wants here

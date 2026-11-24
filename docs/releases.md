@@ -3,8 +3,8 @@
 ## Branches
 
 - `feat/*`: one feature each, branched from `dev` (or `main`).
-- `dev`: the beta line; finished features are merged here and tested on a beta install before release. CI runs on every push.
-- `main`: releases. Merging `dev` into `main` (by pull request, after review) publishes the server image and the desktop app.
+- `dev`: the beta line; finished features are merged here and tested on a beta install before release. CI runs on every push, and the desktop workflow builds every platform: the installers are in the run's artifacts (Actions → Desktop → the run → Artifacts), nothing is published.
+- `main`: releases. Merging `dev` into `main` (by pull request, after review) publishes the server image and the desktop app (`desktop-v<version>` + the `desktop-latest` update manifest). If one desktop platform fails to build — e.g. GitHub has no macOS arm64 runner free — the others are still published and the update manifest lists only those; re-run the failed job or push again.
 
 ## Releases
 

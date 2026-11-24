@@ -28,9 +28,9 @@ func TestKaraokeModelDownloadOnceAndRange(t *testing.T) {
 	}))
 	defer upstream.Close()
 
-	prevURL := karaokeModelURL
-	karaokeModelURL = upstream.URL + "/UVR-MDX-NET-Inst_HQ_3.onnx"
-	t.Cleanup(func() { karaokeModelURL = prevURL })
+	prevBase := karaokeModelBase
+	karaokeModelBase = upstream.URL + "/"
+	t.Cleanup(func() { karaokeModelBase = prevBase })
 	t.Setenv("KARAOKE_MODEL_URL", "")
 
 	s := &Server{
@@ -113,9 +113,9 @@ func TestKaraokeModelRetryAfterFailure(t *testing.T) {
 	}))
 	defer upstream.Close()
 
-	prevURL := karaokeModelURL
-	karaokeModelURL = upstream.URL + "/model.onnx"
-	t.Cleanup(func() { karaokeModelURL = prevURL })
+	prevBase := karaokeModelBase
+	karaokeModelBase = upstream.URL
+	t.Cleanup(func() { karaokeModelBase = prevBase })
 	t.Setenv("KARAOKE_MODEL_URL", "")
 
 	s := &Server{
@@ -141,5 +141,35 @@ func TestKaraokeModelRetryAfterFailure(t *testing.T) {
 	}
 	if got := attempts.Load(); got != 2 {
 		t.Fatalf("attempts = %d, want 2", got)
+	}
+}
+
+func TestKaraokeModelChoice(t *testing.T) {
+	var paths []string
+	var mu sync.Mutex
+	upstream := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		mu.Lock()
+		paths = append(paths, r.URL.Path)
+		mu.Unlock()
+		w.Write([]byte("model:" + r.URL.Path))
+	}))
+	defer upstream.Close()
+	prevBase := karaokeModelBase
+	karaokeModelBase = upstream.URL
+	t.Cleanup(func() { karaokeModelBase = prevBase })
+
+	s := &Server{cfg: Config{DataDir: t.TempDir()}}
+	rec := httptest.NewRecorder()
+	s.handleKaraokeModel(rec, httptest.NewRequest(http.MethodGet, "/api/karaoke/model?m=kara2", nil))
+	if rec.Code != http.StatusOK || rec.Body.String() != "model:/UVR_MDXNET_KARA_2.onnx" {
+		t.Fatalf("kara2: %d %q", rec.Code, rec.Body.String())
+	}
+	rec = httptest.NewRecorder()
+	s.handleKaraokeModel(rec, httptest.NewRequest(http.MethodGet, "/api/karaoke/model?m=../../etc", nil))
+	if rec.Code != http.StatusBadRequest {
+		t.Fatalf("bad id: %d", rec.Code)
+	}
+	if len(paths) != 1 {
+		t.Fatalf("upstream hits: %v", paths)
 	}
 }

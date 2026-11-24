@@ -1,4 +1,6 @@
+import { useState } from "react";
 import { Button } from "@/components/ui/Button";
+import { Dialog } from "@/components/ui/Dialog";
 import { Icon } from "@/components/ui/Icon";
 import { Slider } from "@/components/ui/Slider";
 import { Tip } from "@/components/ui/Tips";
@@ -6,7 +8,9 @@ import { t } from "@/i18n";
 import { engine } from "@/player/engine";
 import { usePlayer } from "@/player/store";
 import { ensureInstrumental, cancelSeparation } from "./separate";
-import { setKaraokeMode, setKey, setVocal, useKaraoke, type KaraokeMode } from "./store";
+import { setKaraokeMode, setKaraokeModel, setKey, setVocal, useKaraoke, type KaraokeMode } from "./store";
+import { ModelPicker } from "./ModelPicker";
+import { MODELS, type ModelId } from "./models";
 
 const MODES: KaraokeMode[] = ["off", "quick", "ai"];
 
@@ -22,6 +26,18 @@ export function KaraokeControls() {
   const sep = useKaraoke((s) => s.sep);
   const ready = useKaraoke((s) => s.ready);
   const trackId = usePlayer((s) => s.current?.track.id ?? null);
+  const model = useKaraoke((s) => s.model);
+  // AI separation is heavy: confirm first, and pick the model there.
+  const [askAi, setAskAi] = useState(false);
+  const [pick, setPick] = useState<ModelId>(model);
+  const choose = (m: KaraokeMode) => {
+    if (m === "ai" && mode !== "ai") {
+      setPick(model);
+      setAskAi(true);
+      return;
+    }
+    setKaraokeMode(m);
+  };
 
   const simple = engine.simpleMode;
   const vocalEnabled = mode === "quick" && !simple;
@@ -48,7 +64,7 @@ export function KaraokeControls() {
                   role="radio"
                   aria-checked={active}
                   disabled={disabled}
-                  onClick={() => setKaraokeMode(m)}
+                  onClick={() => choose(m)}
                   className={`focus-ring h-8 rounded-full px-3 text-label transition-colors duration-fast disabled:pointer-events-none disabled:opacity-40 ${
                     active ? "bg-np-accent text-np-on-accent" : "text-np-fg-muted hover:text-fg"
                   }`}
@@ -180,6 +196,32 @@ export function KaraokeControls() {
           <span>{t("karaoke.aiReady")}</span>
         </div>
       )}
+      <Dialog
+        top
+        open={askAi}
+        onOpenChange={setAskAi}
+        title={t("karaoke.confirm.title")}
+        description={t("karaoke.confirm.desc")}
+        footer={
+          <>
+            <Button variant="ghost" onClick={() => setAskAi(false)}>
+              {t("common.cancel")}
+            </Button>
+            <Button
+              onClick={() => {
+                setAskAi(false);
+                setKaraokeModel(pick);
+                setKaraokeMode("ai");
+              }}
+            >
+              {t("karaoke.confirm.start", { size: MODELS[pick].sizeMb })}
+            </Button>
+          </>
+        }
+      >
+        <ModelPicker value={pick} onChange={setPick} />
+        <p className="mt-3 text-caption text-fg-muted">{t("karaoke.confirm.note")}</p>
+      </Dialog>
     </div>
   );
 }

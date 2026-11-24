@@ -1,287 +1,242 @@
-// Pure DSP routines for UVR-MDX-NET-Inst_HQ_3 (no DOM dependencies).
+// DSP for MDX-Net separation: STFT / ISTFT with torch.stft conventions
+// (center=True, reflect padding, periodic Hann window, onesided) and the
+// model's tensor layout. Works for any n_fft = r·2^k with r ∈ {1, 3, 5}
+// (6144 = 3·2048, 5120 = 5·1024).
+
+import type { MdxParams } from "./models";
 
 export const SAMPLE_RATE = 44100;
-export const N_FFT = 6144; // 3 * 2048
-export const HOP = 1024;
-export const DIM_F = 3072; // N_FFT / 2
-export const DIM_T = 256;
-export const COMPENSATE = 1.022;
-export const CHUNK = HOP * (DIM_T - 1); // 261120 samples -> exactly 256 frames
-export const TRIM = N_FFT / 2; // 3072
-export const GEN = CHUNK - 2 * TRIM; // 254976
 
-const M = 2048; // N_FFT / 3 = 2^11
-const LOG2_M = 11;
-const SQRT3_2 = Math.sqrt(3) / 2;
-const PLANE = DIM_F * DIM_T;
+/** FFT of a fixed size n = r·2^k: r interleaved radix-2 FFTs combined with an r-point DFT. */
+export class FFT {
+  readonly n: number;
+  private readonly r: number;
+  private readonly m: number;
+  private readonly bitRev: Uint32Array;
+  private readonly cosM: Float64Array; // radix-2 twiddles for size m
+  private readonly sinM: Float64Array;
+  private readonly cosN: Float64Array; // W_n^x, x < n
+  private readonly sinN: Float64Array;
+  private readonly subRe: Float64Array[];
+  private readonly subIm: Float64Array[];
 
-// Precomputed bit-reversal and twiddle tables for 2048-point radix-2 FFT.
-const bitRev = new Uint16Array(M);
-const rad2Cos = new Float64Array(M >> 1);
-const rad2Sin = new Float64Array(M >> 1);
-
-// Precomputed twiddle tables for the radix-3 combine stage (W_N^q and W_N^{2q}).
-const tw1Cos = new Float64Array(M);
-const tw1Sin = new Float64Array(M);
-const tw2Cos = new Float64Array(M);
-const tw2Sin = new Float64Array(M);
-
-// Periodic Hann window of length N_FFT.
-const hann = new Float64Array(N_FFT);
-
-for (let i = 0; i < M; i++) {
-  let x = i;
-  let r = 0;
-  for (let b = 0; b < LOG2_M; b++) {
-    r = (r << 1) | (x & 1);
-    x >>= 1;
-  }
-  bitRev[i] = r;
-
-  const a1 = (-2 * Math.PI * i) / N_FFT;
-  tw1Cos[i] = Math.cos(a1);
-  tw1Sin[i] = Math.sin(a1);
-
-  const a2 = (-4 * Math.PI * i) / N_FFT;
-  tw2Cos[i] = Math.cos(a2);
-  tw2Sin[i] = Math.sin(a2);
-}
-
-for (let j = 0; j < M >> 1; j++) {
-  const a = (-2 * Math.PI * j) / M;
-  rad2Cos[j] = Math.cos(a);
-  rad2Sin[j] = Math.sin(a);
-}
-
-for (let n = 0; n < N_FFT; n++) {
-  hann[n] = 0.5 * (1 - Math.cos((2 * Math.PI * n) / N_FFT));
-}
-
-// Reusable scratch buffers for FFT sub-transforms and frame processing.
-const r0 = new Float64Array(M);
-const i0 = new Float64Array(M);
-const r1 = new Float64Array(M);
-const i1 = new Float64Array(M);
-const r2 = new Float64Array(M);
-const i2 = new Float64Array(M);
-
-const frameRe = new Float32Array(N_FFT);
-const frameIm = new Float32Array(N_FFT);
-
-function fft2048(re: Float64Array, im: Float64Array): void {
-  for (let i = 0; i < M; i++) {
-    const j = bitRev[i];
-    if (i < j) {
-      const tr = re[i];
-      re[i] = re[j];
-      re[j] = tr;
-      const ti = im[i];
-      im[i] = im[j];
-      im[j] = ti;
+  constructor(n: number) {
+    let r = 1;
+    for (const c of [5, 3]) if (n % c === 0) r = c;
+    const m = n / r;
+    if (!Number.isInteger(m) || (m & (m - 1)) !== 0) throw new Error(`FFT size ${n} is not r·2^k with r ∈ {1,3,5}`);
+    this.n = n;
+    this.r = r;
+    this.m = m;
+    const bits = Math.log2(m);
+    this.bitRev = new Uint32Array(m);
+    for (let i = 0; i < m; i++) {
+      let x = i, y = 0;
+      for (let b = 0; b < bits; b++) {
+        y = (y << 1) | (x & 1);
+        x >>= 1;
+      }
+      this.bitRev[i] = y;
     }
+    this.cosM = new Float64Array(m >> 1);
+    this.sinM = new Float64Array(m >> 1);
+    for (let i = 0; i < m >> 1; i++) {
+      this.cosM[i] = Math.cos((2 * Math.PI * i) / m);
+      this.sinM[i] = -Math.sin((2 * Math.PI * i) / m);
+    }
+    this.cosN = new Float64Array(n);
+    this.sinN = new Float64Array(n);
+    for (let i = 0; i < n; i++) {
+      this.cosN[i] = Math.cos((2 * Math.PI * i) / n);
+      this.sinN[i] = -Math.sin((2 * Math.PI * i) / n);
+    }
+    this.subRe = Array.from({ length: r }, () => new Float64Array(m));
+    this.subIm = Array.from({ length: r }, () => new Float64Array(m));
   }
 
-  for (let half = 1; half < M; half <<= 1) {
-    const len = half << 1;
-    const step = M / len;
-    for (let i = 0; i < M; i += len) {
-      for (let j = 0; j < half; j++) {
-        const tw = j * step;
-        const wr = rad2Cos[tw];
-        const wi = rad2Sin[tw];
-        const u = i + j;
-        const v = u + half;
-        const tr = wr * re[v] - wi * im[v];
-        const ti = wr * im[v] + wi * re[v];
-        re[v] = re[u] - tr;
-        im[v] = im[u] - ti;
-        re[u] += tr;
-        im[u] += ti;
+  private radix2(re: Float64Array, im: Float64Array) {
+    const m = this.m, br = this.bitRev;
+    for (let i = 0; i < m; i++) {
+      const j = br[i];
+      if (j > i) {
+        let t = re[i]; re[i] = re[j]; re[j] = t;
+        t = im[i]; im[i] = im[j]; im[j] = t;
+      }
+    }
+    for (let size = 2; size <= m; size <<= 1) {
+      const half = size >> 1, step = m / size;
+      for (let start = 0; start < m; start += size) {
+        for (let k = 0; k < half; k++) {
+          const wr = this.cosM[k * step], wi = this.sinM[k * step];
+          const a = start + k, b = a + half;
+          const xr = re[b] * wr - im[b] * wi;
+          const xi = re[b] * wi + im[b] * wr;
+          re[b] = re[a] - xr; im[b] = im[a] - xi;
+          re[a] += xr; im[a] += xi;
+        }
       }
     }
   }
-}
 
-/** In-place 6144-point mixed-radix (3 * 2048) forward FFT. */
-export function fft(re: Float32Array, im: Float32Array): void {
-  for (let m = 0; m < M; m++) {
-    const idx = m * 3;
-    r0[m] = re[idx];
-    i0[m] = im[idx];
-    r1[m] = re[idx + 1];
-    i1[m] = im[idx + 1];
-    r2[m] = re[idx + 2];
-    i2[m] = im[idx + 2];
-  }
-
-  fft2048(r0, i0);
-  fft2048(r1, i1);
-  fft2048(r2, i2);
-
-  for (let q = 0; q < M; q++) {
-    const ar = r0[q];
-    const ai = i0[q];
-
-    const w1r = tw1Cos[q];
-    const w1i = tw1Sin[q];
-    const br = w1r * r1[q] - w1i * i1[q];
-    const bi = w1r * i1[q] + w1i * r1[q];
-
-    const w2r = tw2Cos[q];
-    const w2i = tw2Sin[q];
-    const cr = w2r * r2[q] - w2i * i2[q];
-    const ci = w2r * i2[q] + w2i * r2[q];
-
-    const sumBCr = br + cr;
-    const sumBCi = bi + ci;
-    const diffBCr = br - cr;
-    const diffBCi = bi - ci;
-
-    re[q] = ar + sumBCr;
-    im[q] = ai + sumBCi;
-
-    const midR = ar - 0.5 * sumBCr;
-    const midI = ai - 0.5 * sumBCi;
-    const rotR = SQRT3_2 * diffBCi;
-    const rotI = SQRT3_2 * diffBCr;
-
-    re[q + M] = midR + rotR;
-    im[q + M] = midI - rotI;
-
-    re[q + 2 * M] = midR - rotR;
-    im[q + 2 * M] = midI + rotI;
-  }
-}
-
-/** In-place 6144-point inverse FFT using the conjugate trick. */
-export function ifft(re: Float32Array, im: Float32Array): void {
-  for (let k = 0; k < N_FFT; k++) {
-    im[k] = -im[k];
-  }
-  fft(re, im);
-  const invN = 1 / N_FFT;
-  for (let k = 0; k < N_FFT; k++) {
-    re[k] *= invN;
-    im[k] = -im[k] * invN;
-  }
-}
-
-/**
- * STFT matching torch.stft(center=True, pad_mode="reflect", onesided=True)
- * with periodic Hann window, keeping the first DIM_F bins.
- * Output layout: [DIM_F, DIM_T] with index f * DIM_T + t.
- */
-export function stft(x: Float32Array): { re: Float32Array; im: Float32Array } {
-  if (x.length !== CHUNK) {
-    throw new Error(`stft expects length ${CHUNK}, got ${x.length}`);
-  }
-  const pad = TRIM;
-  const padded = new Float32Array(CHUNK + 2 * pad);
-
-  // Reflect padding (does not repeat edge sample).
-  for (let i = 0; i < pad; i++) {
-    padded[i] = x[pad - i];
-  }
-  padded.set(x, pad);
-  for (let i = 0; i < pad; i++) {
-    padded[pad + CHUNK + i] = x[CHUNK - 2 - i];
-  }
-
-  const outRe = new Float32Array(PLANE);
-  const outIm = new Float32Array(PLANE);
-
-  for (let t = 0; t < DIM_T; t++) {
-    const offset = t * HOP;
-    for (let n = 0; n < N_FFT; n++) {
-      frameRe[n] = padded[offset + n] * hann[n];
-      frameIm[n] = 0;
+  /** In-place forward FFT. */
+  fft(re: Float64Array, im: Float64Array): void {
+    const { n, r, m } = this;
+    for (let j = 0; j < r; j++) {
+      const sr = this.subRe[j], si = this.subIm[j];
+      for (let q = 0; q < m; q++) {
+        sr[q] = re[q * r + j];
+        si[q] = im[q * r + j];
+      }
+      this.radix2(sr, si);
     }
-    fft(frameRe, frameIm);
-    for (let f = 0; f < DIM_F; f++) {
-      const idx = f * DIM_T + t;
-      outRe[idx] = frameRe[f];
-      outIm[idx] = frameIm[f];
+    if (r === 1) {
+      re.set(this.subRe[0]);
+      im.set(this.subIm[0]);
+      return;
+    }
+    const tr = new Float64Array(r), ti = new Float64Array(r);
+    for (let k = 0; k < m; k++) {
+      // t_j = W_n^{jk} · Y_j[k]
+      for (let j = 0; j < r; j++) {
+        const yr = this.subRe[j][k], yi = this.subIm[j][k];
+        const idx = (j * k) % n;
+        const wr = this.cosN[idx], wi = this.sinN[idx];
+        tr[j] = yr * wr - yi * wi;
+        ti[j] = yr * wi + yi * wr;
+      }
+      // X[k + m·q] = Σ_j t_j · W_r^{jq}, and W_r^{x} = W_n^{x·m}
+      for (let q = 0; q < r; q++) {
+        let sr = 0, si = 0;
+        for (let j = 0; j < r; j++) {
+          const idx = (((j * q) % r) * m) % n;
+          const wr = this.cosN[idx], wi = this.sinN[idx];
+          sr += tr[j] * wr - ti[j] * wi;
+          si += tr[j] * wi + ti[j] * wr;
+        }
+        re[k + m * q] = sr;
+        im[k + m * q] = si;
+      }
     }
   }
 
-  return { re: outRe, im: outIm };
-}
-
-/**
- * Inverse STFT with overlap-add and squared-window normalization.
- * Expects re/im of layout [DIM_F, DIM_T] (index f * DIM_T + t); bins >= DIM_F are zero.
- */
-export function istft(re: Float32Array, im: Float32Array): Float32Array {
-  const pad = TRIM;
-  const totalLen = CHUNK + 2 * pad;
-  const out = new Float64Array(totalLen);
-  const winSum = new Float64Array(totalLen);
-
-  for (let t = 0; t < DIM_T; t++) {
-    frameRe[0] = re[t];
-    frameIm[0] = im[t];
-    for (let f = 1; f < DIM_F; f++) {
-      const idx = f * DIM_T + t;
-      const r = re[idx];
-      const j = im[idx];
-      frameRe[f] = r;
-      frameIm[f] = j;
-      frameRe[N_FFT - f] = r;
-      frameIm[N_FFT - f] = -j;
-    }
-    // Bins DIM_F..N_FFT/2 (Nyquist at index 3072) are zero.
-    frameRe[DIM_F] = 0;
-    frameIm[DIM_F] = 0;
-
-    ifft(frameRe, frameIm);
-
-    const offset = t * HOP;
-    for (let n = 0; n < N_FFT; n++) {
-      const w = hann[n];
-      out[offset + n] += frameRe[n] * w;
-      winSum[offset + n] += w * w;
+  /** In-place inverse FFT (scaled by 1/n). */
+  ifft(re: Float64Array, im: Float64Array): void {
+    for (let i = 0; i < this.n; i++) im[i] = -im[i];
+    this.fft(re, im);
+    const s = 1 / this.n;
+    for (let i = 0; i < this.n; i++) {
+      re[i] *= s;
+      im[i] = -im[i] * s;
     }
   }
-
-  const result = new Float32Array(CHUNK);
-  for (let i = 0; i < CHUNK; i++) {
-    const ws = winSum[pad + i];
-    result[i] = ws > 1e-8 ? out[pad + i] / ws : 0;
-  }
-  return result;
 }
 
-/**
- * Packs stereo CHUNK audio into model input tensor [1, 4, DIM_F, DIM_T]
- * with channel order [L_re, L_im, R_re, R_im] and bins f < 3 zeroed.
- */
-export function packTensor(left: Float32Array, right: Float32Array): Float32Array {
-  const l = stft(left);
-  const r = stft(right);
-  const tensor = new Float32Array(4 * PLANE);
+/** STFT / ISTFT and tensor packing for one model's parameters. */
+export class Mdx {
+  readonly p: MdxParams;
+  /** Samples per model call (exactly dimT frames). */
+  readonly chunk: number;
+  /** Edge samples dropped from each chunk's output. */
+  readonly trim: number;
+  /** Useful samples per chunk. */
+  readonly gen: number;
+  private readonly fftr: FFT;
+  private readonly win: Float64Array;
+  private readonly re: Float64Array;
+  private readonly im: Float64Array;
+  private readonly plane: number;
 
-  tensor.set(l.re, 0);
-  tensor.set(l.im, PLANE);
-  tensor.set(r.re, 2 * PLANE);
-  tensor.set(r.im, 3 * PLANE);
-
-  // Zero the first 3 frequency bins (f < 3) across all 4 channels.
-  for (let c = 0; c < 4; c++) {
-    const base = c * PLANE;
-    tensor.fill(0, base, base + 3 * DIM_T);
+  constructor(p: MdxParams) {
+    this.p = p;
+    this.chunk = p.hop * (p.dimT - 1);
+    this.trim = p.nFft / 2;
+    this.gen = this.chunk - 2 * this.trim;
+    this.fftr = new FFT(p.nFft);
+    this.win = new Float64Array(p.nFft);
+    for (let i = 0; i < p.nFft; i++) this.win[i] = 0.5 - 0.5 * Math.cos((2 * Math.PI * i) / p.nFft);
+    this.re = new Float64Array(p.nFft);
+    this.im = new Float64Array(p.nFft);
+    this.plane = p.dimF * p.dimT;
   }
 
-  return tensor;
-}
+  /** torch.stft(center=True, reflect) of one chunk → [dimF × dimT] re/im, index f*dimT + t. */
+  stft(x: Float32Array): { re: Float32Array; im: Float32Array } {
+    const { nFft, dimF, dimT, hop } = this.p;
+    if (x.length !== this.chunk) throw new Error(`stft expects ${this.chunk} samples, got ${x.length}`);
+    const half = nFft / 2, n = x.length;
+    const outRe = new Float32Array(this.plane), outIm = new Float32Array(this.plane);
+    const re = this.re, im = this.im, w = this.win;
+    for (let t = 0; t < dimT; t++) {
+      const start = t * hop - half; // in unpadded coordinates
+      for (let i = 0; i < nFft; i++) {
+        let j = start + i;
+        if (j < 0) j = -j; // reflect (no edge repeat)
+        else if (j >= n) j = 2 * (n - 1) - j;
+        re[i] = x[j] * w[i];
+        im[i] = 0;
+      }
+      this.fftr.fft(re, im);
+      for (let f = 0; f < dimF; f++) {
+        outRe[f * dimT + t] = re[f];
+        outIm[f * dimT + t] = im[f];
+      }
+    }
+    return { re: outRe, im: outIm };
+  }
 
-/** Unpacks model output tensor [1, 4, DIM_F, DIM_T] back to stereo CHUNK audio. */
-export function unpackTensor(tensor: Float32Array): { left: Float32Array; right: Float32Array } {
-  const lRe = tensor.subarray(0, PLANE);
-  const lIm = tensor.subarray(PLANE, 2 * PLANE);
-  const rRe = tensor.subarray(2 * PLANE, 3 * PLANE);
-  const rIm = tensor.subarray(3 * PLANE, 4 * PLANE);
-  return {
-    left: istft(lRe, lIm),
-    right: istft(rRe, rIm),
-  };
+  /** Inverse of stft (bins ≥ dimF are zero) → chunk samples. */
+  istft(specRe: Float32Array, specIm: Float32Array): Float32Array {
+    const { nFft, dimF, dimT, hop } = this.p;
+    const half = nFft / 2;
+    const total = this.chunk + nFft;
+    const acc = new Float64Array(total), norm = new Float64Array(total);
+    const re = this.re, im = this.im, w = this.win;
+    for (let t = 0; t < dimT; t++) {
+      re.fill(0);
+      im.fill(0);
+      for (let f = 0; f < dimF; f++) {
+        re[f] = specRe[f * dimT + t];
+        im[f] = specIm[f * dimT + t];
+      }
+      im[0] = 0; // irfft ignores the DC (and Nyquist) imaginary part
+      for (let f = 1; f < half; f++) {
+        re[nFft - f] = re[f];
+        im[nFft - f] = -im[f];
+      }
+      this.fftr.ifft(re, im);
+      const off = t * hop;
+      for (let i = 0; i < nFft; i++) {
+        acc[off + i] += re[i] * w[i];
+        norm[off + i] += w[i] * w[i];
+      }
+    }
+    const out = new Float32Array(this.chunk);
+    for (let i = 0; i < this.chunk; i++) {
+      const k = i + half;
+      out[i] = norm[k] > 1e-10 ? acc[k] / norm[k] : 0;
+    }
+    return out;
+  }
+
+  /** Model input [1, 4, dimF, dimT]: L re, L im, R re, R im; the lowest 3 bins zeroed. */
+  pack(left: Float32Array, right: Float32Array): Float32Array {
+    const { dimT } = this.p;
+    const l = this.stft(left), r = this.stft(right);
+    const t = new Float32Array(4 * this.plane);
+    t.set(l.re, 0);
+    t.set(l.im, this.plane);
+    t.set(r.re, 2 * this.plane);
+    t.set(r.im, 3 * this.plane);
+    for (let c = 0; c < 4; c++) t.fill(0, c * this.plane, c * this.plane + 3 * dimT);
+    return t;
+  }
+
+  /** Model output (same layout) → left / right chunk samples. */
+  unpack(t: Float32Array): { left: Float32Array; right: Float32Array } {
+    const P = this.plane;
+    return {
+      left: this.istft(t.subarray(0, P), t.subarray(P, 2 * P)),
+      right: this.istft(t.subarray(2 * P, 3 * P), t.subarray(3 * P, 4 * P)),
+    };
+  }
 }

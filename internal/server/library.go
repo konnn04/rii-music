@@ -274,7 +274,7 @@ func (s *Server) gcTrack(id string) bool {
 		s.log.Warn("gc track", "track", id, "err", err)
 		return false
 	}
-	os.Remove(filepath.Join(s.cfg.DataDir, filepath.FromSlash(file)))
+	os.Remove(s.cfg.AudioPath(file))
 	os.Remove(filepath.Join(s.cfg.CoverDir(), id+".jpg"))
 	for _, ext := range []string{".m4a", ".opus", ".webm", ".mp3"} {
 		os.Remove(filepath.Join(s.previewDir(), id+ext))
@@ -309,24 +309,19 @@ func (s *Server) handleStream(w http.ResponseWriter, r *http.Request) {
 		http.NotFound(w, r)
 		return
 	}
-	f, err := os.Open(filepath.Join(s.cfg.DataDir, filepath.FromSlash(file)))
+	f, _, mod, err := s.openAudio(file) // decrypts in local mode
 	if err != nil {
 		httpError(w, http.StatusGone, "Thiếu file nhạc")
 		return
 	}
 	defer f.Close()
-	st, err := f.Stat()
-	if err != nil {
-		s.internalError(w, r, err)
-		return
-	}
 	w.Header().Set("Content-Type", mime)
 	w.Header().Set("Cache-Control", "private, max-age=86400")
 	if r.URL.Query().Get("download") != "" {
 		// "Tải về máy": save the file as "Artist - Title.m4a".
 		w.Header().Set("Content-Disposition", downloadDisposition(artist, title, filepath.Ext(file)))
 	}
-	http.ServeContent(w, r, "", st.ModTime(), f) // handles Range
+	http.ServeContent(w, r, "", mod, f) // handles Range
 }
 
 // downloadDisposition: attachment with a UTF-8 file name (RFC 6266 / 5987) and

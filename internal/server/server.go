@@ -15,22 +15,25 @@ import (
 	"time"
 
 	"rii_music/internal/db"
+	"rii_music/internal/vault"
 	"rii_music/internal/ytdlp"
 )
 
 type Server struct {
-	cfg   Config
-	db    *db.DB
-	yt    *ytdlp.Client
-	log   *slog.Logger
-	web   fs.FS
-	auth  *Auth
-	hub   *Hub
-	dl    *Downloader
-	lrc   *LRCLib
-	login *RateLimiter
-	otpRL *RateLimiter
-	jobRL *RateLimiter
+	cfg Config
+	// vaultKey: set in the desktop app's local mode, audio files are encrypted.
+	vaultKey *vault.Key
+	db       *db.DB
+	yt       *ytdlp.Client
+	log      *slog.Logger
+	web      fs.FS
+	auth     *Auth
+	hub      *Hub
+	dl       *Downloader
+	lrc      *LRCLib
+	login    *RateLimiter
+	otpRL    *RateLimiter
+	jobRL    *RateLimiter
 
 	ext      *extClient
 	features *featureIndex
@@ -39,6 +42,7 @@ type Server struct {
 	playback playbackState
 	rooms    roomHub
 	streams  streamCache
+	move     musicMove
 	autodl   *autoDL
 	logs     *LogBuffer
 }
@@ -189,6 +193,8 @@ func (s *Server) Handler() http.Handler {
 	mux.HandleFunc("GET /agent.sh", s.serveAgentScript(agentSH))
 	mux.HandleFunc("GET /api/openapi.json", s.handleOpenAPI)
 	mux.HandleFunc("GET /api/docs/client.ts", s.handleClientLib)
+	mux.HandleFunc("GET /__rii/auto-login", s.handleAutoLogin) // desktop app, local mode
+	mux.HandleFunc("POST /__rii/shutdown", s.handleShutdown)
 
 	api("POST /api/reset", s.handleReset)
 	api("GET /api/settings", s.handleGetSettings)
@@ -198,6 +204,8 @@ func (s *Server) Handler() http.Handler {
 	admin := func(pattern string, h http.HandlerFunc) { mux.Handle(pattern, s.requireAdmin(h)) }
 	admin("GET /api/admin/users", s.handleAdminListUsers)
 	admin("GET /api/admin/enrich", s.handleEnrichStatus)
+	admin("GET /api/local", s.handleLocalInfo)
+	admin("POST /api/local/music-dir", s.handleMoveMusicDir)
 	admin("POST /api/admin/enrich/resync", s.handleEnrichResync)
 	admin("POST /api/admin/users", s.handleAdminCreateUser)
 	admin("PATCH /api/admin/users/{id}", s.handleAdminPatchUser)

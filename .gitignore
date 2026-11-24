@@ -11,3 +11,8 @@ web/dist
 *.exe~
 rii-test.exe
 rii-*.exe   
+# desktop app
+desktop/node_modules
+desktop/src-tauri/target
+desktop/src-tauri/binaries/rii_music-*
+desktop/src-tauri/gen

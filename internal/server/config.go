@@ -40,11 +40,23 @@ type Config struct {
 
 	// Discord agent builds to offer for download (the Docker image ships them).
 	AgentDir string
+
+	// Desktop app (RII_MODE): "server" (default, this web app), "local" (one
+	// user on this machine, music encrypted in MusicPath) or "client".
+	Mode string
+	// MusicPath: where songs live when not under DataDir/music (local mode:
+	// ~/Music/RiiMusic, movable from the settings).
+	MusicPath string
+	// LocalToken: the desktop shell's secret for /__rii/auto-login (local mode).
+	LocalToken string
 }
+
+// Local: the desktop app's local mode (single user, no accounts).
+func (c Config) Local() bool { return c.Mode == "local" }
 
 func LoadConfig() Config {
 	c := Config{
-		Addr:        ":" + env("PORT", "8080"),
+		Addr:        listenHost() + ":" + env("PORT", "8080"),
 		DataDir:     env("DATA_DIR", "./data"),
 		DatabaseURL: strings.TrimSpace(os.Getenv("DATABASE_URL")),
 		TrustProxy:  envBool("TRUST_PROXY", false),
@@ -67,6 +79,10 @@ func LoadConfig() Config {
 
 		LastfmKey: strings.TrimSpace(os.Getenv("LASTFM_API_KEY")),
 		AgentDir:  strings.TrimSpace(os.Getenv("AGENT_DIR")),
+
+		Mode:       env("RII_MODE", "server"),
+		MusicPath:  strings.TrimSpace(os.Getenv("RII_MUSIC_DIR")),
+		LocalToken: strings.TrimSpace(os.Getenv("RII_LOCAL_TOKEN")),
 	}
 	if abs, err := filepath.Abs(c.DataDir); err == nil {
 		c.DataDir = abs
@@ -83,9 +99,32 @@ func LoadConfig() Config {
 	return c
 }
 
+// listenHost: the desktop app's local mode listens on this machine only.
+func listenHost() string {
+	if os.Getenv("RII_LISTEN_LOCAL") == "1" {
+		return "127.0.0.1"
+	}
+	return ""
+}
+
 func (c Config) MailConfigured() bool { return c.SMTPUsername != "" && c.SMTPPassword != "" }
 
-func (c Config) MusicDir() string { return filepath.Join(c.DataDir, "music") }
+func (c Config) MusicDir() string {
+	if c.MusicPath != "" {
+		return c.MusicPath
+	}
+	return filepath.Join(c.DataDir, "music")
+}
+
+// AudioPath: the file of a track (tracks.file_path is "music/<id>.<ext>",
+// relative to the data dir; the music folder itself may live elsewhere).
+func (c Config) AudioPath(rel string) string {
+	rel = filepath.FromSlash(rel)
+	if rest, ok := strings.CutPrefix(rel, "music"+string(filepath.Separator)); ok {
+		return filepath.Join(c.MusicDir(), rest)
+	}
+	return filepath.Join(c.DataDir, rel)
+}
 func (c Config) CoverDir() string { return filepath.Join(c.DataDir, "covers") }
 func (c Config) TmpDir() string   { return filepath.Join(c.DataDir, "tmp") }
 func (c Config) BinDir() string   { return filepath.Join(c.DataDir, "bin") }

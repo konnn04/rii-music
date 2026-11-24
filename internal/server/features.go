@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"math"
 	"os/exec"
-	"path/filepath"
 	"sort"
 	"strconv"
 	"strings"
@@ -235,7 +234,7 @@ func (s *Server) runFeatureWorker(ctx context.Context) {
 				break // none left (or db error; retry on next tick)
 			}
 			fctx, cancel := context.WithTimeout(ctx, 2*time.Minute)
-			vec, ferr := extractFeatures(fctx, s.cfg.FFmpeg, filepath.Join(s.cfg.DataDir, filepath.FromSlash(path)), dur)
+			vec, ferr := extractFeaturesFile(fctx, s, path, dur)
 			cancel()
 			if ctx.Err() != nil {
 				return
@@ -395,7 +394,7 @@ func (s *Server) measurePendingLoudness(ctx context.Context) bool {
 		return false
 	}
 	lctx, cancel := context.WithTimeout(ctx, 2*time.Minute)
-	lufs, gain := measureLoudness(lctx, s.cfg.FFmpeg, filepath.Join(s.cfg.DataDir, filepath.FromSlash(path)))
+	lufs, gain := measureLoudnessFile(lctx, s, path)
 	cancel()
 	if ctx.Err() != nil {
 		return false

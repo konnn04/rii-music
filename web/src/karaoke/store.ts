@@ -7,6 +7,8 @@ export type SepStatus = {
   phase: "model" | "decode" | "separate" | "save" | "done" | "error";
   progress: number;
   error?: string;
+  /** Where the model runs: a GPU name, or "cpu" (WASM). */
+  backend?: string;
 };
 
 export type KaraokeState = {

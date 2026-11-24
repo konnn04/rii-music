@@ -106,6 +106,9 @@ function encodeWav16(left: Float32Array, right: Float32Array, sampleRate: number
  * Ensures an AI-separated instrumental exists for `trackId`, loading from Cache
  * Storage if available or running the ONNX Web Worker otherwise.
  */
+/** Where the model ran last (shown next to the progress). */
+let lastBackend: string | undefined;
+
 export async function ensureInstrumental(trackId: string): Promise<void> {
   if (!trackId) return;
 
@@ -169,8 +172,10 @@ export async function ensureInstrumental(trackId: string): Promise<void> {
       worker.onmessage = (ev: MessageEvent<WorkerOut>) => {
         if (isStale()) return;
         const msg = ev.data;
-        if (msg.type === "progress") {
-          useKaraoke.setState({ sep: { trackId, phase: msg.phase, progress: msg.progress } });
+        if (msg.type === "backend") {
+          lastBackend = msg.name;
+        } else if (msg.type === "progress") {
+          useKaraoke.setState({ sep: { trackId, phase: msg.phase, progress: msg.progress, backend: lastBackend } });
         } else if (msg.type === "done") {
           resolve({ left: msg.left, right: msg.right });
         } else if (msg.type === "error") {

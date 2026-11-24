@@ -34,5 +34,6 @@
   "clearCache": "Clear karaoke cache",
   "cleared": "Cleared karaoke cache ({size}).",
   "clearedEmpty": "No cached karaoke data to clear.",
-  "shortcutToggle": "Toggle Karaoke"
+  "shortcutToggle": "Toggle Karaoke",
+  "cpu": "CPU (slow, no WebGPU in this browser)"
 }

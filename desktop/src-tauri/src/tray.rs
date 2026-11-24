@@ -68,9 +68,13 @@ pub fn init_tray(app: &AppHandle, is_local_mode: bool) -> tauri::Result<()> {
         .on_menu_event(|app, event| match event.id().as_ref() {
             "open" => show_main_window(app),
             "mini" => {
-                if let Err(e) = crate::toggle_mini(app) {
-                    dlog!("mini player toggle failed: {e}");
-                }
+                // Off the event loop thread, like the command (see toggle_mini_player).
+                let app = app.clone();
+                tauri::async_runtime::spawn(async move {
+                    if let Err(e) = crate::toggle_mini(&app) {
+                        dlog!("mini player toggle failed: {e}");
+                    }
+                });
             }
             "toggle" => dispatch_player_cmd(app, "toggle"),
             "prev" => dispatch_player_cmd(app, "prev"),

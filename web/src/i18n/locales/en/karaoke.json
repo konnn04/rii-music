@@ -34,5 +34,8 @@
   "clearCache": "Clear karaoke cache",
   "cleared": "Cleared karaoke cache ({size}).",
   "clearedEmpty": "No cached karaoke data to clear.",
-  "shortcutToggle": "Toggle Karaoke"
+  "shortcutToggle": "Toggle Karaoke",
+  "cpu": "CPU (slow, no WebGPU in this browser)",
+  "inRoom": "You're in a Nghe chung room: leave it to use karaoke.",
+  "holding": "The song ended: it plays again for singing once the AI is done (not moving on yet)."
 }

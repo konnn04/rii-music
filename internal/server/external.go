@@ -6,9 +6,11 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"net/http"
 	"net/url"
 	"regexp"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -39,6 +41,46 @@ type extClient struct {
 	hc   *http.Client
 	mu   sync.Mutex
 	next time.Time
+	// Per host: rate limited (HTTP 429, Last.fm error 29…) until, and the
+	// current wait, doubled on each new limit (30 s … 30 min).
+	limited map[string]time.Time
+	wait    map[string]time.Duration
+}
+
+// errRateLimited: a service asked us to slow down; try again after a pause.
+var errRateLimited = errors.New("dịch vụ bên ngoài đang giới hạn số lần gọi, thử lại sau")
+
+// RateLimited reports whether calls to host are paused, and until when.
+func (e *extClient) RateLimited(host string) (bool, time.Time) {
+	e.mu.Lock()
+	defer e.mu.Unlock()
+	until := e.limited[host]
+	return time.Now().Before(until), until
+}
+
+// backoff pauses calls to host: retryAfter when the service said so, else
+// doubling from 30 s up to 30 min.
+func (e *extClient) backoff(host string, retryAfter time.Duration) {
+	e.mu.Lock()
+	defer e.mu.Unlock()
+	if e.limited == nil {
+		e.limited, e.wait = map[string]time.Time{}, map[string]time.Duration{}
+	}
+	w := retryAfter
+	if w <= 0 {
+		w = min(max(e.wait[host]*2, 30*time.Second), 30*time.Minute)
+	}
+	e.wait[host] = w
+	e.limited[host] = time.Now().Add(w)
+	e.s.log.Warn("external API rate limited, pausing", "host", host, "for", w.String())
+}
+
+func (e *extClient) clearBackoff(host string) {
+	e.mu.Lock()
+	defer e.mu.Unlock()
+	if e.wait != nil && e.wait[host] > 0 {
+		delete(e.wait, host)
+	}
 }
 
 func newExtClient(s *Server) *extClient {
@@ -85,6 +127,10 @@ func (e *extClient) getJSON(ctx context.Context, u string, out any) error {
 		return err
 	}
 	req.Header.Set("User-Agent", "RiiMusic self-hosted music player")
+	host := req.URL.Host
+	if limited, _ := e.RateLimited(host); limited {
+		return errRateLimited // don't even ask while paused
+	}
 	// One request at a time, ~4/s at most: polite to free APIs. Only the HTTP
 	// call is locked, since fetchers nest (similar → artist id lookup).
 	e.mu.Lock()
@@ -96,10 +142,42 @@ func (e *extClient) getJSON(ctx context.Context, u string, out any) error {
 		return fmt.Errorf("%w: %v", errExtUnavailable, err)
 	}
 	defer res.Body.Close()
+	if res.StatusCode == http.StatusTooManyRequests || res.StatusCode == http.StatusServiceUnavailable {
+		ra, _ := strconv.Atoi(res.Header.Get("Retry-After"))
+		e.backoff(host, time.Duration(ra)*time.Second)
+		return errRateLimited
+	}
 	if res.StatusCode != http.StatusOK {
 		return fmt.Errorf("%w: %s", errExtUnavailable, res.Status)
 	}
-	return json.NewDecoder(res.Body).Decode(out)
+	body, err := io.ReadAll(io.LimitReader(res.Body, 8<<20))
+	if err != nil {
+		return fmt.Errorf("%w: %v", errExtUnavailable, err)
+	}
+	// Last.fm answers 200 with {"error": 29} (rate limit) or 26 (key suspended).
+	if host == "ws.audioscrobbler.com" {
+		var le struct {
+			Error int `json:"error"`
+		}
+		if json.Unmarshal(body, &le) == nil && (le.Error == 29 || le.Error == 26) {
+			e.backoff(host, 0)
+			return errRateLimited
+		}
+	}
+	// Deezer answers 200 with {"error": {"code": 4}} past its quota (50 calls / 5 s).
+	if host == "api.deezer.com" {
+		var de struct {
+			Error struct {
+				Code int `json:"code"`
+			} `json:"error"`
+		}
+		if json.Unmarshal(body, &de) == nil && de.Error.Code == 4 {
+			e.backoff(host, 10*time.Second)
+			return errRateLimited
+		}
+	}
+	e.clearBackoff(host)
+	return json.Unmarshal(body, out)
 }
 
 // Similar returns artists similar to name. Errors are not cached.

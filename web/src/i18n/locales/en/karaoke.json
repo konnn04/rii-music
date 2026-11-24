@@ -35,5 +35,6 @@
   "cleared": "Cleared karaoke cache ({size}).",
   "clearedEmpty": "No cached karaoke data to clear.",
   "shortcutToggle": "Toggle Karaoke",
-  "cpu": "CPU (slow, no WebGPU in this browser)"
+  "cpu": "CPU (slow, no WebGPU in this browser)",
+  "inRoom": "You're in a Nghe chung room: leave it to use karaoke."
 }

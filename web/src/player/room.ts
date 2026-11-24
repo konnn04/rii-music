@@ -14,6 +14,7 @@
 import { create } from "zustand";
 import { api, ApiError, type Track } from "@/lib/api";
 import { queryClient } from "@/lib/queries";
+import { useKaraoke } from "@/karaoke/store";
 import { isDesktop, notifyDesktop } from "@/lib/desktop";
 import { toast } from "@/components/ui/Toast";
 import { t } from "@/i18n";
@@ -102,6 +103,8 @@ function setRoom(room: RoomView | null, tracks?: Track[], now?: number) {
   if (now) useRoom.setState({ skew: now - Date.now() });
   useRoom.setState((s) => ({ room, tracks: tracks ?? s.tracks, status: room ? "connected" : "idle" }));
   setRoomRole(myRole());
+  // In a room karaoke is off (see karaoke/store.ts).
+  if (myRole() && (useKaraoke.getState().mode !== "off" || useKaraoke.getState().open)) useKaraoke.setState({ mode: "off", open: false });
 }
 
 /** Fed from the SSE "room" event. */
@@ -249,7 +252,13 @@ async function reload() {
 // ── actions for the UI ─────────────────────────────────────────────────
 
 /** "Phát trạm": open a room with what this device plays now. */
+/** Starting or joining a room while karaoke is on is refused (and the other way round). */
+function refuseIfKaraoke() {
+  if (useKaraoke.getState().mode !== "off") throw new Error(t("room.karaokeOn"));
+}
+
 export async function createRoom() {
+  refuseIfKaraoke();
   const res = await api<{ room: RoomView; tracks: Track[]; now: number }>("/api/rooms", { method: "POST", json: localState() });
   lastApplied = res.room.state.rev;
   setRoom(res.room, res.tracks, res.now);
@@ -258,6 +267,7 @@ export async function createRoom() {
 }
 
 export async function joinRoom(code: string) {
+  refuseIfKaraoke();
   const c = code.trim().toUpperCase();
   const res = await api<{ room: RoomView; tracks: Track[]; now: number }>(`/api/rooms/${encodeURIComponent(c)}/join`, { method: "POST" });
   setRoom(res.room, res.tracks, res.now);

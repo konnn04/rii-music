@@ -1,0 +1,12 @@
+{
+  "name": "riimusic-desktop",
+  "version": "1.0.0",
+  "private": true,
+  "description": "RiiMusic desktop shell (Tauri v2)",
+  "scripts": {
+    "tauri": "tauri"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "^2"
+  }
+}

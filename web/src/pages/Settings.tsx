@@ -769,7 +769,16 @@ function DesktopSettings() {
           </Row>
         </>
       )}
-      <p className="py-3 text-body-sm text-fg-muted">{t("settings.desktop.switchModeHint")}</p>
+      <Row label={t("settings.desktop.mode")} hint={t("settings.desktop.switchModeHint")}>
+        <Button
+          icon="devices"
+          onClick={() => {
+            if (window.confirm(t("settings.desktop.switchConfirm"))) void window.__TAURI__?.core?.invoke("switch_mode");
+          }}
+        >
+          {t("settings.desktop.switchMode")}
+        </Button>
+      </Row>
       {confirmDir && (
         <Dialog
           open

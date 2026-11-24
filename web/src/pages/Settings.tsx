@@ -23,6 +23,7 @@ import { UI_SCALES, getUiScale, setUiScale } from "@/lib/uiScale";
 import { undoDislike, useDisliked } from "@/lib/dislike";
 import { setLiteMode, useLite, type LiteMode } from "@/lib/lite";
 import { getDesktopAutostart, isDesktop, openDesktopPath, pickDesktopFolder, setDesktopAutostart, useAppMode, checkDesktopUpdate, installDesktopUpdate, type DesktopUpdate } from "@/lib/desktop";
+import { browserDeviceName, customDeviceName, deviceName, setCustomDeviceName } from "@/player/sync";
 
 export function SettingsPage() {
   const { data } = useSettings();
@@ -55,6 +56,7 @@ export function SettingsPage() {
         <LanguageSettings />
 
         <Group title={t("settings.playback.title")} icon="play">
+          <DeviceNameRow />
           <Row
             label={t("settings.playback.crossfade")}
             hint={data.crossfadeSec === 0 ? t("settings.playback.crossfadeOff") : tn("settings.playback.crossfadeOn", cf ?? data.crossfadeSec)}
@@ -613,6 +615,31 @@ type LocalInfo = {
     to: string;
   };
 };
+
+/** "Tên thiết bị này": how this device appears to your other devices (remote control). */
+function DeviceNameRow() {
+  const [value, setValue] = useState(customDeviceName());
+  const save = () => {
+    setCustomDeviceName(value);
+    toast(t("settings.device.saved", { name: deviceName() }));
+  };
+  return (
+    <Row label={t("settings.device.name")} hint={t("settings.device.hint", { name: deviceName() })}>
+      <form
+        className="flex gap-2"
+        onSubmit={(e) => {
+          e.preventDefault();
+          save();
+        }}
+      >
+        <input className="input h-10 w-44" value={value} maxLength={60} placeholder={browserDeviceName()} onChange={(e) => setValue(e.target.value)} />
+        <Button type="submit" disabled={value.trim() === customDeviceName()}>
+          {t("common.save")}
+        </Button>
+      </form>
+    </Row>
+  );
+}
 
 /** "Kiểm tra cập nhật": the desktop app's own version and updates. */
 function UpdateRow() {

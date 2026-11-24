@@ -187,5 +187,10 @@
     "mode": "Mode",
     "switchMode": "Switch mode…",
     "switchConfirm": "Go back to the mode screen? Playback stops; your local-mode data is kept."
+  },
+  "device": {
+    "name": "This device's name",
+    "hint": "Shown to your other devices for remote control. Now: {name}",
+    "saved": "This device is now called “{name}”"
   }
 }

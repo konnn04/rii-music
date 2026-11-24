@@ -187,5 +187,10 @@
     "mode": "Chế độ",
     "switchMode": "Đổi chế độ…",
     "switchConfirm": "Quay lại màn hình chọn chế độ? Nhạc đang phát sẽ dừng; dữ liệu của chế độ Local vẫn được giữ."
+  },
+  "device": {
+    "name": "Tên thiết bị này",
+    "hint": "Hiện cho các thiết bị khác của bạn khi điều khiển từ xa. Hiện tại: {name}",
+    "saved": "Thiết bị này giờ tên là “{name}”"
   }
 }

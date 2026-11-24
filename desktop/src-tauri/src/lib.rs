@@ -128,6 +128,30 @@ async fn install_update(app: AppHandle) -> Result<(), String> {
     app.restart();
 }
 
+/// The computer's name (shown to the user's other devices: "RiiMusic · DESKTOP-42").
+#[tauri::command]
+fn device_name() -> String {
+    for k in ["COMPUTERNAME", "HOSTNAME"] {
+        if let Ok(v) = std::env::var(k) {
+            if !v.trim().is_empty() {
+                return v.trim().to_string();
+            }
+        }
+    }
+    std::fs::read_to_string("/etc/hostname")
+        .map(|s| s.trim().to_string())
+        .ok()
+        .filter(|s| !s.is_empty())
+        .or_else(|| {
+            std::process::Command::new("hostname")
+                .output()
+                .ok()
+                .map(|o| String::from_utf8_lossy(&o.stdout).trim().to_string())
+                .filter(|s| !s.is_empty())
+        })
+        .unwrap_or_else(|| "Máy tính".to_string())
+}
+
 #[tauri::command]
 async fn check_server(url: String) -> Result<String, String> {
     let trimmed = url.trim().trim_end_matches('/');
@@ -353,7 +377,8 @@ pub fn run() {
             open_music_dir,
             switch_mode,
             check_update,
-            install_update
+            install_update,
+            device_name
         ])
         .setup(|app| {
             let handle = app.handle().clone();

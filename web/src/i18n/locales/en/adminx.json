@@ -37,5 +37,20 @@
     "autoDlPerRunHint": "Every 6 hours, within each user's storage limit ({min}–{max}, default 10).",
     "playlistMax": "Max songs per playlist / album link",
     "playlistMaxHint": "The rest of a longer playlist is skipped ({min}–{max}, default 200)."
+  },
+  "tags": {
+    "title": "Genres and languages",
+    "tip": "Genres come from Last.fm / Deezer through a queue (about one song per second) so suggestions don't mix styles. When a service rate-limits, it pauses and resumes on its own.",
+    "tagged": "Songs with genres",
+    "pending": "{n} songs left in the queue",
+    "allDone": "All songs scanned",
+    "failed": "{n} failed, retried hourly",
+    "providerLastfm": "Source: Last.fm + Deezer",
+    "providerDeezer": "Source: Deezer (add LASTFM_API_KEY for better tags)",
+    "lang": "Recomputing languages: {done}/{total}",
+    "paused": "{name} is rate-limiting, paused until {time}",
+    "resync": "Resync",
+    "confirm": "Scan genres and languages again for all {n} songs? Suggestions keep working meanwhile.",
+    "started": "Resync started"
   }
 }

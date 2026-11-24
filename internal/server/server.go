@@ -197,6 +197,8 @@ func (s *Server) Handler() http.Handler {
 	// admin
 	admin := func(pattern string, h http.HandlerFunc) { mux.Handle(pattern, s.requireAdmin(h)) }
 	admin("GET /api/admin/users", s.handleAdminListUsers)
+	admin("GET /api/admin/enrich", s.handleEnrichStatus)
+	admin("POST /api/admin/enrich/resync", s.handleEnrichResync)
 	admin("POST /api/admin/users", s.handleAdminCreateUser)
 	admin("PATCH /api/admin/users/{id}", s.handleAdminPatchUser)
 	admin("DELETE /api/admin/users/{id}", s.handleAdminDeleteUser)

@@ -155,6 +155,12 @@ func (s *Server) tagNextTrack(ctx context.Context) bool {
 	gctx, cancel := context.WithTimeout(ctx, 30*time.Second)
 	defer cancel()
 	tags, err := s.ext.trackGenres(gctx, t.Artist, t.Title)
+	if errors.Is(err, errRateLimited) {
+		// Paused by the service: stop this round (the song stays pending) and
+		// come back when the pause is over.
+		s.enrichResumeAfterLimit()
+		return false
+	}
 	if err != nil && ctx.Err() == nil {
 		// Service unavailable: leave it for a later round (but don't spin on it now).
 		s.db.Exec(`UPDATE tracks SET genres_done = -1 WHERE id = ?`, t.ID)
@@ -177,7 +183,8 @@ func splitGenres(s string) []string {
 // trackGenres: Deezer album genres for the song, plus the top Last.fm tags.
 func (e *extClient) trackGenres(ctx context.Context, artist, title string) ([]string, error) {
 	var out []string
-	_, err := e.cached(ctx, "genres2:"+textutil.Fold(artist)+"|"+textutil.Fold(title), false, &out, func(ctx context.Context) (any, error) {
+	// v3: Last.fm artist tags when the song has none; rate limits are errors (retried), not "no tags".
+	_, err := e.cached(ctx, "genres3:"+textutil.Fold(artist)+"|"+textutil.Fold(title), false, &out, func(ctx context.Context) (any, error) {
 		set := map[string]int{}
 		add := func(g string, w int) {
 			g = strings.ToLower(strings.TrimSpace(g))
@@ -232,12 +239,26 @@ func (e *extClient) trackGenres(ctx context.Context, artist, title string) ([]st
 			}
 			u := "https://ws.audioscrobbler.com/2.0/?method=track.gettoptags&format=json&autocorrect=1&api_key=" + url.QueryEscape(k) +
 				"&artist=" + url.QueryEscape(firstArtist(artist)) + "&track=" + url.QueryEscape(baseTitle(title))
+			trackTags := 0
 			if err := e.getJSON(ctx, u, &lf); err == nil {
 				for i, tg := range lf.TopTags.Tag {
 					if i >= 6 || tg.Count < 10 {
 						break
 					}
 					add(tg.Name, tg.Count)
+					trackTags++
+				}
+			} else if errors.Is(err, errRateLimited) {
+				return nil, err
+			}
+			// Many songs (V-pop especially) have no tags of their own: the artist's.
+			if trackTags == 0 {
+				at, err := e.ArtistTags(ctx, firstArtist(artist), false)
+				if errors.Is(err, errRateLimited) {
+					return nil, err
+				}
+				for i, tg := range at {
+					add(tg, 60-i*6)
 				}
 			}
 		}

@@ -37,5 +37,20 @@
     "autoDlPerRunHint": "Mỗi 6 giờ, trong giới hạn dung lượng của từng người ({min}–{max}, mặc định 10).",
     "playlistMax": "Số bài tối đa mỗi link playlist / album",
     "playlistMaxHint": "Phần còn lại của playlist dài sẽ bị bỏ qua ({min}–{max}, mặc định 200)."
+  },
+  "tags": {
+    "title": "Thể loại và ngôn ngữ",
+    "tip": "Gắn thể loại từ Last.fm / Deezer theo hàng chờ (khoảng 1 bài mỗi giây) để gợi ý không lẫn kiểu nhạc. Gặp giới hạn của dịch vụ thì tự tạm dừng và chạy tiếp.",
+    "tagged": "Bài đã có thể loại",
+    "pending": "Còn {n} bài trong hàng chờ",
+    "allDone": "Đã quét hết",
+    "failed": "{n} bài lỗi, tự thử lại mỗi giờ",
+    "providerLastfm": "Nguồn: Last.fm + Deezer",
+    "providerDeezer": "Nguồn: Deezer (thêm LASTFM_API_KEY để chính xác hơn)",
+    "lang": "Đang tính lại ngôn ngữ: {done}/{total}",
+    "paused": "{name} đang giới hạn số lần gọi, tạm dừng đến {time}",
+    "resync": "Đồng bộ lại",
+    "confirm": "Quét lại thể loại và ngôn ngữ cho cả {n} bài? Gợi ý vẫn dùng được trong lúc quét.",
+    "started": "Đã bắt đầu đồng bộ lại"
   }
 }

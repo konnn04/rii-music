@@ -86,7 +86,9 @@
     "album": "Album: {album}",
     "expand": "Expand",
     "closeLyrics": "Close full-screen lyrics",
-    "more": "More options"
+    "more": "More options",
+    "genres": "Genres: {genres}",
+    "noGenres": "No genres yet"
   },
   "sleep": {
     "title": "Sleep timer",

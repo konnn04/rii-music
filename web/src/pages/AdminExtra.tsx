@@ -122,6 +122,79 @@ export function DiscordCard() {
   );
 }
 
+type EnrichStatus = {
+  tracks: number;
+  genresDone: number;
+  genresTagged: number;
+  genresPending: number;
+  genresFailed: number;
+  lyricsInFile: number;
+  langRunning: boolean;
+  langDone: number;
+  langTotal: number;
+  provider: "lastfm" | "deezer";
+  lastfmPausedUntil?: number;
+  deezerPausedUntil?: number;
+};
+
+/** Genres and languages: progress of the tagging queue, rate-limit pauses, "Đồng bộ lại". */
+export function TagsCard() {
+  const st = useQuery({
+    queryKey: ["admin", "enrich"],
+    queryFn: () => api<EnrichStatus>("/api/admin/enrich"),
+    refetchInterval: (q) => (q.state.data && (q.state.data.genresPending > 0 || q.state.data.langRunning) ? 3000 : 30_000),
+  });
+  const [busy, setBusy] = useState(false);
+  const d = st.data;
+  if (!d) return null;
+  const pct = d.tracks ? Math.round((d.genresDone / d.tracks) * 100) : 100;
+  const paused = [d.lastfmPausedUntil && ["Last.fm", d.lastfmPausedUntil], d.deezerPausedUntil && ["Deezer", d.deezerPausedUntil]].filter(Boolean) as [string, number][];
+  const resync = async () => {
+    if (!window.confirm(t("adminx.tags.confirm", { n: d.tracks }))) return;
+    setBusy(true);
+    try {
+      const s = await api<EnrichStatus>("/api/admin/enrich/resync", { method: "POST" });
+      queryClient.setQueryData(["admin", "enrich"], s);
+      toast(t("adminx.tags.started"), "success");
+    } catch (e) {
+      toast((e as Error).message, "error");
+    } finally {
+      setBusy(false);
+    }
+  };
+  return (
+    <Card title={t("adminx.tags.title")} icon="filter" tip={t("adminx.tags.tip")}>
+      <div className="flex flex-col gap-1 text-body-sm">
+        <div className="flex justify-between">
+          <span>{t("adminx.tags.tagged")}</span>
+          <span className="tabular">
+            {d.genresTagged} / {d.tracks}
+          </span>
+        </div>
+        <div className="h-1.5 overflow-hidden rounded-full bg-surface-3" role="progressbar" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100}>
+          <div className="h-full bg-accent transition-[width]" style={{ width: `${pct}%` }} />
+        </div>
+        <div className="flex flex-wrap justify-between gap-x-3 text-caption text-fg-muted">
+          <span>{d.genresPending > 0 ? t("adminx.tags.pending", { n: d.genresPending }) : t("adminx.tags.allDone")}</span>
+          {d.genresFailed > 0 && <span className="text-warning">{t("adminx.tags.failed", { n: d.genresFailed })}</span>}
+          <span>{t(d.provider === "lastfm" ? "adminx.tags.providerLastfm" : "adminx.tags.providerDeezer")}</span>
+        </div>
+        {d.langRunning && <p className="text-caption text-fg-muted">{t("adminx.tags.lang", { done: d.langDone, total: d.langTotal })}</p>}
+        {paused.map(([name, until]) => (
+          <p key={name} className="text-caption text-warning">
+            {t("adminx.tags.paused", { name, time: new Date(until).toLocaleTimeString() })}
+          </p>
+        ))}
+      </div>
+      <div className="flex justify-end">
+        <Button icon="retry" loading={busy} onClick={resync}>
+          {t("adminx.tags.resync")}
+        </Button>
+      </div>
+    </Card>
+  );
+}
+
 /** Suggestions and downloads: how much autoplay queues / downloads, auto-download per run, playlist size. */
 export function LimitsCard() {
   const srv = useQuery({ queryKey: ["admin", "settings"], queryFn: () => api<ServerSettings>("/api/admin/settings") });

@@ -304,6 +304,9 @@ export function RightPanel() {
                 <TrackMenuButton track={current.track} />
               </div>
               {current.track.album && <p className="mt-2 truncate text-body-sm text-np-fg-muted">{t("player.np.album", { album: current.track.album })}</p>}
+              <p className="mt-1 truncate text-body-sm text-np-fg-muted">
+                {current.track.genres?.length ? t("player.np.genres", { genres: current.track.genres.slice(0, 4).join(", ") }) : t("player.np.noGenres")}
+              </p>
               <div className="mt-4 min-h-[240px] flex-1 overflow-hidden rounded-card bg-black/20">
                 <div className="flex items-center justify-between px-4 pt-3">
                   <span className="text-overline uppercase text-np-fg-muted">{t("player.np.lyrics")}</span>

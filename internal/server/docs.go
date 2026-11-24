@@ -104,6 +104,8 @@ var apiDocs = []apiDoc{
 	{"GET", "/api/playback", "Phát nhạc", "Phiên phát gần nhất (thiết bị, bài, vị trí, hàng chờ) để tiếp tục ở đây", "", nil, ``, `{"session":{},"tracks":[]}`},
 	{"GET", "/api/stream/{videoId}", "Stream", "Âm thanh của video YouTube, phát thẳng qua máy chủ không cần tải vào thư viện (hỗ trợ Range; bài đã có trong thư viện thì lấy từ đĩa). Dành cho bot, ví dụ Discord", "", nil, ``, ``},
 	{"GET", "/api/stream/{videoId}/info", "Stream", "Tên bài, nghệ sĩ, thời lượng, định dạng và link stream của video YouTube", "", nil, ``, `{"videoId":"…","title":"…","artist":"…","durationMs":215000,"mime":"audio/webm","streamUrl":"/api/stream/…"}`},
+	{"GET", "/api/admin/enrich", "Quản trị", "Tiến độ gắn thể loại / lời trong file, trạng thái giới hạn Last.fm và Deezer", "", nil, ``, `{"tracks":120,"genresDone":80,"genresTagged":64,"genresPending":40,"provider":"lastfm"}`},
+	{"POST", "/api/admin/enrich/resync", "Quản trị", "Đồng bộ lại: gắn thể loại lại cho mọi bài (theo hàng chờ) và tính lại ngôn ngữ", "", nil, ``, ``},
 	{"GET", "/api/streak", "Nghe & gợi ý", "Chuỗi ngày nghe (≥ 10 phút/ngày), kỷ lục, giai đoạn của Vani; tz = getTimezoneOffset()", "", []string{"tz"}, ``, `{"current":5,"best":9,"todayMinutes":12,"goalMinutes":10,"todayDone":true,"stage":2,"nextStageAt":14,"week":[0,15,20,11,30,12,12]}`},
 	{"POST", "/api/devices", "Phát nhạc", "Thiết bị này đang mở app (mỗi 30 giây), để chọn làm nơi phát", "", nil, `{"deviceId":"…","deviceName":"Chrome · Windows"}`, ``},
 	{"GET", "/api/devices", "Phát nhạc", "Các thiết bị đang mở app; thiết bị giữ phiên phát có active / playing", "", nil, ``, `[{"deviceId":"…","deviceName":"Chrome · Windows","active":true,"playing":true}]`},

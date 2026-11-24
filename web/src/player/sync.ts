@@ -58,7 +58,31 @@ export const deviceId = (() => {
   return id;
 })();
 
+// The desktop app tells the computer's name (set once at start).
+let desktopHost = "";
+
+/** The user's own name for this device (Cài đặt → Tên thiết bị này), if any. */
+export function customDeviceName(): string {
+  return (localStorage.getItem("rii-device-name") ?? "").trim();
+}
+
+export function setCustomDeviceName(name: string) {
+  const v = name.trim().slice(0, 60);
+  if (v) localStorage.setItem("rii-device-name", v);
+  else localStorage.removeItem("rii-device-name");
+  void report(true);
+  announce();
+}
+
+/** What other devices see: the name you gave, the computer's name in the app, else browser · OS. */
 export function deviceName() {
+  const custom = customDeviceName();
+  if (custom) return custom;
+  if (desktopHost) return `RiiMusic · ${desktopHost}`;
+  return browserDeviceName();
+}
+
+export function browserDeviceName() {
   const ua = navigator.userAgent;
   const os = /iPhone/.test(ua) ? "iPhone" : /iPad/.test(ua) ? "iPad" : /Android/.test(ua) ? "Android" : /Windows/.test(ua) ? "Windows" : /Mac/.test(ua) ? "Mac" : /Linux/.test(ua) ? "Linux" : "";
   const br = /Edg\//.test(ua) ? "Edge" : /OPR\//.test(ua) ? "Opera" : /Firefox\//.test(ua) ? "Firefox" : /Chrome\//.test(ua) ? "Chrome" : /Safari\//.test(ua) ? "Safari" : "";
@@ -284,6 +308,17 @@ export function dismissRemote() {
 export function startSync() {
   if (started) return;
   started = true;
+  const tauri = (window as unknown as { __TAURI__?: { core?: { invoke: (cmd: string) => Promise<unknown> } } }).__TAURI__;
+  tauri?.core
+    ?.invoke("device_name")
+    .then((n) => {
+      if (typeof n === "string" && n) {
+        desktopHost = n;
+        announce();
+        if (usePlayback.getState().isPlaying) void report(true);
+      }
+    })
+    .catch(() => {});
   if ("BroadcastChannel" in window) {
     bc = new BroadcastChannel("rii-player");
     bc.onmessage = (e) => {

@@ -95,6 +95,7 @@ export function DiscordCard() {
     try {
       const st = await api<ServerSettings>("/api/admin/settings", { method: "PUT", json: { ...srv.data, discordAppId: (appId ?? srv.data.discordAppId).trim(), agentUrl: (url ?? srv.data.agentUrl).trim() } });
       queryClient.setQueryData(["admin", "settings"], st);
+      void queryClient.invalidateQueries({ queryKey: ["discordInfo"] });
       setAppId(null);
       setUrl(null);
       toast(t("adminx.discord.saved"), "success");

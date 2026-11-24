@@ -758,8 +758,14 @@ func (d *Downloader) ingest(ctx context.Context, j *Job, tmp, src string, info *
 	}
 
 	rel := "music/" + id + "." + ext
-	final := filepath.Join(s.cfg.DataDir, filepath.FromSlash(rel))
+	final := s.cfg.AudioPath(rel)
 	if err := moveFile(tmpOut, final); err != nil {
+		os.Remove(coverOut)
+		return "", err
+	}
+	// Local mode: never keep the song raw on disk.
+	if err := s.sealAudio(final); err != nil {
+		os.Remove(final)
 		os.Remove(coverOut)
 		return "", err
 	}

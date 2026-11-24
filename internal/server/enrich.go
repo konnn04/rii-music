@@ -99,8 +99,8 @@ func (s *Server) embedNextLyrics(ctx context.Context) bool {
 		s.db.Exec(`UPDATE tracks SET lyrics_embedded = -1 WHERE id = ?`, t.ID)
 		return true
 	}
-	path := filepath.Join(s.cfg.DataDir, filepath.FromSlash(t.filePath))
-	size, err := embedLyrics(ctx, s.cfg.FFmpeg, path, text)
+	path := s.cfg.AudioPath(t.filePath)
+	size, err := s.embedLyricsFile(ctx, t.filePath, path, text)
 	if err != nil {
 		s.log.Debug("embed lyrics", "track", t.ID, "err", err)
 		s.db.Exec(`UPDATE tracks SET lyrics_embedded = -2 WHERE id = ?`, t.ID) // busy (being streamed on Windows) or ffmpeg failed

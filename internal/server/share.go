@@ -125,7 +125,12 @@ func (s *Server) previewFile(ctx context.Context, t *Track) (string, string, err
 		start = min(dur*0.25, dur-previewSec)
 	}
 	tmp := out + ".tmp" + ext
-	args := []string{"-y", "-ss", ftoa(start), "-t", ftoa(previewSec), "-i", filepath.Join(s.cfg.DataDir, filepath.FromSlash(file)),
+	src, done, err := s.plainAudio(file)
+	if err != nil {
+		return "", "", err
+	}
+	defer done()
+	args := []string{"-y", "-ss", ftoa(start), "-t", ftoa(previewSec), "-i", src,
 		"-map", "0:a:0", "-c", "copy", "-map_metadata", "-1"}
 	if ext == ".m4a" {
 		args = append(args, "-movflags", "+faststart")

@@ -8,6 +8,7 @@ import { setUnauthorizedHandler } from "./lib/api";
 import { router } from "./router";
 import { startAutofill } from "./player/autofill";
 import { initLite } from "./lib/lite";
+import { initDesktop } from "./lib/desktop";
 import "./styles/app.css";
 
 setUnauthorizedHandler(() => {
@@ -17,6 +18,7 @@ setUnauthorizedHandler(() => {
 
 startAutofill();
 initLite(); // fewer effects on weak devices
+initDesktop();
 
 if (import.meta.env.PROD) registerSW({ immediate: true });
 

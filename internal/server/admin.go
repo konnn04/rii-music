@@ -508,7 +508,7 @@ func (s *Server) handleAdminCleanup(w http.ResponseWriter, r *http.Request) {
 		for rows.Next() {
 			var id, fp string
 			if rows.Scan(&id, &fp) == nil {
-				known[filepath.Clean(filepath.Join(s.cfg.DataDir, filepath.FromSlash(fp)))] = true
+				known[filepath.Clean(s.cfg.AudioPath(fp))] = true
 				known[filepath.Clean(filepath.Join(s.cfg.CoverDir(), id+".jpg"))] = true
 			}
 		}

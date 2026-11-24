@@ -56,6 +56,11 @@ internal/server/            HTTP API (net/http 1.22 routing), one file per area:
   playback.go rooms.go        device sync + remote control, Nghe chung (listen-together) rooms
   settings.go docs.go hub.go  user/server settings, OpenAPI table, per-user SSE hub
   agent/                      PowerShell and sh+python agent templates (go:embed)
+desktop.go                  desktop modes: RII_MODE=local (embedded PostgreSQL, vault, auto-login) / client (proxy)
+internal/vault              encrypted, seekable audio files (local mode)
+internal/clientproxy        desktop client mode: reverse proxy to a RiiMusic server
+internal/ffmpegdl           downloads a static ffmpeg on first use (local mode)
+desktop/                    Tauri v2 shell (setup screen, sidecar, tray, autostart, deep links); see desktop/README.md
 web/src/
   player/                   Zustand queue store, audio engine (two <audio> + Web Audio: crossfade, gapless, gain, analyser), autofill
   pages/ components/ lib/   UI (TanStack Router + Query, Tailwind v4, Radix, dnd-kit)

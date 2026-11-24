@@ -60,7 +60,7 @@ Name, description and logo are stored in settings and injected into `index.html`
 
 ## Discord presence
 
-Discord only accepts presence through local IPC on the user's machine. The browser posts now-playing to the server (`/api/nowplaying`, 60 s heartbeat) when the user enabled it; an agent on the desktop polls `/api/agent/nowplaying` and talks to the Discord pipe/socket. Agents: `/agent.ps1` (PowerShell 5.1+, nothing to install) and `/agent.sh` (sh + python3), generated with the server URL; the token is prompted for and stored locally, never put in a URL. The Go binary's `discord-agent` subcommand is the exe fallback. The fallback art asset key is `riimusic`.
+Discord only accepts presence through local IPC on the user's machine. In the browser, the player posts now-playing to the server (`/api/nowplaying`, 60 s heartbeat) when the user enabled it; an agent on the desktop polls `/api/agent/nowplaying` and talks to the Discord pipe/socket. Agents: `/agent.ps1` (PowerShell 5.1+, nothing to install) and `/agent.sh` (sh + python3), generated with the server URL; the token is prompted for and stored locally, never put in a URL. The Go binary's `discord-agent` subcommand is the exe fallback. In the desktop app (`desktop/`), the local Go sidecar exposes `/__rii/discord` in both Local and Client modes and talks directly to the local Discord IPC (using YouTube thumbnails for cover art), so no separate agent or token is needed. The fallback art asset key is `riimusic`.
 
 ## API docs
 

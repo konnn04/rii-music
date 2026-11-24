@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ApiTokens, DiscordPresence, LanguageSettings } from "./SettingsExtra";
 import { Link } from "@tanstack/react-router";
 import { api, type AutoDLStatus, type Me, type Settings } from "@/lib/api";
@@ -22,6 +22,8 @@ import { useIsMobile } from "@/lib/useMedia";
 import { UI_SCALES, getUiScale, setUiScale } from "@/lib/uiScale";
 import { undoDislike, useDisliked } from "@/lib/dislike";
 import { setLiteMode, useLite, type LiteMode } from "@/lib/lite";
+import { getDesktopAutostart, isDesktop, openDesktopPath, pickDesktopFolder, setDesktopAutostart, useAppMode, checkDesktopUpdate, installDesktopUpdate, type DesktopUpdate } from "@/lib/desktop";
+import { browserDeviceName, customDeviceName, deviceName, setCustomDeviceName } from "@/player/sync";
 
 export function SettingsPage() {
   const { data } = useSettings();
@@ -30,6 +32,7 @@ export function SettingsPage() {
   const [uiScale, setScaleState] = useState(getUiScale);
   const mobile = useIsMobile();
   const isAdmin = useMe().data?.user.role === "admin";
+  const isLocal = useAppMode() === "local";
   if (!data) return <Spinner />;
   const set = (p: Partial<Settings>) => save.mutate(p);
 
@@ -49,10 +52,11 @@ export function SettingsPage() {
         }
       />
       <div className="flex max-w-2xl flex-col gap-6 px-4 md:px-6">
-        <AccountSettings />
+        {!isLocal && <AccountSettings />}
         <LanguageSettings />
 
         <Group title={t("settings.playback.title")} icon="play">
+          <DeviceNameRow />
           <Row
             label={t("settings.playback.crossfade")}
             hint={data.crossfadeSec === 0 ? t("settings.playback.crossfadeOff") : tn("settings.playback.crossfadeOn", cf ?? data.crossfadeSec)}
@@ -126,8 +130,10 @@ export function SettingsPage() {
           <LiteRow />
         </Group>
 
-        <DiscordPresence />
-        <ApiTokens />
+        {isDesktop() && <DesktopSettings />}
+
+        {(isDesktop() || !isLocal) && <DiscordPresence />}
+        {!isLocal && <ApiTokens />}
         <DataSettings />
 
         <Group title={t("settings.shortcuts.title")} icon="keyboard">
@@ -591,6 +597,232 @@ function DataSettings() {
             <input className="input" value={typed} onChange={(e) => setTyped(e.target.value)} autoFocus autoComplete="off" />
           </label>
         </Dialog>
+      )}
+    </Group>
+  );
+}
+
+type LocalInfo = {
+  mode: string;
+  musicDir: string;
+  dataDir: string;
+  encrypted: boolean;
+  move: {
+    running: boolean;
+    done: number;
+    total: number;
+    error: string;
+    to: string;
+  };
+};
+
+/** "Tên thiết bị này": how this device appears to your other devices (remote control). */
+function DeviceNameRow() {
+  const [value, setValue] = useState(customDeviceName());
+  const save = () => {
+    setCustomDeviceName(value);
+    toast(t("settings.device.saved", { name: deviceName() }));
+  };
+  return (
+    <Row label={t("settings.device.name")} hint={t("settings.device.hint", { name: deviceName() })}>
+      <form
+        className="flex gap-2"
+        onSubmit={(e) => {
+          e.preventDefault();
+          save();
+        }}
+      >
+        <input className="input h-10 w-44" value={value} maxLength={60} placeholder={browserDeviceName()} onChange={(e) => setValue(e.target.value)} />
+        <Button type="submit" disabled={value.trim() === customDeviceName()}>
+          {t("common.save")}
+        </Button>
+      </form>
+    </Row>
+  );
+}
+
+/** "Kiểm tra cập nhật": the desktop app's own version and updates. */
+function UpdateRow() {
+  const [state, setState] = useState<{ busy: boolean; info: DesktopUpdate | null }>({ busy: false, info: null });
+  const check = async () => {
+    setState({ busy: true, info: null });
+    try {
+      const info = await checkDesktopUpdate();
+      setState({ busy: false, info });
+      if (info && !info.version) toast(t("settings.desktop.upToDate", { version: info.current }));
+    } catch (e) {
+      setState({ busy: false, info: null });
+      toast((e as Error).message, "error");
+    }
+  };
+  const install = async () => {
+    setState((s) => ({ ...s, busy: true }));
+    toast(t("settings.desktop.installing"));
+    try {
+      await installDesktopUpdate(); // the app restarts
+    } catch (e) {
+      setState((s) => ({ ...s, busy: false }));
+      toast((e as Error).message, "error");
+    }
+  };
+  const v = state.info?.version;
+  return (
+    <Row
+      label={t("settings.desktop.update")}
+      hint={v ? t("settings.desktop.updateAvailable", { version: v }) : state.info ? t("settings.desktop.upToDate", { version: state.info.current }) : t("settings.desktop.updateHint")}
+    >
+      {v ? (
+        <Button variant="primary" icon="download" loading={state.busy} onClick={install}>
+          {t("settings.desktop.updateNow")}
+        </Button>
+      ) : (
+        <Button icon="retry" loading={state.busy} onClick={check}>
+          {t("settings.desktop.checkUpdate")}
+        </Button>
+      )}
+    </Row>
+  );
+}
+
+function DesktopSettings() {
+  const isLocal = useAppMode() === "local";
+  const [autostart, setAutostartState] = useState(false);
+  const [confirmDir, setConfirmDir] = useState<string | null>(null);
+  const [startingMove, setStartingMove] = useState(false);
+  const [moveStartedAt, setMoveStartedAt] = useState<number | null>(null);
+
+  useEffect(() => {
+    let active = true;
+    void getDesktopAutostart().then((v) => {
+      if (active) setAutostartState(v);
+    });
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  const local = useQuery({
+    queryKey: ["localInfo"],
+    queryFn: () => api<LocalInfo>("/api/local"),
+    enabled: isLocal,
+    refetchInterval: (q) => (q.state.data?.move.running || moveStartedAt !== null ? 1000 : false),
+  });
+
+  const prevRunning = useRef(false);
+  useEffect(() => {
+    const mv = local.data?.move;
+    if (!mv) return;
+    const finishedFromRunning = prevRunning.current && !mv.running;
+    const finishedFast = moveStartedAt !== null && !mv.running && local.dataUpdatedAt > moveStartedAt;
+    prevRunning.current = mv.running;
+    if (finishedFromRunning || finishedFast) {
+      setMoveStartedAt(null);
+      if (mv.error) toast(mv.error, "error");
+      else toast(t("settings.desktop.movedToast"), "success");
+    }
+  }, [local.data, local.dataUpdatedAt, moveStartedAt]);
+
+  const toggleAutostart = async (next: boolean) => {
+    setAutostartState(next);
+    try {
+      await setDesktopAutostart(next);
+    } catch (e) {
+      setAutostartState(!next);
+      toast((e as Error)?.message ?? t("common.error"), "error");
+    }
+  };
+
+  const pickFolder = async () => {
+    try {
+      const picked = await pickDesktopFolder(t("settings.desktop.musicDir"), local.data?.musicDir);
+      if (picked) setConfirmDir(picked);
+    } catch (e) {
+      toast((e as Error)?.message ?? t("common.error"), "error");
+    }
+  };
+
+  const startMove = async () => {
+    if (!confirmDir) return;
+    setStartingMove(true);
+    try {
+      const startedAt = Date.now();
+      await api("/api/local/music-dir", { method: "POST", json: { path: confirmDir } });
+      setConfirmDir(null);
+      setMoveStartedAt(startedAt);
+      void local.refetch();
+    } catch (e) {
+      toast((e as Error)?.message ?? t("common.error"), "error");
+    } finally {
+      setStartingMove(false);
+    }
+  };
+
+  const mv = local.data?.move;
+  const isMoving = !!mv?.running || moveStartedAt !== null;
+
+  return (
+    <Group title={t("settings.desktop.title")} icon="devices">
+      <Toggle label={t("settings.desktop.autostart")} on={autostart} set={(v) => void toggleAutostart(v)} />
+      <UpdateRow />
+      {isLocal && (
+        <>
+          <Row
+            label={t("settings.desktop.musicDir")}
+            hint={
+              isMoving
+                ? t("settings.desktop.moving", { done: mv?.done ?? 0, total: mv?.total ?? 0 })
+                : local.data?.musicDir
+                  ? `${local.data.musicDir} — ${t("settings.desktop.musicDirHint")}`
+                  : t("settings.desktop.musicDirHint")
+            }
+          >
+            <Button size="sm" loading={isMoving} onClick={() => void pickFolder()}>
+              {t("settings.desktop.changeDir")}
+            </Button>
+          </Row>
+          <Row label={t("settings.desktop.dataDir")} hint={local.data?.dataDir ?? ""}>
+            <Button
+              size="sm"
+              disabled={!local.data?.dataDir}
+              onClick={() => {
+                if (!local.data?.dataDir) return;
+                void openDesktopPath(local.data.dataDir).catch((e) =>
+                  toast((e as Error)?.message ?? t("common.error"), "error"),
+                );
+              }}
+            >
+              {t("settings.desktop.openDir")}
+            </Button>
+          </Row>
+        </>
+      )}
+      <Row label={t("settings.desktop.mode")} hint={t("settings.desktop.switchModeHint")}>
+        <Button
+          icon="devices"
+          onClick={() => {
+            if (window.confirm(t("settings.desktop.switchConfirm"))) void window.__TAURI__?.core?.invoke("switch_mode");
+          }}
+        >
+          {t("settings.desktop.switchMode")}
+        </Button>
+      </Row>
+      {confirmDir && (
+        <Dialog
+          open
+          onOpenChange={(o) => !o && setConfirmDir(null)}
+          title={t("settings.desktop.confirmMoveTitle")}
+          description={t("settings.desktop.confirmMoveDesc", { path: confirmDir })}
+          footer={
+            <>
+              <Button variant="ghost" onClick={() => setConfirmDir(null)}>
+                {t("common.cancel")}
+              </Button>
+              <Button variant="primary" loading={startingMove} onClick={() => void startMove()}>
+                {t("settings.desktop.confirmMoveBtn")}
+              </Button>
+            </>
+          }
+        />
       )}
     </Group>
   );

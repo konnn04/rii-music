@@ -46,6 +46,10 @@
     "runUnix": "Open Terminal on the computer running Discord, run this command and paste the token when asked:",
     "needsPython": "Needs python3: on macOS install it with xcode-select --install; most Linux systems have it.",
     "tokenSaved": "The token is kept on that computer; next time just run the command again.",
-    "prebuilt": "Use a prebuilt program (exe) instead of the script"
+    "prebuilt": "Use a prebuilt program (exe) instead of the script",
+    "desktopTip": "The RiiMusic app talks to Discord on this computer itself: no command to run, no token.",
+    "desktopHint": "Shows what you play on this computer's Discord (Discord must be running).",
+    "desktopNoAppId": "No Discord Application ID yet: set it in Admin → Discord (in server mode, ask the server's admin).",
+    "desktopAppIdHint": "Create an application at discord.com/developers/applications (its name is what shows after “Listening to”), then paste its Application ID here."
   }
 }

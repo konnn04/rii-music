@@ -65,6 +65,27 @@ func main() {
 		return
 	}
 
+	switch os.Getenv("RII_MODE") {
+	case "client": // desktop app connected to a RiiMusic server
+		if err := runClient(log); err != nil {
+			log.Error("fatal", "err", err)
+			os.Exit(1)
+		}
+		return
+	case "local": // desktop app on its own
+		stopPG, err := prepareLocal(log)
+		if err != nil {
+			log.Error("fatal", "err", err)
+			os.Exit(1)
+		}
+		err = run(log, logBuf)
+		stopPG()
+		if err != nil {
+			log.Error("fatal", "err", err)
+			os.Exit(1)
+		}
+		return
+	}
 	if err := run(log, logBuf); err != nil {
 		log.Error("fatal", "err", err)
 		os.Exit(1)
@@ -124,20 +145,39 @@ func run(log *slog.Logger, logBuf *server.LogBuffer) error {
 	if err := srv.EnsureAdmin(); err != nil {
 		return err
 	}
+	if cfg.Local() {
+		key, err := localVaultKey()
+		if err != nil {
+			return err
+		}
+		srv.SetVaultKey(key) // songs are stored encrypted
+		srv.LoadLocalMusicDir()
+	}
 	if !cfg.MailConfigured() {
 		log.Warn("SMTP chưa cấu hình: đăng nhập bằng mã OTP và quên mật khẩu sẽ không dùng được (xem .env.example)")
 	}
 
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
+	server.SetShutdownHook(stop) // desktop app: POST /__rii/shutdown
 
 	log.Info("RiiMusic", "version", server.Version)
 	go yt.Init(ctx)
 	srv.Start(ctx)
 
+	handler := srv.Handler()
+	if cfg.Local() {
+		// Desktop app: Discord presence straight to the Discord client on this computer.
+		dp := discordrpc.NewPresence(log.With("component", "discord"))
+		defer dp.Close()
+		mux := http.NewServeMux()
+		mux.Handle("/__rii/discord", dp.Handler())
+		mux.Handle("/", handler)
+		handler = mux
+	}
 	hs := &http.Server{
 		Addr:              cfg.Addr,
-		Handler:           srv.Handler(),
+		Handler:           handler,
 		ReadHeaderTimeout: 10 * time.Second,
 		IdleTimeout:       120 * time.Second,
 	}

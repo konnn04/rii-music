@@ -46,6 +46,10 @@
     "runUnix": "Mở Terminal trên máy có Discord, chạy lệnh này rồi dán token khi được hỏi:",
     "needsPython": "Cần python3: macOS cài bằng lệnh xcode-select --install, Linux thường có sẵn.",
     "tokenSaved": "Token được lưu trên máy, lần sau chỉ cần chạy lại lệnh.",
-    "prebuilt": "Dùng bản chạy sẵn (file exe) thay cho script"
+    "prebuilt": "Dùng bản chạy sẵn (file exe) thay cho script",
+    "desktopTip": "Ứng dụng RiiMusic tự báo cho Discord đang mở trên máy này: không cần chạy lệnh hay tạo token.",
+    "desktopHint": "Hiện bài đang nghe trên Discord của máy này (Discord phải đang mở).",
+    "desktopNoAppId": "Chưa có Discord Application ID: đặt trong Quản trị → Discord (ở chế độ máy chủ, nhờ admin của máy chủ).",
+    "desktopAppIdHint": "Tạo ứng dụng tại discord.com/developers/applications (tên ứng dụng là chữ hiện sau “Đang nghe”), rồi dán Application ID vào đây."
   }
 }

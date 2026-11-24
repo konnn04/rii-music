@@ -20,7 +20,7 @@ cleanupOutdatedCaches();
 // SPA navigations → index.html (not the API, share audio, agent scripts, robots…).
 registerRoute(
   new NavigationRoute(createHandlerBoundToURL("/index.html"), {
-    denylist: [/^\/api\//, /^\/agent\./, /^\/download\//, /^\/branding\//, /^\/robots\.txt/, /^\/manifest/],
+    denylist: [/^\/api\//, /^\/__rii\//, /^\/agent\./, /^\/download\//, /^\/branding\//, /^\/robots\.txt/, /^\/manifest/],
   }),
 );
 

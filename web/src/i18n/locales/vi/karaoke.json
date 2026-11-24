@@ -8,7 +8,7 @@
     "quick": "Nhanh",
     "ai": "AI"
   },
-  "modeTip": "Nhanh: tách giọng trực tiếp trong trình duyệt, dùng được ngay cho hầu hết bài stereo nhưng có thể còn lẫn chút giọng.\nAI: tách nhạc nền bằng mô hình AI ngay trên trình duyệt — lần đầu tải ~65 MB và mất vài phút mỗi bài, sau đó được lưu sẵn.",
+  "modeTip": "Nhanh: tách giọng trực tiếp trong trình duyệt, dùng được ngay cho hầu hết bài stereo nhưng có thể còn lẫn chút giọng.\nAI: tách nhạc nền bằng model AI ngay trên máy này. Lần đầu tải model (30–67 MB tuỳ loại, chọn trong Cài đặt → Âm thanh), mỗi bài tách một lần rồi lưu lại.\nĐóng màn hình karaoke thì karaoke tự tắt.",
   "vocal": "Giọng hát",
   "vocalAiHint": "Bản nhạc nền AI đã tách sẵn giọng hát.",
   "key": "Tông nhạc",
@@ -37,5 +37,27 @@
   "shortcutToggle": "Mở / đóng Karaoke",
   "cpu": "CPU (chậm, trình duyệt không có WebGPU)",
   "inRoom": "Đang Nghe chung: tắt Nghe chung để dùng karaoke.",
-  "holding": "Bài đã hết: chờ AI tách xong sẽ phát lại bài này để hát (chưa chuyển bài)."
+  "holding": "Bài đã hết: chờ AI tách xong sẽ phát lại bài này để hát (chưa chuyển bài).",
+  "model": {
+    "label": "Model tách giọng (AI)",
+    "hint": "Model nhẹ chạy nhanh hơn, hợp máy yếu; model lớn tách sạch hơn. Đổi model thì mỗi bài tách lại một lần.",
+    "kara": {
+      "name": "Nhẹ: KARA",
+      "desc": "Nhanh nhất, ít tốn máy. Bỏ giọng chính, giữ bè."
+    },
+    "kara2": {
+      "name": "Cân bằng: KARA 2",
+      "desc": "Sạch hơn KARA, vẫn giữ bè. Hợp hát karaoke."
+    },
+    "hq3": {
+      "name": "Chất lượng cao: Inst HQ 3",
+      "desc": "Bỏ hết giọng (cả bè), sạch nhất, nặng nhất. Nên có card đồ hoạ."
+    }
+  },
+  "confirm": {
+    "title": "Tách giọng bằng AI?",
+    "desc": "AI chạy ngay trên máy này và có thể làm máy chậm hoặc nóng trong lúc tách.",
+    "note": "Lần đầu tải model về máy. Mỗi bài tách một lần rồi lưu lại; có card đồ hoạ (WebGPU) thì nhanh hơn nhiều. Bấm Hủy trên thanh tiến trình để dừng bất cứ lúc nào.",
+    "start": "Bắt đầu (~{{size}} MB)"
+  }
 }

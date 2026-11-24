@@ -24,7 +24,7 @@ Settings come from `.env` (read at start-up, path from `ENV_FILE`) or real envir
 | `YTDLP_PATH` | managed | Use an installed yt-dlp instead of the managed nightly build |
 | `YTDLP_GEO_COUNTRY` | | Pretend to be in a country, e.g. `VN` |
 | `YTDLP_MAX_PROCS` | `3` | Maximum concurrent yt-dlp processes |
-| `KARAOKE_MODEL_URL` | UVR-MDX-NET-Inst_HQ_3 on GitHub | Where the server downloads the karaoke vocal-separation model (ONNX) the first time someone uses AI karaoke |
+| `KARAOKE_MODEL_BASE_URL` | UVR's public model releases on GitHub | Folder the server downloads the karaoke separation models (`UVR_MDXNET_KARA.onnx`, `UVR_MDXNET_KARA_2.onnx`, `UVR-MDX-NET-Inst_HQ_3.onnx`) from, each the first time someone picks it |
 | `FORCE_IPV4` | `false` | IPv4 only, for yt-dlp (`--force-ipv4`) and every outbound connection (YouTube Music, LRCLIB, Deezer, SMTP…) |
 | `FFMPEG_PATH` | `ffmpeg` | |
 | `LOG_LEVEL` | `info` | `debug` logs every request |

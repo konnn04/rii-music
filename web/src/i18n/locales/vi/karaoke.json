@@ -30,6 +30,9 @@
   "nothingPlaying": "Chưa phát bài nào.",
   "plainScrolling": "Lời chưa đồng bộ · tự cuộn chậm",
   "countdown": "Chuẩn bị hát: {n}",
+  "lyrics": {
+    "follow": "Tô chữ theo nhạc"
+  },
   "settingsHint": "Nhạc nền AI đã tách được lưu trong trình duyệt này để phát lại ngay.",
   "clearCache": "Xoá bộ nhớ karaoke",
   "cleared": "Đã xoá bộ nhớ karaoke ({size}).",
@@ -41,6 +44,10 @@
   "model": {
     "label": "Model tách giọng (AI)",
     "hint": "Model nhẹ chạy nhanh hơn, hợp máy yếu; model lớn tách sạch hơn. Đổi model thì mỗi bài tách lại một lần.",
+    "spleeter": {
+      "name": "Siêu nhẹ: Spleeter",
+      "desc": "Nhanh gấp ~7 lần KARA, chạy kịp nhạc cả trên máy yếu. Tách thô hơn, đôi khi còn sót giọng."
+    },
     "kara": {
       "name": "Nhẹ: KARA",
       "desc": "Nhanh nhất, ít tốn máy. Bỏ giọng chính, giữ bè."

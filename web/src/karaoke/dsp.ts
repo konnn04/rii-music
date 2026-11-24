@@ -240,3 +240,119 @@ export class Mdx {
     };
   }
 }
+
+/** Spleeter 2 stems (sherpa-onnx export): STFT n_fft 4096 / hop 1024, no centre padding,
+ *  magnitudes of the lowest 1024 bins in, a soft mask out (vocals² / (vocals² + accompaniment²)).
+ *  Each segment is processed with `ctx` samples of context on both sides so segments join cleanly. */
+export class SpleeterDsp {
+  static readonly N_FFT = 4096;
+  static readonly HOP = 1024;
+  static readonly BINS = 1024;
+  static readonly FRAMES = 512;
+  /** Context on each side (≥ n_fft, so the window edges are thrown away). */
+  readonly ctx = 8192;
+  /** Samples of output per segment: the window of 512 frames minus the context. */
+  readonly segLen: number;
+  readonly win: number;
+  private readonly fftr = new FFT(SpleeterDsp.N_FFT);
+  private readonly hann: Float64Array;
+
+  constructor() {
+    const { N_FFT, HOP, FRAMES } = SpleeterDsp;
+    this.win = N_FFT + (FRAMES - 1) * HOP; // 527360 samples → exactly 512 frames
+    this.segLen = this.win - 2 * this.ctx;
+    this.hann = new Float64Array(N_FFT);
+    for (let i = 0; i < N_FFT; i++) this.hann[i] = 0.5 - 0.5 * Math.cos((2 * Math.PI * i) / N_FFT);
+  }
+
+  /** Complex spectra of one channel's window: [frame][bin 0..n_fft/2], as re/im of size FRAMES·(n_fft/2+1). */
+  stft(x: Float32Array): { re: Float32Array; im: Float32Array } {
+    const { N_FFT, HOP, FRAMES } = SpleeterDsp;
+    const nb = N_FFT / 2 + 1;
+    const re = new Float32Array(FRAMES * nb), im = new Float32Array(FRAMES * nb);
+    const fr = new Float64Array(N_FFT), fi = new Float64Array(N_FFT);
+    for (let t = 0; t < FRAMES; t++) {
+      const off = t * HOP;
+      for (let i = 0; i < N_FFT; i++) {
+        fr[i] = x[off + i] * this.hann[i];
+        fi[i] = 0;
+      }
+      this.fftr.fft(fr, fi);
+      for (let f = 0; f < nb; f++) {
+        re[t * nb + f] = fr[f];
+        im[t * nb + f] = fi[f];
+      }
+    }
+    return { re, im };
+  }
+
+  /** Model input [2, 1, 512, 1024]: magnitudes of both channels. */
+  magnitudes(l: { re: Float32Array; im: Float32Array }, r: { re: Float32Array; im: Float32Array }): Float32Array {
+    const { N_FFT, BINS, FRAMES } = SpleeterDsp;
+    const nb = N_FFT / 2 + 1;
+    const out = new Float32Array(2 * FRAMES * BINS);
+    [l, r].forEach((s, c) => {
+      for (let t = 0; t < FRAMES; t++)
+        for (let f = 0; f < BINS; f++) {
+          const a = s.re[t * nb + f], b = s.im[t * nb + f];
+          out[(c * FRAMES + t) * BINS + f] = Math.sqrt(a * a + b * b);
+        }
+    });
+    return out;
+  }
+
+  /** Accompaniment mask from both outputs; above bin 1024 the mask continues at the
+   *  average of its top quarter (sherpa-onnx zeroes it, which cuts everything above ~11 kHz). */
+  mask(voc: Float32Array, acc: Float32Array): Float32Array {
+    const { N_FFT, BINS, FRAMES } = SpleeterDsp;
+    const nb = N_FFT / 2 + 1;
+    const m = new Float32Array(2 * FRAMES * nb);
+    const eps = 1e-10;
+    for (let c = 0; c < 2; c++)
+      for (let t = 0; t < FRAMES; t++) {
+        const src = (c * FRAMES + t) * BINS, dst = (c * FRAMES + t) * nb;
+        let top = 0;
+        for (let f = 0; f < BINS; f++) {
+          const v = voc[src + f], a = acc[src + f];
+          const k = (a * a + eps / 2) / (v * v + a * a + eps);
+          m[dst + f] = k;
+          if (f >= BINS - BINS / 4) top += k;
+        }
+        const ext = top / (BINS / 4);
+        for (let f = BINS; f < nb; f++) m[dst + f] = ext;
+      }
+    return m;
+  }
+
+  /** Masked inverse STFT of one channel (channel c of the mask) → window samples. */
+  istft(s: { re: Float32Array; im: Float32Array }, mask: Float32Array, c: number): Float32Array {
+    const { N_FFT, HOP, FRAMES } = SpleeterDsp;
+    const nb = N_FFT / 2 + 1, half = N_FFT / 2;
+    const acc = new Float64Array(this.win), norm = new Float64Array(this.win);
+    const fr = new Float64Array(N_FFT), fi = new Float64Array(N_FFT);
+    for (let t = 0; t < FRAMES; t++) {
+      const b = t * nb, mb = (c * FRAMES + t) * nb;
+      for (let f = 0; f < nb; f++) {
+        const k = mask[mb + f];
+        fr[f] = s.re[b + f] * k;
+        fi[f] = s.im[b + f] * k;
+      }
+      fi[0] = 0;
+      fi[half] = 0;
+      for (let f = 1; f < half; f++) {
+        fr[N_FFT - f] = fr[f];
+        fi[N_FFT - f] = -fi[f];
+      }
+      this.fftr.ifft(fr, fi);
+      const off = t * HOP;
+      for (let i = 0; i < N_FFT; i++) {
+        const w = this.hann[i];
+        acc[off + i] += fr[i] * w;
+        norm[off + i] += w * w;
+      }
+    }
+    const out = new Float32Array(this.win);
+    for (let i = 0; i < this.win; i++) out[i] = norm[i] > 1e-8 ? acc[i] / norm[i] : 0;
+    return out;
+  }
+}

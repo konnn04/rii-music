@@ -20,6 +20,11 @@ export type SepStatus = {
   error?: string;
   /** Where the model runs: a GPU name, or "cpu" (WASM). */
   backend?: string;
+  /** Streaming separation: completed segments and total segment count. */
+  doneSegs?: number;
+  totalSegs?: number;
+  /** True while the playhead is over a segment not separated yet. */
+  inGap?: boolean;
 };
 
 export type KaraokeState = {

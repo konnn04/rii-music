@@ -1,9 +1,10 @@
 // Module Web Worker for MDX-Net ONNX instrumental separation.
 import * as ort from "onnxruntime-web/webgpu";
-import { CHUNK, COMPENSATE, DIM_F, DIM_T, GEN, TRIM, packTensor, unpackTensor } from "./dsp";
+import { Mdx } from "./dsp";
+import type { KaraokeModel } from "./models";
 
 export type WorkerIn =
-  | { type: "run"; modelUrl: string; left: Float32Array; right: Float32Array }
+  | { type: "run"; modelUrl: string; model: KaraokeModel; left: Float32Array; right: Float32Array }
   | { type: "cancel" };
 
 export type WorkerOut =
@@ -130,56 +131,52 @@ async function getSession(modelUrl: string): Promise<ort.InferenceSession | null
   return session;
 }
 
-async function runSeparation(modelUrl: string, left: Float32Array, right: Float32Array): Promise<void> {
+async function runSeparation(modelUrl: string, model: KaraokeModel, left: Float32Array, right: Float32Array): Promise<void> {
   cancelled = false;
   const session = await getSession(modelUrl);
   if (!session || cancelled) return;
 
   const inputName = session.inputNames[0];
   const outputName = session.outputNames[0];
+  const d = new Mdx(model);
+  const { chunk, trim, gen } = d;
 
+  // UVR demix: pad, run overlapping chunks, keep the middle of each.
   const n = Math.min(left.length, right.length);
-  const pad = GEN - (n % GEN);
-  const paddedLen = TRIM + n + pad + TRIM;
-
+  const pad = gen - (n % gen);
+  const paddedLen = trim + n + pad + trim;
   const padL = new Float32Array(paddedLen);
   const padR = new Float32Array(paddedLen);
-  padL.set(left.subarray(0, n), TRIM);
-  padR.set(right.subarray(0, n), TRIM);
+  padL.set(left.subarray(0, n), trim);
+  padR.set(right.subarray(0, n), trim);
 
   const outL = new Float32Array(n);
   const outR = new Float32Array(n);
-
-  const limit = paddedLen - 2 * TRIM;
-  const totalChunks = Math.max(1, Math.ceil(limit / GEN));
+  const limit = paddedLen - 2 * trim;
+  const totalChunks = Math.max(1, Math.ceil(limit / gen));
+  const vocals = model.primary === "vocals"; // then instrumental = mix − vocals
   postProgress("separate", 0);
 
-  for (let i = 0, chunkIdx = 0; i < limit; i += GEN, chunkIdx++) {
+  for (let i = 0, chunkIdx = 0; i < limit; i += gen, chunkIdx++) {
     if (cancelled) return;
-
-    const chunkL = padL.subarray(i, i + CHUNK);
-    const chunkR = padR.subarray(i, i + CHUNK);
-    const inputData = packTensor(chunkL, chunkR);
-    const inputTensor = new ort.Tensor("float32", inputData, [1, 4, DIM_F, DIM_T]);
-
+    const input = new ort.Tensor("float32", d.pack(padL.subarray(i, i + chunk), padR.subarray(i, i + chunk)), [1, 4, model.dimF, model.dimT]);
     let results: ort.InferenceSession.OnnxValueMapType;
     try {
-      results = await session.run({ [inputName]: inputTensor });
+      results = await session.run({ [inputName]: input });
     } finally {
-      inputTensor.dispose?.();
+      input.dispose?.();
     }
+    const output = results[outputName];
+    const sep = d.unpack(output.data as Float32Array);
+    output.dispose?.();
 
-    const outputTensor = results[outputName];
-    const outData = outputTensor.data as Float32Array;
-    const { left: sepL, right: sepR } = unpackTensor(outData);
-    outputTensor.dispose?.();
-
-    const copyLen = Math.min(GEN, n - i);
+    const copyLen = Math.min(gen, n - i);
     for (let k = 0; k < copyLen; k++) {
-      outL[i + k] = sepL[TRIM + k] * COMPENSATE;
-      outR[i + k] = sepR[TRIM + k] * COMPENSATE;
+      const a = sep.left[trim + k] * model.compensate;
+      const b = sep.right[trim + k] * model.compensate;
+      outL[i + k] = vocals ? left[i + k] - a : a;
+      outR[i + k] = vocals ? right[i + k] - b : b;
     }
-
     postProgress("separate", (chunkIdx + 1) / totalChunks);
   }
 
@@ -194,7 +191,7 @@ ctx.onmessage = (ev: MessageEvent<WorkerIn>) => {
     return;
   }
   if (msg.type === "run") {
-    runSeparation(msg.modelUrl, msg.left, msg.right).catch((err: unknown) => {
+    runSeparation(msg.modelUrl, msg.model, msg.left, msg.right).catch((err: unknown) => {
       if (cancelled) return;
       const message = err instanceof Error ? err.message : String(err);
       ctx.postMessage({ type: "error", message });

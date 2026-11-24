@@ -28,6 +28,7 @@ export function KaraokeView() {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
+        if (document.querySelector('[role="dialog"]')) return; // the dialog closes first
         e.preventDefault();
         openKaraoke(false);
         return;

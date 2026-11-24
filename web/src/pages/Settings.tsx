@@ -25,6 +25,8 @@ import { setLiteMode, useLite, type LiteMode } from "@/lib/lite";
 import { getDesktopAutostart, isDesktop, openDesktopPath, pickDesktopFolder, setDesktopAutostart, useAppMode, checkDesktopUpdate, installDesktopUpdate, type DesktopUpdate } from "@/lib/desktop";
 import { browserDeviceName, customDeviceName, deviceName, setCustomDeviceName } from "@/player/sync";
 import { clearInstrumentals } from "@/karaoke/separate";
+import { setKaraokeModel, useKaraoke } from "@/karaoke/store";
+import { ModelPicker } from "@/karaoke/ModelPicker";
 
 export function SettingsPage() {
   const { data } = useSettings();
@@ -167,6 +169,7 @@ export function SettingsPage() {
 
 function KaraokeCacheRow() {
   const [busy, setBusy] = useState(false);
+  const model = useKaraoke((s) => s.model);
   const clear = async () => {
     setBusy(true);
     try {
@@ -183,11 +186,18 @@ function KaraokeCacheRow() {
     }
   };
   return (
-    <Row label={t("karaoke.title")} hint={t("karaoke.settingsHint")}>
-      <Button variant="ghost" icon="trash" loading={busy} onClick={() => void clear()}>
-        {t("karaoke.clearCache")}
-      </Button>
-    </Row>
+    <>
+      <Row label={t("karaoke.model.label")} hint={t("karaoke.model.hint")}>
+        <div className="w-full max-w-md">
+          <ModelPicker value={model} onChange={setKaraokeModel} />
+        </div>
+      </Row>
+      <Row label={t("karaoke.title")} hint={t("karaoke.settingsHint")}>
+        <Button variant="ghost" icon="trash" loading={busy} onClick={() => void clear()}>
+          {t("karaoke.clearCache")}
+        </Button>
+      </Row>
+    </>
   );
 }
 

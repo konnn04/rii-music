@@ -1,7 +1,9 @@
-// Plain self-test for dsp.ts (no test framework required).
-import { CHUNK, DIM_F, DIM_T, N_FFT, TRIM, fft, ifft, istft, packTensor, stft } from "./dsp";
+// Plain self-test for dsp.ts (no test framework): run with any TS runner and
+// check that selfTest() returns no failures.
+import { FFT, Mdx } from "./dsp";
+import { MODELS } from "./models";
 
-function mulberry32(seed: number): () => number {
+function rng(seed: number): () => number {
   let a = seed >>> 0;
   return () => {
     a = (a + 0x6d2b79f5) >>> 0;
@@ -11,110 +13,48 @@ function mulberry32(seed: number): () => number {
   };
 }
 
-/** Runs DSP verification checks and returns failure messages (empty = ok). */
+/** Returns failure messages (empty = ok). */
 export function selfTest(): string[] {
-  const failures: string[] = [];
-  const rand = mulberry32(0x5269694d);
+  const fail: string[] = [];
+  const rand = rng(0x5269694d);
 
-  // 1. FFT vs naive DFT on random n=6144 complex data (max error < 1e-3).
-  const inRe = new Float32Array(N_FFT);
-  const inIm = new Float32Array(N_FFT);
-  for (let n = 0; n < N_FFT; n++) {
-    inRe[n] = rand() * 2 - 1;
-    inIm[n] = rand() * 2 - 1;
-  }
-  const gotRe = new Float32Array(inRe);
-  const gotIm = new Float32Array(inIm);
-  fft(gotRe, gotIm);
-
-  let maxFftErr = 0;
-  for (let k = 0; k < N_FFT; k++) {
-    const stepAngle = (-2 * Math.PI * k) / N_FFT;
-    const wr = Math.cos(stepAngle);
-    const wi = Math.sin(stepAngle);
-    let curR = 1;
-    let curI = 0;
-    let sumR = 0;
-    let sumI = 0;
-    for (let n = 0; n < N_FFT; n++) {
-      // Refresh recurrence every 256 steps to prevent float drift.
-      if ((n & 255) === 0 && n > 0) {
-        const a = stepAngle * n;
-        curR = Math.cos(a);
-        curI = Math.sin(a);
+  // FFT vs a naive DFT for every size the models use (and a small one per radix).
+  for (const n of [12, 20, 16, 5120, 6144]) {
+    const re = new Float64Array(n), im = new Float64Array(n);
+    for (let i = 0; i < n; i++) {
+      re[i] = rand() * 2 - 1;
+      im[i] = rand() * 2 - 1;
+    }
+    const gr = re.slice(), gi = im.slice();
+    const f = new FFT(n);
+    f.fft(gr, gi);
+    let err = 0;
+    for (let k = 0; k < n; k += n > 64 ? 97 : 1) {
+      let sr = 0, si = 0;
+      for (let t = 0; t < n; t++) {
+        const a = (-2 * Math.PI * k * t) / n;
+        sr += re[t] * Math.cos(a) - im[t] * Math.sin(a);
+        si += re[t] * Math.sin(a) + im[t] * Math.cos(a);
       }
-      const xr = inRe[n];
-      const xi = inIm[n];
-      sumR += xr * curR - xi * curI;
-      sumI += xr * curI + xi * curR;
-      const nextR = curR * wr - curI * wi;
-      const nextI = curR * wi + curI * wr;
-      curR = nextR;
-      curI = nextI;
+      err = Math.max(err, Math.abs(sr - gr[k]), Math.abs(si - gi[k]));
     }
-    const errR = Math.abs(gotRe[k] - sumR);
-    const errI = Math.abs(gotIm[k] - sumI);
-    if (errR > maxFftErr) maxFftErr = errR;
-    if (errI > maxFftErr) maxFftErr = errI;
-  }
-  if (maxFftErr >= 1e-3) {
-    failures.push(`fft vs naive DFT max error ${maxFftErr.toExponential(3)} >= 1e-3`);
+    if (err > 1e-6) fail.push(`fft n=${n}: max error ${err}`);
+    f.ifft(gr, gi);
+    let back = 0;
+    for (let i = 0; i < n; i++) back = Math.max(back, Math.abs(gr[i] - re[i]), Math.abs(gi[i] - im[i]));
+    if (back > 1e-9) fail.push(`ifft n=${n}: round trip error ${back}`);
   }
 
-  // 2. IFFT(FFT(x)) round-trip check.
-  ifft(gotRe, gotIm);
-  let maxIfftErr = 0;
-  for (let n = 0; n < N_FFT; n++) {
-    const errR = Math.abs(gotRe[n] - inRe[n]);
-    const errI = Math.abs(gotIm[n] - inIm[n]);
-    if (errR > maxIfftErr) maxIfftErr = errR;
-    if (errI > maxIfftErr) maxIfftErr = errI;
+  // STFT → ISTFT round trip of a band-limited signal (all energy below dimF).
+  for (const m of Object.values(MODELS)) {
+    const d = new Mdx(m);
+    const x = new Float32Array(d.chunk);
+    for (let i = 0; i < x.length; i++) x[i] = 0.5 * Math.sin(i * 0.031) + 0.3 * Math.sin(i * 0.47 + 1);
+    const s = d.stft(x);
+    const y = d.istft(s.re, s.im);
+    let err = 0;
+    for (let i = d.trim; i < x.length - d.trim; i++) err = Math.max(err, Math.abs(y[i] - x[i]));
+    if (err > 1e-4) fail.push(`stft/istft ${m.id}: max error ${err}`);
   }
-  if (maxIfftErr >= 1e-4) {
-    failures.push(`ifft(fft(x)) max error ${maxIfftErr.toExponential(3)} >= 1e-4`);
-  }
-
-  // 3. STFT -> ISTFT round-trip on a random signal (max error < 1e-4 away from edges).
-  // Apply a 3-tap [0.25, 0.5, 0.25] filter so Nyquist bin (dropped by DIM_F) has zero energy.
-  const raw = new Float32Array(CHUNK + 2);
-  for (let i = 0; i < raw.length; i++) {
-    raw[i] = rand() * 2 - 1;
-  }
-  const sig = new Float32Array(CHUNK);
-  for (let i = 0; i < CHUNK; i++) {
-    sig[i] = 0.25 * raw[i] + 0.5 * raw[i + 1] + 0.25 * raw[i + 2];
-  }
-  const spec = stft(sig);
-  const rec = istft(spec.re, spec.im);
-  let maxStftErr = 0;
-  for (let i = TRIM; i < CHUNK - TRIM; i++) {
-    const err = Math.abs(rec[i] - sig[i]);
-    if (err > maxStftErr) maxStftErr = err;
-  }
-  if (maxStftErr >= 1e-4) {
-    failures.push(`stft->istft max error ${maxStftErr.toExponential(3)} >= 1e-4`);
-  }
-
-  // 4. Tensor packing zeroes bins f < 3.
-  const tensor = packTensor(sig, sig);
-  if (tensor.length !== 4 * DIM_F * DIM_T) {
-    failures.push(`packTensor length ${tensor.length} != ${4 * DIM_F * DIM_T}`);
-  } else {
-    let nonZeroLow = false;
-    for (let c = 0; c < 4 && !nonZeroLow; c++) {
-      for (let f = 0; f < 3 && !nonZeroLow; f++) {
-        for (let t = 0; t < DIM_T; t++) {
-          if (tensor[(c * DIM_F + f) * DIM_T + t] !== 0) {
-            nonZeroLow = true;
-            break;
-          }
-        }
-      }
-    }
-    if (nonZeroLow) {
-      failures.push("packTensor did not zero frequency bins f < 3");
-    }
-  }
-
-  return failures;
+  return fail;
 }

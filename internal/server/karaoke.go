@@ -13,13 +13,17 @@ import (
 	"time"
 )
 
-const (
-	karaokeModelFile     = "mdx-inst-hq3.onnx"
-	maxKaraokeModelBytes = 200 << 20 // 200 MB
-)
+const maxKaraokeModelBytes = 200 << 20 // 200 MB
 
-// karaokeModelURL is the default ONNX model download URL; tests may override it.
-var karaokeModelURL = "https://github.com/TRvlvr/model_repo/releases/download/all_public_uvr_models/UVR-MDX-NET-Inst_HQ_3.onnx"
+// karaokeModels maps the ids the web app asks for (?m=) to UVR's file names.
+var karaokeModels = map[string]string{
+	"kara":  "UVR_MDXNET_KARA.onnx",
+	"kara2": "UVR_MDXNET_KARA_2.onnx",
+	"hq3":   "UVR-MDX-NET-Inst_HQ_3.onnx",
+}
+
+// karaokeModelBase is where the models are downloaded from; tests may override it.
+var karaokeModelBase = "https://github.com/TRvlvr/model_repo/releases/download/all_public_uvr_models/"
 
 type karaokeDownload struct {
 	done chan struct{}
@@ -31,21 +35,28 @@ var (
 	karaokeInFlight = map[string]*karaokeDownload{}
 )
 
-func resolveKaraokeModelURL() string {
-	if u := strings.TrimSpace(os.Getenv("KARAOKE_MODEL_URL")); u != "" {
-		return u
+func karaokeModelURL(file string) string {
+	base := karaokeModelBase
+	if u := strings.TrimSpace(os.Getenv("KARAOKE_MODEL_BASE_URL")); u != "" {
+		base = u
 	}
-	return karaokeModelURL
+	return strings.TrimSuffix(base, "/") + "/" + file
 }
 
-func (s *Server) karaokeModelPath() string {
-	return filepath.Join(s.cfg.DataDir, "models", karaokeModelFile)
-}
-
-// handleKaraokeModel serves the MDX-Net ONNX model, downloading it once on demand.
+// handleKaraokeModel serves an MDX-Net ONNX model (?m=kara|kara2|hq3, default
+// hq3 for older clients), downloading it once on demand.
 func (s *Server) handleKaraokeModel(w http.ResponseWriter, r *http.Request) {
-	p := s.karaokeModelPath()
-	if err := s.ensureKaraokeModel(r.Context(), p); err != nil {
+	id := r.URL.Query().Get("m")
+	if id == "" {
+		id = "hq3"
+	}
+	file, ok := karaokeModels[id]
+	if !ok {
+		httpError(w, http.StatusBadRequest, "Model karaoke không hợp lệ")
+		return
+	}
+	p := filepath.Join(s.cfg.DataDir, "models", file)
+	if err := s.ensureKaraokeModel(r.Context(), p, karaokeModelURL(file)); err != nil {
 		if errors.Is(err, context.Canceled) {
 			return
 		}
@@ -80,12 +91,12 @@ func (s *Server) handleKaraokeModel(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/octet-stream")
 	w.Header().Set("Cache-Control", "private, max-age=31536000, immutable")
-	http.ServeContent(w, r, karaokeModelFile, st.ModTime(), f)
+	http.ServeContent(w, r, file, st.ModTime(), f)
 }
 
 // ensureKaraokeModel downloads the model once; concurrent callers wait on the
 // same download, and a failed download can be retried by subsequent requests.
-func (s *Server) ensureKaraokeModel(ctx context.Context, dst string) error {
+func (s *Server) ensureKaraokeModel(ctx context.Context, dst, url string) error {
 	if st, err := os.Stat(dst); err == nil && st.Mode().IsRegular() && st.Size() > 0 {
 		return nil
 	}
@@ -108,7 +119,7 @@ func (s *Server) ensureKaraokeModel(ctx context.Context, dst string) error {
 	karaokeInFlight[dst] = dl
 	karaokeMu.Unlock()
 
-	err := s.downloadKaraokeModel(dst)
+	err := s.downloadKaraokeModel(dst, url)
 	dl.err = err
 
 	karaokeMu.Lock()
@@ -119,13 +130,12 @@ func (s *Server) ensureKaraokeModel(ctx context.Context, dst string) error {
 	return err
 }
 
-func (s *Server) downloadKaraokeModel(dst string) error {
+func (s *Server) downloadKaraokeModel(dst, url string) error {
 	dir := filepath.Dir(dst)
 	if err := os.MkdirAll(dir, 0o755); err != nil {
 		return fmt.Errorf("create models dir: %w", err)
 	}
 
-	url := resolveKaraokeModelURL()
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Minute)
 	defer cancel()
 
@@ -146,7 +156,7 @@ func (s *Server) downloadKaraokeModel(dst string) error {
 		return fmt.Errorf("download karaoke model: HTTP %s", res.Status)
 	}
 
-	tmp, err := os.CreateTemp(dir, karaokeModelFile+".*.tmp")
+	tmp, err := os.CreateTemp(dir, filepath.Base(dst)+".*.tmp")
 	if err != nil {
 		return fmt.Errorf("create temp model file: %w", err)
 	}

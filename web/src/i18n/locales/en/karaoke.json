@@ -8,7 +8,7 @@
     "quick": "Quick",
     "ai": "AI"
   },
-  "modeTip": "Quick: live vocal remover in the browser, works instantly on most stereo songs but may leave some vocals.\nAI: separates vocals with an AI model in this browser — the first time downloads ~65 MB and takes a few minutes per song, then it is cached.",
+  "modeTip": "Quick: live vocal remover in the browser, works instantly on most stereo songs but may leave some vocals.\nAI: separates the vocals with an AI model on this computer. The model downloads the first time (30–67 MB, pick it in Settings → Sound); each song is separated once and kept.\nClosing the karaoke screen turns karaoke off.",
   "vocal": "Vocal level",
   "vocalAiHint": "AI instrumental already has vocals removed.",
   "key": "Key",
@@ -37,5 +37,27 @@
   "shortcutToggle": "Toggle Karaoke",
   "cpu": "CPU (slow, no WebGPU in this browser)",
   "inRoom": "You're in a Nghe chung room: leave it to use karaoke.",
-  "holding": "The song ended: it plays again for singing once the AI is done (not moving on yet)."
+  "holding": "The song ended: it plays again for singing once the AI is done (not moving on yet).",
+  "model": {
+    "label": "Vocal separation model (AI)",
+    "hint": "Lighter models are faster and suit weak computers; bigger ones separate more cleanly. Changing the model separates each song again once.",
+    "kara": {
+      "name": "Light: KARA",
+      "desc": "Fastest, easiest on the computer. Removes the lead vocal, keeps backing vocals."
+    },
+    "kara2": {
+      "name": "Balanced: KARA 2",
+      "desc": "Cleaner than KARA, still keeps backing vocals. Made for karaoke."
+    },
+    "hq3": {
+      "name": "High quality: Inst HQ 3",
+      "desc": "Removes all vocals (backing too), cleanest and heaviest. A graphics card helps."
+    }
+  },
+  "confirm": {
+    "title": "Separate vocals with AI?",
+    "desc": "The AI runs on this computer and may make it slow or warm while it works.",
+    "note": "The model downloads the first time. Each song is separated once and kept; a graphics card (WebGPU) makes it much faster. Press Cancel on the progress bar to stop at any time.",
+    "start": "Start (~{{size}} MB)"
+  }
 }

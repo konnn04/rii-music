@@ -2,6 +2,7 @@ import { create } from "zustand";
 import { roomRole } from "@/player/roomFlag";
 import { toast } from "@/components/ui/Toast";
 import { t } from "@/i18n";
+import { DEFAULT_MODEL, isModelId, type ModelId } from "./models";
 
 /** Karaoke and Nghe chung exclude each other: everyone in a room hears the same audio. */
 function blockedByRoom(): boolean {
@@ -22,7 +23,10 @@ export type SepStatus = {
 };
 
 export type KaraokeState = {
+  /** Always starts "off": karaoke is on only while its screen is open. */
   mode: KaraokeMode;
+  /** AI separation model (Settings → Sound, or the AI confirmation). */
+  model: ModelId;
   vocal: number;
   key: number;
   open: boolean;
@@ -48,24 +52,25 @@ function clampKey(v: unknown): number {
   return Math.max(-6, Math.min(6, Math.round(v))) || 0;
 }
 
-function loadPersisted(): Pick<KaraokeState, "mode" | "vocal" | "key"> {
+type Persisted = Pick<KaraokeState, "model" | "vocal" | "key">;
+
+function loadPersisted(): Persisted {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return { mode: "off", vocal: 0, key: 0 };
-    const data = JSON.parse(raw) as Record<string, unknown> | null;
+    const data = raw ? (JSON.parse(raw) as Record<string, unknown> | null) : null;
     return {
-      mode: parseMode(data?.mode),
+      model: isModelId(data?.model) ? data.model : DEFAULT_MODEL,
       vocal: clampVocal(data?.vocal),
       key: clampKey(data?.key),
     };
   } catch {
-    return { mode: "off", vocal: 0, key: 0 };
+    return { model: DEFAULT_MODEL, vocal: 0, key: 0 };
   }
 }
 
-function savePersisted(s: Pick<KaraokeState, "mode" | "vocal" | "key">) {
+function savePersisted(s: Persisted) {
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify({ mode: s.mode, vocal: s.vocal, key: s.key }));
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ model: s.model, vocal: s.vocal, key: s.key }));
   } catch {
     /* ignore */
   }
@@ -73,6 +78,7 @@ function savePersisted(s: Pick<KaraokeState, "mode" | "vocal" | "key">) {
 
 export const useKaraoke = create<KaraokeState>()(() => ({
   ...loadPersisted(),
+  mode: "off",
   open: false,
   sep: null,
   holding: null,
@@ -80,7 +86,7 @@ export const useKaraoke = create<KaraokeState>()(() => ({
 }));
 
 useKaraoke.subscribe((s, prev) => {
-  if (s.mode !== prev.mode || s.vocal !== prev.vocal || s.key !== prev.key) {
+  if (s.model !== prev.model || s.vocal !== prev.vocal || s.key !== prev.key) {
     savePersisted(s);
   }
 });
@@ -98,7 +104,12 @@ export function setKey(k: number): void {
   useKaraoke.setState({ key: clampKey(k) });
 }
 
+/** Closing the karaoke screen also turns karaoke off. */
 export function openKaraoke(open: boolean): void {
   if (open && blockedByRoom()) return;
-  useKaraoke.setState({ open: !!open });
+  useKaraoke.setState(open ? { open: true } : { open: false, mode: "off" });
+}
+
+export function setKaraokeModel(m: ModelId): void {
+  if (isModelId(m)) useKaraoke.setState({ model: m });
 }

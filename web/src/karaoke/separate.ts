@@ -3,15 +3,19 @@ import { streamUrl } from "@/lib/api";
 import { engine } from "@/player/engine";
 import { usePlayer } from "@/player/store";
 import { SAMPLE_RATE } from "./dsp";
-import { registerInstrumental } from "./source";
+import { MODELS, modelUrl, type ModelId } from "./models";
+import { registerInstrumental, unregisterInstrumental } from "./source";
 import { useKaraoke } from "./store";
 import type { WorkerIn, WorkerOut } from "./worker";
 
 const CACHE_NAME = "rii-karaoke";
-const MODEL_URL = "/api/karaoke/model";
-const CACHE_KEY_RE = /^\/karaoke\/([^/]+)\.wav$/;
+const MODEL_CACHE = "rii-karaoke-model";
+// /karaoke/<model>/<track>.wav; the first version stored HQ_3 results as /karaoke/<track>.wav.
+const CACHE_KEY_RE = /^\/karaoke\/(?:(kara|kara2|hq3)\/)?([^/]+)\.wav$/;
 
-const cacheKey = (trackId: string) => `/karaoke/${trackId}.wav`;
+const cacheKey = (model: ModelId, trackId: string) => `/karaoke/${model}/${trackId}.wav`;
+const cacheKeys = (model: ModelId, trackId: string) => (model === "hq3" ? [cacheKey(model, trackId), `/karaoke/${trackId}.wav`] : [cacheKey(model, trackId)]);
+const curModel = () => useKaraoke.getState().model;
 
 const objectUrls = new Map<string, string>();
 let activeWorker: Worker | null = null;
@@ -132,6 +136,7 @@ export async function ensureInstrumental(trackId: string): Promise<void> {
 
   // One job at a time: cancel any running job for a previous track.
   const mySeq = ++jobSeq;
+  const jobModel = curModel();
   terminateActiveWorker();
   const isStale = () => mySeq !== jobSeq;
 
@@ -139,7 +144,8 @@ export async function ensureInstrumental(trackId: string): Promise<void> {
   if (typeof caches !== "undefined") {
     try {
       const cache = await caches.open(CACHE_NAME);
-      const hit = await cache.match(cacheKey(trackId));
+      let hit: Response | undefined;
+      for (const k of cacheKeys(jobModel, trackId)) hit ??= await cache.match(k);
       if (isStale()) return;
       if (hit) {
         const blob = await hit.blob();
@@ -196,7 +202,7 @@ export async function ensureInstrumental(trackId: string): Promise<void> {
         reject(new Error(ev.message || "Separation worker error"));
       };
       worker.postMessage(
-        { type: "run", modelUrl: MODEL_URL, left, right } satisfies WorkerIn,
+        { type: "run", modelUrl: modelUrl(jobModel), model: MODELS[jobModel], left, right } satisfies WorkerIn,
         [left.buffer, right.buffer],
       );
     });
@@ -211,7 +217,7 @@ export async function ensureInstrumental(trackId: string): Promise<void> {
     if (typeof caches !== "undefined") {
       try {
         const cache = await caches.open(CACHE_NAME);
-        await cache.put(cacheKey(trackId), new Response(blob, { headers: { "Content-Type": "audio/wav" } }));
+        await cache.put(cacheKey(jobModel, trackId), new Response(blob, { headers: { "Content-Type": "audio/wav" } }));
       } catch {
         // Ignore cache quota errors; playback still uses the in-memory object URL.
       }
@@ -244,7 +250,7 @@ export async function loadCachedInstrumentals(): Promise<void> {
     const ready: Record<string, true> = {};
     for (const req of keys) {
       const m = CACHE_KEY_RE.exec(new URL(req.url).pathname);
-      if (m) ready[m[1]] = true;
+      if (m && (m[1] ?? "hq3") === curModel()) ready[m[2]] = true;
     }
     if (Object.keys(ready).length > 0) {
       useKaraoke.setState((s) => ({ ready: { ...s.ready, ...ready } }));
@@ -277,6 +283,10 @@ export async function clearInstrumentals(): Promise<number> {
         }
       }
       await caches.delete(CACHE_NAME);
+      // The downloaded models too (up to ~150 MB).
+      const models = await caches.open(MODEL_CACHE);
+      for (const req of await models.keys()) freed += (await (await models.match(req))?.blob())?.size ?? 0;
+      await caches.delete(MODEL_CACHE);
     } catch {
       /* ignore */
     }
@@ -315,9 +325,33 @@ export function startKaraokeAuto(): () => void {
     }
   });
 
+  let prevModel = useKaraoke.getState().model;
   const unsubKaraoke = useKaraoke.subscribe((s) => {
+    if (s.model !== prevModel) {
+      // Another model: drop this one's instrumentals from memory (the cache keeps
+      // them per model) and start over with the new one.
+      prevModel = s.model;
+      jobSeq++;
+      terminateActiveWorker();
+      for (const [id, url] of objectUrls) {
+        URL.revokeObjectURL(url);
+        unregisterInstrumental(id);
+      }
+      objectUrls.clear();
+      useKaraoke.setState({ ready: {}, sep: null });
+      engine.refreshKaraokeSource();
+      void loadCachedInstrumentals();
+      check();
+      return;
+    }
     if (s.mode !== prevMode) {
       prevMode = s.mode;
+      if (s.mode !== "ai" && useKaraoke.getState().sep) {
+        // Leaving AI mode (or closing karaoke) stops the separation.
+        jobSeq++;
+        terminateActiveWorker();
+        useKaraoke.setState({ sep: null });
+      }
       check();
     }
   });

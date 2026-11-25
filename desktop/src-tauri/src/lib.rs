@@ -1,5 +1,6 @@
 #[macro_use]
 mod logfile;
+mod lang;
 mod config;
 mod sidecar;
 #[cfg(windows)]
@@ -318,6 +319,19 @@ async fn now_playing(
     }
 }
 
+/// The web app's language, for the tray menu and taskbar buttons.
+#[tauri::command]
+async fn set_language(app: AppHandle, lang: String) {
+    if crate::lang::set(&lang) {
+        tray::relabel(&app);
+        #[cfg(windows)]
+        {
+            let playing = app.state::<AppState>().now_playing.lock().map(|n| n.playing).unwrap_or(false);
+            thumbbar::update_playing(&app, playing);
+        }
+    }
+}
+
 #[tauri::command]
 async fn mini_state(app: AppHandle) -> NowPlayingState {
     app.state::<AppState>()
@@ -503,7 +517,8 @@ pub fn run() {
             switch_mode,
             check_update,
             install_update,
-            device_name
+            device_name,
+            set_language
         ])
         .setup(|app| {
             let handle = app.handle().clone();

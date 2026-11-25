@@ -72,6 +72,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # GStreamer plugins get bundled into the AppImage (bundleMediaFramework), so audio
+      # plays on distributions whose own GStreamer doesn't match the bundled WebKit.
       - name: Install Tauri Linux dependencies
         if: runner.os == 'Linux'
         run: |
@@ -81,7 +83,10 @@ jobs:
             libappindicator3-dev \
             librsvg2-dev \
             patchelf \
-            libssl-dev
+            libssl-dev \
+            gstreamer1.0-plugins-base \
+            gstreamer1.0-plugins-good \
+            gstreamer1.0-libav
 
       - uses: actions/setup-go@v5
         with:

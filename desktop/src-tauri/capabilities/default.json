@@ -2,9 +2,14 @@
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "default",
   "description": "Default capability for RiiMusic main window and local sidecar origin",
-  "windows": ["main", "mini"],
+  "windows": [
+    "main",
+    "mini"
+  ],
   "remote": {
-    "urls": ["http://127.0.0.1:*", "http://127.0.0.1:*/*"]
+    "urls": [
+      "http://127.0.0.1:*"
+    ]
   },
   "permissions": [
     "core:default",
@@ -18,6 +23,22 @@
     "opener:default",
     "shell:default",
     "updater:default",
-    "window-state:default"
+    "window-state:default",
+    "allow-get-setup-state",
+    "allow-pick-music-dir",
+    "allow-check-server",
+    "allow-save-setup",
+    "allow-set-autostart",
+    "allow-now-playing",
+    "allow-mini-state",
+    "allow-mini-cmd",
+    "allow-toggle-mini-player",
+    "allow-open-music-dir",
+    "allow-open-log-dir",
+    "allow-switch-mode",
+    "allow-check-update",
+    "allow-install-update",
+    "allow-device-name",
+    "allow-set-language"
   ]
 }

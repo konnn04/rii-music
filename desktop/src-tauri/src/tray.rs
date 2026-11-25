@@ -11,33 +11,36 @@ pub const TRAY_ID: &str = "main-tray";
 
 pub struct TrayState {
     pub open_music_item: Mutex<Option<MenuItem<Wry>>>,
+    /// Every labelled item, to relabel them when the language changes.
+    pub items: Mutex<Vec<MenuItem<Wry>>>,
 }
 
 impl TrayState {
     pub fn new() -> Self {
         Self {
             open_music_item: Mutex::new(None),
+            items: Mutex::new(Vec::new()),
         }
     }
 }
 
 pub fn init_tray(app: &AppHandle, is_local_mode: bool) -> tauri::Result<()> {
-    let item_open = MenuItem::with_id(app, "open", "Mở RiiMusic", true, None::<&str>)?;
-    let item_mini = MenuItem::with_id(app, "mini", "Trình phát mini", true, None::<&str>)?;
+    let item_open = MenuItem::with_id(app, "open", crate::lang::tr("open"), true, None::<&str>)?;
+    let item_mini = MenuItem::with_id(app, "mini", crate::lang::tr("mini"), true, None::<&str>)?;
     let sep1 = PredefinedMenuItem::separator(app)?;
-    let item_toggle = MenuItem::with_id(app, "toggle", "Phát / Tạm dừng", true, None::<&str>)?;
-    let item_prev = MenuItem::with_id(app, "prev", "Bài trước", true, None::<&str>)?;
-    let item_next = MenuItem::with_id(app, "next", "Bài sau", true, None::<&str>)?;
+    let item_toggle = MenuItem::with_id(app, "toggle", crate::lang::tr("toggle"), true, None::<&str>)?;
+    let item_prev = MenuItem::with_id(app, "prev", crate::lang::tr("prev"), true, None::<&str>)?;
+    let item_next = MenuItem::with_id(app, "next", crate::lang::tr("next"), true, None::<&str>)?;
     let sep2 = PredefinedMenuItem::separator(app)?;
-    let item_switch = MenuItem::with_id(app, "switch_mode", "Đổi chế độ…", true, None::<&str>)?;
+    let item_switch = MenuItem::with_id(app, "switch_mode", crate::lang::tr("switch_mode"), true, None::<&str>)?;
     let item_music_dir = MenuItem::with_id(
         app,
         "open_music_dir",
-        "Mở thư mục nhạc",
+        crate::lang::tr("open_music_dir"),
         is_local_mode,
         None::<&str>,
     )?;
-    let item_quit = MenuItem::with_id(app, "quit", "Thoát", true, None::<&str>)?;
+    let item_quit = MenuItem::with_id(app, "quit", crate::lang::tr("quit"), true, None::<&str>)?;
 
     let menu = Menu::with_items(
         app,
@@ -56,6 +59,18 @@ pub fn init_tray(app: &AppHandle, is_local_mode: bool) -> tauri::Result<()> {
     )?;
 
     if let Some(tray_state) = app.try_state::<TrayState>() {
+        if let Ok(mut items) = tray_state.items.lock() {
+            *items = vec![
+                item_open.clone(),
+                item_mini.clone(),
+                item_toggle.clone(),
+                item_prev.clone(),
+                item_next.clone(),
+                item_switch.clone(),
+                item_music_dir.clone(),
+                item_quit.clone(),
+            ];
+        }
         if let Ok(mut guard) = tray_state.open_music_item.lock() {
             *guard = Some(item_music_dir);
         }
@@ -115,6 +130,17 @@ pub fn init_tray(app: &AppHandle, is_local_mode: bool) -> tauri::Result<()> {
 
     builder.build(app)?;
     Ok(())
+}
+
+/// Relabel the tray menu in the current language (see lang.rs).
+pub fn relabel(app: &AppHandle) {
+    if let Some(tray_state) = app.try_state::<TrayState>() {
+        if let Ok(items) = tray_state.items.lock() {
+            for item in items.iter() {
+                let _ = item.set_text(crate::lang::tr(item.id().as_ref()));
+            }
+        }
+    }
 }
 
 pub fn update_local_mode(app: &AppHandle, is_local: bool) {

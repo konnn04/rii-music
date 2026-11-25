@@ -164,7 +164,7 @@ pub fn update_playing(app: &AppHandle, playing: bool) {
             iId: BTN_TOGGLE,
             iBitmap: 0,
             hIcon: icon,
-            szTip: tip_buf(if playing { "Tạm dừng" } else { "Phát" }),
+            szTip: tip_buf(crate::lang::tr(if playing { "pause" } else { "play" })),
             dwFlags: THBF_ENABLED,
         };
         if let Err(e) = unsafe { taskbar.ThumbBarUpdateButtons(hwnd, &[btn]) } {
@@ -255,7 +255,7 @@ unsafe fn try_add_buttons(reset: bool) {
             iId: BTN_PREV,
             iBitmap: 0,
             hIcon: icon_prev,
-            szTip: tip_buf("Bài trước"),
+            szTip: tip_buf(crate::lang::tr("prev")),
             dwFlags: THBF_ENABLED,
         },
         THUMBBUTTON {
@@ -263,7 +263,7 @@ unsafe fn try_add_buttons(reset: bool) {
             iId: BTN_TOGGLE,
             iBitmap: 0,
             hIcon: toggle_icon,
-            szTip: tip_buf(if playing { "Tạm dừng" } else { "Phát" }),
+            szTip: tip_buf(crate::lang::tr(if playing { "pause" } else { "play" })),
             dwFlags: THBF_ENABLED,
         },
         THUMBBUTTON {
@@ -271,7 +271,7 @@ unsafe fn try_add_buttons(reset: bool) {
             iId: BTN_NEXT,
             iBitmap: 0,
             hIcon: icon_next,
-            szTip: tip_buf("Bài sau"),
+            szTip: tip_buf(crate::lang::tr("next")),
             dwFlags: THBF_ENABLED,
         },
     ];

@@ -19,17 +19,23 @@ RUN pnpm build
 # ── 2. Go binaries with the web app embedded ─────────────────────────────
 FROM golang:1.27-bookworm AS server
 ARG AGENT_BINARIES=false
-# Release version (CI passes VERSION.major.minor + run number); "dev" otherwise.
-ARG VERSION=dev
+# Release version: CI passes VERSION (major.minor + run number). Other builds (e.g.
+# Coolify) get <VERSION file>-<commit>, the commit from SOURCE_COMMIT if the builder
+# passes it (Coolify: "Include Source Commit in Build"), else "src".
+ARG VERSION=
+ARG SOURCE_COMMIT=
 WORKDIR /src
 COPY go.mod go.sum ./
 RUN go mod download
-COPY main.go desktop.go ./
+COPY main.go desktop.go VERSION ./
 COPY internal/ ./internal/
 COPY web/embed.go ./web/
 COPY --from=web /src/web/dist ./web/dist
 ENV CGO_ENABLED=0
-RUN go build -trimpath -ldflags="-s -w -X rii_music/internal/server.Version=${VERSION}" -o /out/rii_music .
+RUN V="${VERSION}"; \
+    if [ -z "$V" ]; then C="${SOURCE_COMMIT:-src}"; V="$(tr -d '[:space:]' < VERSION)-$(printf '%s' "$C" | cut -c1-7)"; fi; \
+    echo "version $V"; \
+    go build -trimpath -ldflags="-s -w -X rii_music/internal/server.Version=$V" -o /out/rii_music .
 # The same binary is the Discord agent ("rii_music discord-agent …"); users download
 # the build for their computer from Cài đặt → Trạng thái Discord.
 RUN mkdir -p /out/agent && if [ "$AGENT_BINARIES" = "true" ]; then \

@@ -4,7 +4,7 @@ import { queryClient } from "@/lib/queries";
 import { engine } from "@/player/engine";
 import { usePlayback, usePlayer } from "@/player/store";
 import { notify, toast } from "@/components/ui/Toast";
-import { t } from "@/i18n";
+import { t, lang } from "@/i18n";
 
 export type AppMode = "server" | "local" | "client";
 
@@ -184,6 +184,8 @@ export function initDesktop(): void {
   }, 15_000);
 
   startDiscord();
+  // Tray menu and taskbar buttons in the app's language (the page reloads on a change).
+  window.__TAURI__?.core?.invoke("set_language", { lang }).catch(() => {});
 
   window.addEventListener("rii:cmd", (ev: Event) => {
     const cmd = (ev as CustomEvent<string>).detail;

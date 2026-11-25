@@ -45,6 +45,11 @@
         "languages": ["Vietnamese", "English"],
         "displayLanguageSelector": true
       }
+    },
+    "linux": {
+      "appimage": {
+        "bundleMediaFramework": true
+      }
     }
   },
   "plugins": {

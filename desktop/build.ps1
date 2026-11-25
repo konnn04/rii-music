@@ -20,7 +20,9 @@ if (-not $env:TAURI_SIGNING_PRIVATE_KEY) { Write-Warning "TAURI_SIGNING_PRIVATE_
 else { Write-Host "Signing key loaded from .env" }
 
 Push-Location (Join-Path $root "web"); pnpm build; Pop-Location
-$ld = "-s -w"; if ($Version) { $ld += " -X rii_music/internal/server.Version=$Version" }
+# Without -Version the sidecar reports <VERSION file>-local (not "dev").
+$sv = $Version; if (-not $sv) { $sv = (Get-Content (Join-Path $root "VERSION") -Raw).Trim() + "-local" }
+$ld = "-s -w -X rii_music/internal/server.Version=$sv"
 Push-Location $root
 go build -trimpath -ldflags $ld -o desktop\src-tauri\binaries\rii_music-x86_64-pc-windows-msvc.exe .
 Pop-Location

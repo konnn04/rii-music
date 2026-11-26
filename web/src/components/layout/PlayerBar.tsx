@@ -13,7 +13,7 @@ import { SoundDialog } from "@/components/SoundDialog";
 import { MenuItems } from "@/components/TrackMenu";
 import { useFx } from "@/player/fx";
 import { COVER_VT, withCoverTransition } from "@/lib/viewTransition";
-import { ctl, openRemoteSheet, useRemoteView, useViewPlaying, useViewTime, useViewTrack } from "@/player/view";
+import { ctl, openRemoteSheet, useViewEntry, useRemoteView, useViewPlaying, useViewTime, useViewTrack } from "@/player/view";
 import { DevicesButton } from "@/components/DevicePicker";
 import { isDesktop, toggleMiniPlayer } from "@/lib/desktop";
 import { toast } from "../ui/Toast";
@@ -84,7 +84,7 @@ export function PlayerBar() {
 
 /** ⋯ of the player bar: the song's actions, Âm thanh and Hẹn giờ ngủ. */
 function PlayerMore() {
-  const current = usePlayer((s) => s.current);
+  const current = useViewEntry(); // the song on the bar, also when it plays on another device
   const fxOn = useFx((s) => s.enabled);
   const karaokeOn = useKaraoke((s) => s.mode !== "off");
   const sleep = useSleepState();

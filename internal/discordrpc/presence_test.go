@@ -47,3 +47,12 @@ func TestPresenceHandler(t *testing.T) {
 		t.Errorf("delete: %d", c)
 	}
 }
+
+// The 15 s loop must not move the song's start forward (the progress bar reset every 15 s).
+func TestPresenceStartFromPostTime(t *testing.T) {
+	np := &Playing{Playing: true, Title: "x", TrackID: "t", PositionMs: 30_000, at: time.Now().Add(-20 * time.Second)}
+	start := np.at.Add(-time.Duration(np.PositionMs) * time.Millisecond).Unix()
+	if got, want := start, time.Now().Add(-50*time.Second).Unix(); got < want-1 || got > want+1 {
+		t.Fatalf("start %d, want ~%d (posted 20 s ago at 0:30 → started 50 s ago)", got, want)
+	}
+}

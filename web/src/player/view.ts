@@ -64,6 +64,15 @@ export function useViewTrack(): Track | null {
   return remote ? (remoteTrack ?? known) : local;
 }
 
+/** Like the store's `current`, for what the bar shows (a remote device's song too). */
+export function useViewEntry(): { uid: string; track: Track } | null {
+  const remote = useRemoteView();
+  const local = usePlayer((s) => s.current);
+  const track = useViewTrack();
+  if (!remote) return local;
+  return track ? { uid: "remote:" + track.id, track } : null;
+}
+
 export function useViewPlaying(): boolean {
   const remote = useRemoteView();
   const local = usePlayback((s) => s.isPlaying);

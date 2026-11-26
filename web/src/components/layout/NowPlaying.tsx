@@ -13,11 +13,12 @@ import { usePulse } from "./Pulse";
 import { ArtistLinks } from "@/components/ArtistLinks";
 import { NowPlayingMenuButton } from "../NowPlayingMenu";
 import { COVER_VT, withCoverTransition } from "@/lib/viewTransition";
+import { useViewEntry, useViewTrack } from "@/player/view";
 import { useLite } from "@/lib/lite";
 
 /** Dark scope with the cover blurred behind a scrim and the accent taken from the cover. */
 export function NowPlayingSurface({ children, className = "", style }: { children: ReactNode; className?: string; style?: CSSProperties }) {
-  const track = usePlayer((s) => s.current?.track);
+  const track = useViewTrack();
   const accent = usePlayback((s) => s.accent);
   const settings = useSettings().data;
   // A fixed accent chosen in Settings wins; "song" follows the cover.
@@ -74,7 +75,7 @@ export function NowPlayingSurface({ children, className = "", style }: { childre
 }
 
 function TrackTitle({ big }: { big?: boolean }) {
-  const track = usePlayer((s) => s.current?.track);
+  const track = useViewTrack();
   if (!track) return null;
   return (
     <div className="min-w-0 flex-1">
@@ -93,7 +94,7 @@ export function MobileNowPlaying() {
   const open = usePlayer((s) => s.npOpen);
   const tab = usePlayer((s) => s.npTab);
   const setNp = usePlayer((s) => s.setNp);
-  const current = usePlayer((s) => s.current);
+  const current = useViewEntry();
   const source = usePlayer((s) => s.source);
   const [dy, setDy] = useState(0);
   const [dx, setDx] = useState(0);
@@ -219,7 +220,7 @@ export function MobileNowPlaying() {
 
 /** Square cover as large as the space allows; below it, when there is room, the lyric line playing now. */
 function CoverStage({ onLyrics }: { onLyrics: () => void }) {
-  const current = usePlayer((s) => s.current);
+  const current = useViewEntry();
   const line = useLyricLine();
   const box = useRef<HTMLDivElement>(null);
   const [dims, setDims] = useState({ w: 0, h: 0 });
@@ -268,7 +269,7 @@ function CoverStage({ onLyrics }: { onLyrics: () => void }) {
 export function RightPanel() {
   const panel = usePlayer((s) => s.panel);
   const setPanel = usePlayer((s) => s.setPanel);
-  const current = usePlayer((s) => s.current);
+  const current = useViewEntry();
   if (!panel) return null;
   const tabs = [
     { key: "nowplaying" as const, label: t("player.np.title") },
@@ -333,7 +334,7 @@ export function RightPanel() {
 export function LyricsFullscreen() {
   const open = usePlayer((s) => s.lyricsFull);
   const set = usePlayer((s) => s.setLyricsFull);
-  const current = usePlayer((s) => s.current);
+  const current = useViewEntry();
   useEffect(() => {
     if (!open) return;
     const k = (e: KeyboardEvent) => e.key === "Escape" && set(false);

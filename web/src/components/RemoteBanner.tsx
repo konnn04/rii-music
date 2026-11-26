@@ -266,3 +266,46 @@ function RemoteQueueRow({ id, item }: { id: string; item: QueueItem }) {
     </div>
   );
 }
+
+/** Queue tab while another device plays: its song and upcoming songs, controlled from here. */
+export function RemoteQueuePanel() {
+  const s = useRemote((r) => r.session);
+  const tracks = useRemote((r) => r.tracks);
+  const trackById = useMemo(() => new Map(tracks.map((tr) => [tr.id, tr])), [tracks]);
+  if (!s) return null;
+  const cur = trackById.get(s.trackId);
+  const items = s.upcoming
+    .slice(0, 150)
+    .map((id, index) => ({ id, index, track: trackById.get(id) }))
+    .filter((it): it is QueueItem => !!it.track);
+  return (
+    <div className="flex flex-col gap-3 p-3">
+      <div className="flex items-center justify-between gap-2 px-1">
+        <div className="flex min-w-0 items-center gap-1.5 text-caption text-np-fg-muted">
+          <Icon name="devices" size={16} />
+          <span className="truncate">{t("ui.remote.queueOn", { device: s.deviceName })}</span>
+        </div>
+        <button className="focus-ring shrink-0 rounded-full px-3 py-1 text-caption text-np-accent hover:bg-white/10" onClick={() => void takeOver().catch((e: Error) => toast(e.message, "error"))}>
+          {t("ui.remote.playHere")}
+        </button>
+      </div>
+      {cur && (
+        <div className="flex items-center gap-3 rounded-control bg-white/5 p-2">
+          <Cover trackId={cur.id} hasCover={cur.hasCover} size={48} />
+          <div className="min-w-0 flex-1">
+            <div className="truncate text-body font-medium text-np-accent">{cur.title}</div>
+            <div className="truncate text-body-sm text-np-fg-muted">{cur.artist}</div>
+          </div>
+        </div>
+      )}
+      {items.length > 0 ? (
+        <>
+          <div className="px-1 text-caption uppercase tracking-wide text-np-fg-muted">{t("ui.remote.upNext")}</div>
+          <RemoteQueue items={items} />
+        </>
+      ) : (
+        <div className="px-1 text-body-sm text-np-fg-muted">{t("ui.remote.queueEmpty")}</div>
+      )}
+    </div>
+  );
+}

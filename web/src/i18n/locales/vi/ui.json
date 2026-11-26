@@ -58,7 +58,7 @@
     "pausedOn": "Vừa nghe trên {device}",
     "playHere": "Phát ở đây",
     "controlTitle": "Điều khiển {device}",
-    "queueOn": "Hàng đợi trên {device}",
+    "queueOn": "Hàng đợi đang phát trên {device}",
     "queueEmpty": "Không có bài nào trong hàng đợi",
     "volume": "Âm lượng",
     "seek": "Tua",
@@ -72,7 +72,8 @@
     "lastHere": "Phiên gần nhất",
     "noOther": "Mở RiiMusic trên thiết bị khác (cùng tài khoản) để chọn phát ở đó.",
     "devicesButton": "Chọn thiết bị phát",
-    "switching": "Đang chuyển sang {device}…"
+    "switching": "Đang chuyển sang {device}…",
+    "upNext": "Tiếp theo"
   },
   "drag": {
     "count": "{n} bài",

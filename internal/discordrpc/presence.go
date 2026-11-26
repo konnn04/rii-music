@@ -24,6 +24,8 @@ type Playing struct {
 	DurationMs int64  `json:"durationMs"`
 	PositionMs int64  `json:"positionMs"`
 	CoverURL   string `json:"coverUrl"`
+
+	at time.Time // when it was posted: positionMs is relative to this
 }
 
 type Presence struct {
@@ -121,7 +123,9 @@ func (p *Presence) apply() {
 	key := "none"
 	var act *Activity
 	if np.Playing && np.Title != "" {
-		start := time.Now().Add(-time.Duration(np.PositionMs) * time.Millisecond).Unix()
+		// From the moment it was posted, not now: the loop re-applies every 15 s, and
+		// counting from now moved the start forward each time (progress reset to 0:00).
+		start := np.at.Add(-time.Duration(np.PositionMs) * time.Millisecond).Unix()
 		act = &Activity{Title: np.Title, Artist: np.Artist, Album: np.Album, StartUnix: start, ImageURL: np.CoverURL, ImageKey: "riimusic"}
 		if np.DurationMs > 0 {
 			act.EndUnix = start + np.DurationMs/1000
@@ -155,6 +159,7 @@ func (p *Presence) Handler() http.Handler {
 				http.Error(w, "bad request", http.StatusBadRequest)
 				return
 			}
+			np.at = time.Now()
 			p.set(&np)
 		case http.MethodDelete:
 			p.set(nil)

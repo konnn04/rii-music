@@ -47,7 +47,8 @@
     "offlineRemove": "Bỏ lưu offline",
     "downloadFile": "Tải về máy",
     "dislikeTrack": "Không thích bài này",
-    "dislikeArtist": "Không thích {name}"
+    "dislikeArtist": "Không thích {name}",
+    "selectMany": "Chọn nhiều bài"
   },
   "toast": {
     "playNext": "Sẽ phát tiếp theo",

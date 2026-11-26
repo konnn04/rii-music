@@ -13,7 +13,12 @@ import { t, tn, tsv } from "@/i18n";
 import { removeStored, storeTrack, useOffline } from "@/lib/offline";
 import { dislikeArtist, dislikeTrack, mainArtist } from "@/lib/dislike";
 
-export type TrackContext = { playlistId?: string; playlistKind?: string };
+export type TrackContext = {
+  playlistId?: string;
+  playlistKind?: string;
+  /** Lists that can select several songs: the long-press sheet offers "Chọn nhiều". */
+  onSelect?: () => void;
+};
 
 type DialogState =
   | { kind: "addToPlaylist"; trackIds: string[] }
@@ -451,6 +456,18 @@ function TrackSheet({ track, ctx }: { track: Track; ctx?: TrackContext }) {
   return (
     <Dialog open onOpenChange={(o) => !o && close()} title={track.title} description={track.artist || undefined}>
       <div className="-mx-4 -mt-2 flex flex-col">
+        {ctx?.onSelect && (
+          <button
+            onClick={() => {
+              close();
+              ctx.onSelect?.();
+            }}
+            className="focus-ring state-layer flex h-14 items-center gap-4 rounded-control px-4 text-left text-body"
+          >
+            <Icon name="check" className="text-fg-muted" />
+            {t("tracks.action.selectMany")}
+          </button>
+        )}
         {[...primary, ...danger].map((a) => (
           <button
             key={a.key}

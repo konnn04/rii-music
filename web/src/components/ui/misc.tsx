@@ -1,3 +1,4 @@
+import { lazy, Suspense } from "react";
 import type { ReactNode } from "react";
 import { Icon, type IconName } from "./Icon";
 import { t } from "@/i18n";
@@ -15,8 +16,12 @@ export function Empty({ icon = "music-note", title, children, action }: { icon?:
   );
 }
 
+// Offline: under the error, the songs stored on this device (loaded on demand).
+const OfflineShelf = lazy(() => import("@/components/OfflineShelf"));
+
 export function ErrorState({ error, onRetry }: { error: unknown; onRetry?: () => void }) {
   return (
+    <>
     <Empty
       icon="alert"
       title={t("ui.error.loadFailed")}
@@ -30,6 +35,10 @@ export function ErrorState({ error, onRetry }: { error: unknown; onRetry?: () =>
     >
       {(error as Error)?.message}
     </Empty>
+    <Suspense fallback={null}>
+      <OfflineShelf />
+    </Suspense>
+    </>
   );
 }
 

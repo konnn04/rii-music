@@ -64,6 +64,19 @@ function pick(s: State): OfflineSettings {
   return { enabled: s.enabled, retentionDays: s.retentionDays, autoCache: s.autoCache };
 }
 
+/** Songs stored on this device, most recently played first (works with no server). */
+export async function storedTracks(): Promise<Track[]> {
+  const all = await listAudio().catch(() => []);
+  return all
+    .sort((a, b) => b.lastUsedAt - a.lastUsedAt)
+    .map((e) =>
+      e.track
+        ? (e.track as unknown as Track)
+        : // Stored before the details were kept: enough to show and play it.
+          ({ id: e.id, title: e.title || e.id, artist: e.artist || "", album: "", durationMs: 0, hasCover: true, gainDb: 0, playCount: 0, lastPlayedAt: 0, addedAt: e.cachedAt, mime: e.mime, liked: false, sourceUrl: "" } satisfies Track),
+    );
+}
+
 async function refresh() {
   try {
     const all = await listAudio();
@@ -81,7 +94,7 @@ export function storeTrack(t: Track, pinned: boolean): Promise<void> {
   const run = async () => {
     const existing = await getAudio(t.id);
     if (existing) {
-      if (pinned && !existing.pinned) await putAudio({ ...existing, pinned: true });
+      if ((pinned && !existing.pinned) || !existing.track) await putAudio({ ...existing, pinned: existing.pinned || pinned, track: { ...t } });
       return refresh();
     }
     useOffline.setState((s) => ({ busy: new Set(s.busy).add(t.id) }));
@@ -90,7 +103,7 @@ export function storeTrack(t: Track, pinned: boolean): Promise<void> {
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const blob = await res.blob();
       const now = Date.now();
-      await putAudio({ id: t.id, blob, mime: blob.type || t.mime || "audio/mp4", size: blob.size, cachedAt: now, lastUsedAt: now, pinned, title: t.title, artist: t.artist });
+      await putAudio({ id: t.id, blob, mime: blob.type || t.mime || "audio/mp4", size: blob.size, cachedAt: now, lastUsedAt: now, pinned, title: t.title, artist: t.artist, track: { ...t } });
     } finally {
       useOffline.setState((s) => {
         const busy = new Set(s.busy);

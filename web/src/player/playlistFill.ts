@@ -5,7 +5,7 @@
 // with the first song and waits at a song still downloading.
 
 import { api, type Job, type Track, type WebResult } from "@/lib/api";
-import { usePlayback, usePlayer, newUid, type QueueEntry, type Source } from "./store";
+import { routeRemote, usePlayback, usePlayer, newUid, type QueueEntry, type Source } from "./store";
 
 type Follow = {
   source: Source;
@@ -121,6 +121,8 @@ function flush(f: Follow) {
     usePlayer.getState().playList(batch, 0, f.source, { shuffle: false });
     return;
   }
+  // Another device leads (remote control): the rest of the list goes to its queue.
+  if (routeRemote("queue", batch)) return;
   const s = usePlayer.getState();
   if (s.source?.id !== f.source.id) return; // the user moved on to something else
   const fresh = batch.filter((t) => !s.context.some((e) => e.track.id === t.id));

@@ -1,7 +1,8 @@
 import { useQuery } from "@tanstack/react-query";
 import { api, coverUrl, type Settings } from "@/lib/api";
 import { queryClient } from "@/lib/queries";
-import { engine } from "@/player/engine";
+import { ctl, viewNow } from "@/player/view";
+import { useRemote } from "@/player/sync";
 import { usePlayback, usePlayer } from "@/player/store";
 import { notify, toast } from "@/components/ui/Toast";
 import { t, lang } from "@/i18n";
@@ -114,8 +115,10 @@ function startDiscord() {
     if (timer !== null) window.clearTimeout(timer);
     timer = window.setTimeout(() => {
       timer = null;
-      const cur = usePlayer.getState().current?.track;
-      const pb = usePlayback.getState();
+      // What the bar shows: this device, or the one being remote-controlled.
+      const v = viewNow();
+      const cur = v.track;
+      const pb = { isPlaying: v.playing, position: v.position, duration: v.duration };
       if (!enabled() || !appId || !cur) {
         if (lastKey !== "off") void post(null, "DELETE");
         lastKey = "off";
@@ -141,6 +144,7 @@ function startDiscord() {
   loadAppId(true);
   usePlayer.subscribe((s, prev) => s.current?.uid !== prev.current?.uid && send());
   usePlayback.subscribe((s, prev) => (s.isPlaying !== prev.isPlaying || Math.abs(s.position - prev.position) > 3) && send());
+  useRemote.subscribe(() => send()); // another device plays / pauses / seeks
   // The toggle in Settings, login in client mode, and the admin setting the Application ID.
   queryClient.getQueryCache().subscribe((e) => {
     const k = e.query.queryKey[0];
@@ -189,17 +193,18 @@ export function initDesktop(): void {
 
   window.addEventListener("rii:cmd", (ev: Event) => {
     const cmd = (ev as CustomEvent<string>).detail;
-    if (cmd === "toggle") engine.toggle();
-    else if (cmd === "next") engine.next();
-    else if (cmd === "prev") engine.prev();
+    // Tray, taskbar buttons, media keys, mini player: a remote control while
+    // another device plays (ctl), not a takeover.
+    if (cmd === "toggle") ctl.toggle();
+    else if (cmd === "next") ctl.next();
+    else if (cmd === "prev") ctl.prev();
   });
 
   let timer: number | null = null;
   let lastKey = "";
 
   const scheduleNowPlaying = () => {
-    const track = usePlayer.getState().current?.track;
-    const playing = usePlayback.getState().isPlaying;
+    const { track, playing } = viewNow();
     const title = track?.title ?? "";
     const artist = track?.artist ?? "";
     const cover = track ? coverUrl(track.id) : "";
@@ -221,6 +226,7 @@ export function initDesktop(): void {
     scheduleNowPlaying();
   };
 
+  useRemote.subscribe(() => scheduleNowPlaying());
   usePlayer.subscribe((s, prev) => {
     if (
       s.current?.uid !== prev.current?.uid ||

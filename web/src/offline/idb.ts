@@ -24,6 +24,8 @@ export type AudioEntry = {
   pinned: boolean;
   title?: string;
   artist?: string;
+  /** The song's details (a Track), to list stored songs without the server. */
+  track?: Record<string, unknown>;
 };
 
 const DB = "rii-offline";

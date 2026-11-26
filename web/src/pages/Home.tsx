@@ -7,6 +7,7 @@ import { DiscoverLink, ExtArtistCard, RecCard } from "@/components/Recs";
 import { PageHeader } from "@/components/layout/AppShell";
 import { Mascot } from "@/components/Mascot";
 import type { Source } from "@/player/store";
+import { OfflineShelf } from "@/components/OfflineShelf";
 import { t, tsv } from "@/i18n";
 
 function greeting() {
@@ -75,6 +76,7 @@ export function HomePage() {
   return (
     <div className="flex flex-col gap-8 pb-4 md:px-6">
       <div className="-mx-0 md:-mx-6">{header}</div>
+      <OfflineShelf />
       <Mascot />
 
       {data.continue.length > 0 && (

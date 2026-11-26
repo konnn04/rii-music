@@ -5,6 +5,8 @@ import { usePlayback, usePlayer, type Source } from "@/player/store";
 import { engine } from "@/player/engine";
 import { Collage, Cover } from "./ui/Cover";
 import { Icon } from "./ui/Icon";
+import { Tooltip } from "./ui/Tooltip";
+import { notify } from "./ui/Toast";
 import { t, tn, tsv } from "@/i18n";
 import { ArtistLinks } from "@/components/ArtistLinks";
 import { TrackContextMenu } from "./TrackMenu";
@@ -88,10 +90,26 @@ export function TrackCard({ track, tracks, index, source }: { track: Track; trac
   return (
     <TrackContextMenu track={track}>
       <div className="group flex w-[140px] shrink-0 snap-start flex-col gap-2 md:-m-2 md:w-auto md:rounded-card md:p-2 md:hover:bg-surface-1">
-        <button className="focus-ring relative rounded-card text-left" onClick={play} aria-label={t("ui.card.playAria", { title: track.title })}>
-          <Cover trackId={track.id} hasCover={track.hasCover} size="100%" rounded="rounded-card" className="aspect-square !h-auto" />
+        <div className="relative">
+          <button className="focus-ring block w-full rounded-card text-left" onClick={play} aria-label={t("ui.card.playAria", { title: track.title })}>
+            <Cover trackId={track.id} hasCover={track.hasCover} size="100%" rounded="rounded-card" className="aspect-square !h-auto" />
+          </button>
+          <Tooltip content={t("tracks.action.addToQueue")}>
+            <button
+              aria-label={t("tracks.action.addToQueue")}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                usePlayer.getState().addToQueue([track]);
+                notify({ text: t("tracks.toast.addedToQueue"), icon: "queue" });
+              }}
+              className="focus-ring absolute bottom-2 left-2 flex size-9 items-center justify-center rounded-full bg-surface-3/90 text-fg shadow-float backdrop-blur-sm transition-all duration-base translate-y-1 opacity-0 hover:bg-surface-3 group-hover:translate-y-0 group-hover:opacity-100 focus-visible:opacity-100 [@media(hover:none)]:hidden"
+            >
+              <Icon name="queue" size={18} />
+            </button>
+          </Tooltip>
           <HoverPlay onPlay={play} playing={playing} />
-        </button>
+        </div>
         <div className="min-w-0">
           <div className={`truncate text-label ${isCur ? "text-accent" : ""}`}>{track.title}</div>
           <ArtistLinks artist={track.artist} className="block truncate text-body-sm text-fg-muted" />

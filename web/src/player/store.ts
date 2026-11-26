@@ -67,9 +67,10 @@ type State = {
 };
 
 type Actions = {
-  playList: (tracks: Track[], start: number, source: Source, opts?: { shuffle?: boolean; oneLang?: boolean }) => void;
-  playNext: (tracks: Track[]) => void;
-  addToQueue: (tracks: Track[]) => void;
+  /** opts.local: play here even while another device leads (taking over, remote commands). */
+  playList: (tracks: Track[], start: number, source: Source, opts?: { shuffle?: boolean; oneLang?: boolean; local?: boolean }) => void;
+  playNext: (tracks: Track[], opts?: { local?: boolean }) => void;
+  addToQueue: (tracks: Track[], opts?: { local?: boolean }) => void;
   /** Advance; returns false when the queue ended. */
   advance: () => boolean;
   back: () => boolean;
@@ -96,6 +97,14 @@ type Actions = {
   setLyricsFull: (v: boolean) => void;
 };
 
+/** Set by view.ts: while another device of the user leads, sends plays and queue
+ *  additions there and returns true (this device stays a remote control). */
+let remoteRouter: ((kind: "play" | "next" | "queue", tracks: Track[]) => boolean) | null = null;
+export const setRemoteRouter = (f: typeof remoteRouter) => {
+  remoteRouter = f;
+};
+export const routeRemote = (kind: "play" | "next" | "queue", tracks: Track[]) => !!remoteRouter?.(kind, tracks);
+
 export const usePlayer = create<State & Actions>()(
   persist(
     (set, get) => ({
@@ -119,6 +128,8 @@ export const usePlayer = create<State & Actions>()(
       lyricsFull: false,
 
       playList: (tracks, start, source, opts) => {
+        // Another device of the user is the player: the song goes there (remote control).
+        if (!opts?.local && routeRemote("play", [...tracks.slice(Math.max(0, start)), ...tracks.slice(0, Math.max(0, start))])) return;
         if (tracks.some((t) => !t?.id)) {
           const picked = tracks[start];
           tracks = playable(tracks);
@@ -158,15 +169,17 @@ export const usePlayer = create<State & Actions>()(
         }));
       },
 
-      playNext: (tracks) => {
-        if (!get().current) return get().playList(tracks, 0, { type: "queue", name: "Hàng đợi" });
+      playNext: (tracks, opts) => {
+        if (!opts?.local && routeRemote("next", tracks)) return;
+        if (!get().current) return get().playList(tracks, 0, { type: "queue", name: "Hàng đợi" }, opts);
         set((s) => ({ manual: [...entries(tracks), ...s.manual] }));
       },
       // "Thêm vào hàng chờ": after what the user chose to play (the rest of the
       // list and earlier additions), before autoplay suggestions. "Phát tiếp
       // theo" (playNext) is the one that jumps ahead.
-      addToQueue: (tracks) => {
-        if (!get().current) return get().playList(tracks, 0, { type: "queue", name: "Hàng đợi" });
+      addToQueue: (tracks, opts) => {
+        if (!opts?.local && routeRemote("queue", tracks)) return;
+        if (!get().current) return get().playList(tracks, 0, { type: "queue", name: "Hàng đợi" }, opts);
         set((s) => {
           const add = playable(tracks).map((track) => ({ uid: newUid(), track, added: true }));
           const i = activeEnd(s.context, s.pos);

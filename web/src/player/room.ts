@@ -78,7 +78,7 @@ function applyState(force = false) {
   const sameQueue = local.join(",") === st.queue.slice(st.index).join(",");
   if (p.current?.track.id !== want || !sameQueue) {
     const start = list.findIndex((tr) => tr.id === want);
-    usePlayer.getState().playList(list, Math.max(0, start), sourceFor(room.code), { shuffle: false });
+    usePlayer.getState().playList(list, Math.max(0, start), sourceFor(room.code), { shuffle: false, local: true });
   }
   const seekWhenReady = () => {
     const target = expectedPositionMs(st) / 1000;

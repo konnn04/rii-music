@@ -37,7 +37,7 @@ export type RemoteCmd =
   | { cmd: "volume"; volume: number }
   | { cmd: "jump" | "remove"; index: number; trackId: string }
   | { cmd: "move"; index: number; to: number; trackId: string }
-  | { cmd: "playNow" | "queue"; trackIds: string[] };
+  | { cmd: "playNow" | "queue" | "playNext"; trackIds: string[] };
 
 type RemoteState = {
   /** The session of another device (null when this device is the active one). */
@@ -269,11 +269,13 @@ export async function onRemoteCommand(c: RemoteCmd & { target: string; from: str
       await takeOver();
       return;
     case "playNow":
-    case "queue": {
+    case "queue":
+    case "playNext": {
       const tracks = (await Promise.all(c.trackIds.map((id) => api<Track>(`/api/tracks/${id}`).catch(() => null)))).filter((t): t is Track => !!t);
       if (!tracks.length) break;
-      if (c.cmd === "playNow") usePlayer.getState().playList(tracks, 0, { type: "queue", name: "Điều khiển từ xa" }, { shuffle: false });
-      else usePlayer.getState().addToQueue(tracks);
+      if (c.cmd === "playNow") usePlayer.getState().playList(tracks, 0, { type: "queue", name: "Điều khiển từ xa" }, { shuffle: false, local: true });
+      else if (c.cmd === "playNext") usePlayer.getState().playNext(tracks, { local: true });
+      else usePlayer.getState().addToQueue(tracks, { local: true });
       break;
     }
   }
@@ -287,7 +289,7 @@ export async function takeOver() {
   const s = r.session;
   // Ask the other device to stop (it also pauses when this one starts playing).
   if (s.deviceId !== deviceId) void api("/api/playback/command", { method: "POST", json: { cmd: "pause", target: s.deviceId, from: deviceId } }).catch(() => {});
-  usePlayer.getState().playList(r.tracks, 0, { type: "queue", name: s.sourceName || s.deviceName }, { shuffle: false });
+  usePlayer.getState().playList(r.tracks, 0, { type: "queue", name: s.sourceName || s.deviceName }, { shuffle: false, local: true });
   clearRemote();
   // Seek once the engine has loaded the song.
   const want = s.positionMs / 1000;

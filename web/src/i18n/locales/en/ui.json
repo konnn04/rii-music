@@ -58,7 +58,7 @@
     "pausedOn": "Last played on {device}",
     "playHere": "Play here",
     "controlTitle": "Control {device}",
-    "queueOn": "Queue on {device}",
+    "queueOn": "Queue playing on {device}",
     "queueEmpty": "Nothing queued",
     "volume": "Volume",
     "seek": "Seek",
@@ -72,7 +72,8 @@
     "lastHere": "Last session",
     "noOther": "Open RiiMusic on another device (same account) to play there.",
     "devicesButton": "Choose a device",
-    "switching": "Switching to {device}…"
+    "switching": "Switching to {device}…",
+    "upNext": "Up next"
   },
   "drag": {
     "count": "{n} songs",

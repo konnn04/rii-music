@@ -12,12 +12,20 @@ import { Equalizer } from "../ui/misc";
 import { toast } from "../ui/Toast";
 import { Hint } from "../ui/Tips";
 import { AutoplayButton } from "./AutoplayButton";
+import { useRemoteView } from "@/player/view";
+import { RemoteQueuePanel } from "@/components/RemoteBanner";
 import { ArtistLinks } from "@/components/ArtistLinks";
 
 const LIMIT = 150;
 
 /** Queue: now playing, manual queue ("thêm tay"), the rest of the source, then autoplay suggestions. Drag to reorder. */
 export function QueueView({ compact, className = "" }: { compact?: boolean; className?: string }) {
+  // Another device plays: its queue, so reordering / jumping / removing control it.
+  if (useRemoteView()) return <RemoteQueuePanel />;
+  return <LocalQueue compact={compact} className={className} />;
+}
+
+function LocalQueue({ compact, className = "" }: { compact?: boolean; className?: string }) {
   const current = usePlayer((s) => s.current);
   const manual = usePlayer((s) => s.manual);
   const context = usePlayer((s) => s.context);

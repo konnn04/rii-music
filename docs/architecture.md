@@ -76,6 +76,8 @@ Files: `web/src/player/sync.ts`, `playback.go`.
 
 One player at a time: tabs tell each other over BroadcastChannel; devices POST `/api/playback` (on change incl. volume / shuffle / repeat / queue, + 30 s heartbeat) and get `playback` SSE events; a device that was playing pauses and offers "Phát ở đây" (GET `/api/playback` returns the session with its tracks). There is one player bar: while another device plays, the bar / mini player show that device (`web/src/player/view.ts`: `useRemoteView`, `useView*`, and `ctl.*` which sends remote commands or drives the local engine), and the sheet `RemoteSheet` holds the remote queue. Devices announce themselves (`POST /api/devices` every 30 s; `GET /api/devices` lists the ones seen in 90 s); the device picker moves playback with the `takeOver` command (the target continues the session; a paused report from another device never replaces a playing session). Other devices show the playing one (song, extrapolated progress, volume, queue) and control it: `POST /api/playback/command` → SSE `remote-cmd` to the target device (play, pause, toggle, next, prev, seek, volume, jump/remove/move in the upcoming list by index + expected track id, playNow, queue, shuffle, repeat). Discord presence is fed from the same reports. State is in memory.
 
+While another device leads, this device is a remote control everywhere: `store.playList` / `playNext` / `addToQueue` go through `routeRemote` (set by `view.ts`) and become `playNow` / `playNext` / `queue` remote commands unless called with `{ local: true }` (taking over, applying remote commands, rooms). The desktop tray, taskbar buttons, media keys and mini player use `ctl`; lyrics, the tray tooltip, the mini player and Discord follow `viewNow()` / `useViewTrack()`.
+
 ## Nghe chung
 
 Files: `rooms.go`, `web/src/player/room.ts`, `roomFlag.ts`.
@@ -136,6 +138,8 @@ Video export (`karaoke/video/`, loaded on demand): audio = the cached AI instrum
 Files: `web/src/sw.ts`, `web/src/offline/idb.ts`, `web/src/lib/offline.ts`.
 
 Our own service worker (vite-plugin-pwa `injectManifest`; typechecked with `tsconfig.sw.json`). Songs live in IndexedDB `rii-offline` and are served by the service worker for `/api/tracks/{id}/stream` with Range support, online or not. With offline mode on (setting stored in IndexedDB so the SW can read it), library GETs are network-first into the `rii-api` cache. Auto-stored songs (played 20 s) expire after 30/60/90 days since last use; pinned ones ("Lưu offline" in a song's ⋯ menu) stay; "Tải về máy" is a real file download (`/api/tracks/{id}/stream?download=1`, named "Artist - Title.ext", not served by the service worker). Logout clears both.
+
+Stored songs keep their details (`track`) in IndexedDB, so `OfflineShelf` lists them on Home and under any page that fails to load while offline. When a new version replaced the precache while an old page is still open, an old lazy chunk can't load (`vite:preloadError`): the page reloads once into the new version.
 
 ## Enrichment worker
 

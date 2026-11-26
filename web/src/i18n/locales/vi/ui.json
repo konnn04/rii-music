@@ -86,7 +86,10 @@
     "screenBody": "Thiết bị này chưa có bản offline. Bật Cài đặt → Nghe offline khi có mạng để lần sau mở được app và nghe bài đã lưu. App sẽ tự thử lại khi có mạng.",
     "retry": "Thử lại",
     "skipping": "Đang offline · bỏ qua các bài chưa lưu trên máy",
-    "noneLeft": "Hết bài đã lưu trên máy để phát"
+    "noneLeft": "Hết bài đã lưu trên máy để phát",
+    "storedTitle": "Đã lưu trên máy ({n})",
+    "storedHint": "Không kết nối được máy chủ: các bài này vẫn nghe được.",
+    "storedName": "Đã lưu trên máy"
   },
   "follow": {
     "follow": "Theo dõi",

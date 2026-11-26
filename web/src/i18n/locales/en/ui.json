@@ -86,7 +86,10 @@
     "screenBody": "This device has no offline copy yet. Turn on Settings → Offline listening while online to open the app and play saved songs next time. The app retries when you're back online.",
     "retry": "Try again",
     "skipping": "Offline · skipping songs not stored on this device",
-    "noneLeft": "No more songs stored on this device"
+    "noneLeft": "No more songs stored on this device",
+    "storedTitle": "Stored on this device ({n})",
+    "storedHint": "Can't reach the server: these songs still play.",
+    "storedName": "Stored on this device"
   },
   "follow": {
     "follow": "Follow",

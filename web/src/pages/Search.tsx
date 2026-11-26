@@ -1,16 +1,19 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate, useSearch } from "@tanstack/react-router";
+import { ContextMenu } from "radix-ui";
 import { queryClient, useJobs, useWebSearch } from "@/lib/queries";
 import { useQuery } from "@tanstack/react-query";
-import { playWeb, usePendingPlay } from "@/lib/playweb";
+import { playNextWeb, playWeb, queueWeb, usePendingPlay, usePendingQueue } from "@/lib/playweb";
 import { Dialog } from "@/components/ui/Dialog";
 import { notify, toast } from "@/components/ui/Toast";
 import { fmtTime } from "@/lib/format";
 import { api, type WebKind, type WebList, type WebResult } from "@/lib/api";
 import { Icon } from "@/components/ui/Icon";
-import { Button } from "@/components/ui/Button";
+import { Button, IconButton } from "@/components/ui/Button";
 import { Empty, ErrorState } from "@/components/ui/misc";
 import { PageHeader } from "@/components/layout/AppShell";
+import { useLongPress } from "@/components/TrackMenu";
+import { useCanHover } from "@/lib/useMedia";
 import { t, tn } from "@/i18n";
 import { ArtistLinks } from "@/components/ArtistLinks";
 import { playWebList } from "@/player/playlistFill";
@@ -261,18 +264,23 @@ function CollectionDialog({ r, onClose }: { r: WebResult; onClose: () => void })
 }
 
 export function WebRow({ r, index }: { r: WebResult; index?: number }) {
+  const canHover = useCanHover();
   const jobs = useJobs();
   const pendingJob = usePendingPlay((s) => s.byVideo[r.id]);
+  const pendingQueue = usePendingQueue((s) => s.byVideo[r.id]);
   const [busy, setBusy] = useState(false);
+  const [queueBusy, setQueueBusy] = useState(false);
+  const [sheetOpen, setSheetOpen] = useState(false);
   const job = jobs.data?.jobs.find((j) => j.sourceId === r.id);
   const active = job && ["queued", "downloading", "processing"].includes(job.status);
   const have = !!r.inLibrary || !!r.onServer || job?.status === "done" || job?.status === "skipped";
-  const waiting = !!pendingJob || (busy && !have);
+  const waiting = !!pendingJob || !!pendingQueue || ((busy || queueBusy) && !have);
+  const inLib = r.inLibrary || (job?.status === "done" || job?.status === "skipped" ? job.trackId : "");
 
   const play = async () => {
     setBusy(true);
     try {
-      await playWeb({ ...r, inLibrary: r.inLibrary || (job?.status === "done" || job?.status === "skipped" ? job.trackId : "") });
+      await playWeb({ ...r, inLibrary: inLib });
     } catch (e) {
       toast((e as Error).message, "error");
     } finally {
@@ -280,8 +288,32 @@ export function WebRow({ r, index }: { r: WebResult; index?: number }) {
     }
   };
 
-  return (
-    <li className="flex min-h-16 items-center gap-3 rounded-control px-2 py-2 hover:bg-surface-1">
+  const queue = async () => {
+    setQueueBusy(true);
+    try {
+      await queueWeb({ ...r, inLibrary: inLib });
+    } catch (e) {
+      toast((e as Error).message, "error");
+    } finally {
+      setQueueBusy(false);
+    }
+  };
+
+  const playNext = async () => {
+    setQueueBusy(true);
+    try {
+      await playNextWeb({ ...r, inLibrary: inLib });
+    } catch (e) {
+      toast((e as Error).message, "error");
+    } finally {
+      setQueueBusy(false);
+    }
+  };
+
+  const longPress = useLongPress(() => setSheetOpen(true));
+
+  const rowInner = (
+    <div className="flex min-h-16 select-none items-center gap-3 rounded-control px-2 py-2 hover:bg-surface-1">
       {index !== undefined && <span className="w-6 shrink-0 text-right text-caption text-fg-muted tabular">{index}</span>}
       {index === undefined && (
         <img
@@ -318,15 +350,94 @@ export function WebRow({ r, index }: { r: WebResult; index?: number }) {
           {job!.status === "downloading" && job!.progress > 0 ? `${Math.round(job!.progress * 100)}%` : t("search.row.preparing")}
         </span>
       ) : (
-        <button
-          onClick={play}
-          disabled={busy}
-          className={`focus-ring flex size-10 shrink-0 items-center justify-center rounded-full transition-colors ${have ? "bg-accent text-fg-on-accent" : "bg-surface-2 text-fg hover:bg-surface-3"} ${job?.status === "error" ? "!text-danger" : ""}`}
-          aria-label={have ? t("search.row.playAria", { title: r.title }) : t("search.row.downloadPlayAria", { title: r.title })}
-          title={have ? undefined : t("search.row.downloadPlayHint")}
-        >
-          <Icon name={busy ? "loader" : job?.status === "error" ? "retry" : "play"} size={20} />
-        </button>
+        <div className="flex shrink-0 items-center gap-1">
+          <IconButton
+            icon={queueBusy ? "loader" : "queue"}
+            size={20}
+            label={t("tracks.action.addToQueue")}
+            disabled={busy || queueBusy}
+            onClick={(e) => {
+              e.stopPropagation();
+              void queue();
+            }}
+            className="!size-10"
+          />
+          <button
+            onClick={play}
+            disabled={busy || queueBusy}
+            className={`focus-ring flex size-10 shrink-0 items-center justify-center rounded-full transition-colors ${have ? "bg-accent text-fg-on-accent" : "bg-surface-2 text-fg hover:bg-surface-3"} ${job?.status === "error" ? "!text-danger" : ""}`}
+            aria-label={have ? t("search.row.playAria", { title: r.title }) : t("search.row.downloadPlayAria", { title: r.title })}
+            title={have ? undefined : t("search.row.downloadPlayHint")}
+          >
+            <Icon name={busy ? "loader" : job?.status === "error" ? "retry" : "play"} size={20} />
+          </button>
+        </div>
+      )}
+    </div>
+  );
+
+  return (
+    <li>
+      <div className="contents" {...longPress}>
+        {canHover ? (
+          <ContextMenu.Root modal={false}>
+            <ContextMenu.Trigger asChild>{rowInner}</ContextMenu.Trigger>
+            <ContextMenu.Portal>
+              <ContextMenu.Content className="menu-content">
+                <ContextMenu.Item className="menu-item" onSelect={() => void play()}>
+                  <Icon name="play" size={20} className="text-fg-muted" />
+                  {t("common.play")}
+                </ContextMenu.Item>
+                <ContextMenu.Item className="menu-item" onSelect={() => void playNext()}>
+                  <Icon name="queue" size={20} className="text-fg-muted" />
+                  {t("tracks.action.playNext")}
+                </ContextMenu.Item>
+                <ContextMenu.Item className="menu-item" onSelect={() => void queue()}>
+                  <Icon name="plus" size={20} className="text-fg-muted" />
+                  {t("tracks.action.addToQueue")}
+                </ContextMenu.Item>
+              </ContextMenu.Content>
+            </ContextMenu.Portal>
+          </ContextMenu.Root>
+        ) : (
+          rowInner
+        )}
+      </div>
+      {sheetOpen && (
+        <Dialog open onOpenChange={(o) => !o && setSheetOpen(false)} title={r.title} description={r.artist || r.channel || undefined}>
+          <div className="-mx-4 -mt-2 flex flex-col">
+            <button
+              onClick={() => {
+                setSheetOpen(false);
+                void play();
+              }}
+              className="focus-ring state-layer flex h-14 items-center gap-4 rounded-control px-4 text-left text-body"
+            >
+              <Icon name="play" className="text-fg-muted" />
+              {t("common.play")}
+            </button>
+            <button
+              onClick={() => {
+                setSheetOpen(false);
+                void playNext();
+              }}
+              className="focus-ring state-layer flex h-14 items-center gap-4 rounded-control px-4 text-left text-body"
+            >
+              <Icon name="queue" className="text-fg-muted" />
+              {t("tracks.action.playNext")}
+            </button>
+            <button
+              onClick={() => {
+                setSheetOpen(false);
+                void queue();
+              }}
+              className="focus-ring state-layer flex h-14 items-center gap-4 rounded-control px-4 text-left text-body"
+            >
+              <Icon name="plus" className="text-fg-muted" />
+              {t("tracks.action.addToQueue")}
+            </button>
+          </div>
+        </Dialog>
       )}
     </li>
   );

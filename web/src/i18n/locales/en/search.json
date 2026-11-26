@@ -61,6 +61,8 @@
     "onServer": "Already on the server",
     "preparing": "Downloading…",
     "willPlay": "Downloading “{title}”, it plays as soon as it's ready.",
+    "willQueue": "Will be queued when downloaded",
+    "willPlayNext": "Will play next when downloaded",
     "downloadPlayAria": "Download and play {title}",
     "downloadPlayHint": "Not on the server yet: downloads, then plays"
   }

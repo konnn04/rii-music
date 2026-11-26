@@ -13,10 +13,11 @@ import { engine } from "@/player/engine";
 import { usePlayback, usePlayer, type Source } from "@/player/store";
 import { Cover } from "./ui/Cover";
 import { Icon } from "./ui/Icon";
+import { IconButton } from "./ui/Button";
 import { Equalizer } from "./ui/misc";
 import { TrackContextMenu, TrackMenuButton } from "./TrackMenu";
 import { openDialog, type TrackContext } from "./dialogs";
-import { toast } from "./ui/Toast";
+import { notify, toast } from "./ui/Toast";
 import { t, tn } from "@/i18n";
 import { ArtistLinks } from "@/components/ArtistLinks";
 import { useOffline } from "@/lib/offline";
@@ -67,7 +68,7 @@ export function TrackList({ tracks, source, ctx, showAlbum = true, showAdded = f
   }, []);
 
   const cols = desktop
-    ? `${numbered || onReorder ? "40px " : ""}minmax(0,4fr) ${showAlbum ? "minmax(0,3fr) " : ""}${showAdded ? "112px " : ""}44px 64px 44px`
+    ? `${numbered || onReorder ? "40px " : ""}minmax(0,4fr) ${showAlbum ? "minmax(0,3fr) " : ""}${showAdded ? "112px " : ""}44px 44px 64px 44px`
     : "";
 
   const header = desktop && (
@@ -79,6 +80,7 @@ export function TrackList({ tracks, source, ctx, showAlbum = true, showAdded = f
       <span>{t("tracks.columns.title")}</span>
       {showAlbum && <span>{t("tracks.columns.album")}</span>}
       {showAdded && <span>{t("tracks.columns.dateAdded")}</span>}
+      <span />
       <span />
       <span className="text-right">
         <Icon name="history" size={16} className="ml-auto" aria-label={t("tracks.columns.duration")} />
@@ -224,7 +226,6 @@ const Row = memo(function Row({
   const unavailable = (browserOffline || serverDown) && !stored;
   const canHover = useCanHover();
   const like = useToggleLike();
-  const pressTimer = useRef<number | null>(null);
   const selecting = selected !== null;
   const isSel = selected?.has(track.id) ?? false;
   const canDrag = desktop && canHover && !dragHandle;
@@ -246,20 +247,10 @@ const Row = memo(function Row({
     else play(index);
   };
 
-  const touchHandlers =
-    selectable && !canHover
-      ? {
-          onTouchStart: () => {
-            pressTimer.current = window.setTimeout(() => {
-              pressTimer.current = null;
-              navigator.vibrate?.(10);
-              setSelected(new Set([track.id]));
-            }, 500);
-          },
-          onTouchMove: () => pressTimer.current && clearTimeout(pressTimer.current),
-          onTouchEnd: () => pressTimer.current && clearTimeout(pressTimer.current),
-        }
-      : {};
+  const addToQueue = () => {
+    usePlayer.getState().addToQueue([track]);
+    notify({ text: t("tracks.toast.addedToQueue"), icon: "queue" });
+  };
 
   const titleCls = `truncate text-body ${isCurrent ? "text-accent font-medium" : "text-fg"}`;
 
@@ -315,7 +306,6 @@ const Row = memo(function Row({
       onKeyDown={(e) => {
         if (e.key === "Enter") onActivate();
       }}
-      {...touchHandlers}
       className={`group focus-ring grid h-full cursor-default select-none items-center gap-3 rounded-control px-2 transition-colors duration-fast
         ${isSel ? "bg-accent-soft" : "hover:bg-surface-2"} ${unavailable ? "opacity-40" : ""}`}
       style={desktop ? { gridTemplateColumns: cols } : { gridTemplateColumns: `${selecting ? "32px " : ""}auto minmax(0,1fr) auto` }}
@@ -386,14 +376,46 @@ const Row = memo(function Row({
           <Icon name={track.liked ? "heart-filled" : "heart"} size={20} />
         </button>
       )}
+      {desktop &&
+        (!selecting ? (
+          <IconButton
+            icon="queue"
+            size={20}
+            label={t("tracks.action.addToQueue")}
+            onClick={(e) => {
+              e.stopPropagation();
+              addToQueue();
+            }}
+            onDoubleClick={(e) => e.stopPropagation()}
+            className="!size-9 opacity-0 group-hover:opacity-100 focus-visible:opacity-100 [@media(hover:none)]:opacity-100"
+          />
+        ) : (
+          <span />
+        ))}
       {desktop && <div className="text-right text-body-sm text-fg-muted tabular">{fmtMs(track.durationMs)}</div>}
-      {!selecting && <TrackMenuButton track={track} ctx={ctx} className={desktop ? "opacity-0 group-hover:opacity-100 focus-visible:opacity-100 data-[state=open]:opacity-100" : ""} />}
-      {selecting && desktop && <span />}
+      {desktop && !selecting && <TrackMenuButton track={track} ctx={ctx} className="opacity-0 group-hover:opacity-100 focus-visible:opacity-100 data-[state=open]:opacity-100" />}
+      {desktop && selecting && <span />}
+      {!desktop && !selecting && (
+        <div className="flex items-center">
+          <IconButton
+            icon="queue"
+            size={20}
+            label={t("tracks.action.addToQueue")}
+            tooltip={false}
+            onClick={(e) => {
+              e.stopPropagation();
+              addToQueue();
+            }}
+            className="!size-9"
+          />
+          <TrackMenuButton track={track} ctx={ctx} className="!size-9" />
+        </div>
+      )}
     </div>
   );
 
   return (
-    <TrackContextMenu track={track} ctx={ctx} disabled={!canHover || selecting}>
+    <TrackContextMenu track={track} ctx={selectable ? { ...ctx, onSelect: () => setSelected(new Set([track.id])) } : ctx} disabled={selecting}>
       {content}
     </TrackContextMenu>
   );

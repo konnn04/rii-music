@@ -2,8 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { api, type Lyrics } from "@/lib/api";
 import { queryClient, useLyrics } from "@/lib/queries";
-import { engine } from "@/player/engine";
-import { usePlayback, usePlayer } from "@/player/store";
+import { useViewTime, useViewTrack, ctl } from "@/player/view";
 import { fmtTime } from "@/lib/format";
 import { t } from "@/i18n";
 import { Button } from "../ui/Button";
@@ -42,10 +41,10 @@ export function activeIndex(lines: Line[], at: number) {
 
 /** The synced line playing now (for the cover view), or null. */
 export function useLyricLine(): string | null {
-  const track = usePlayer((s) => s.current?.track);
+  const track = useViewTrack(); // the song on the bar: this device or the one being remote-controlled
   const { data } = useLyrics(track?.id);
   const lines = useMemo(() => (data?.synced ? parseLRC(data.synced) : []), [data?.synced]);
-  const position = usePlayback((s) => s.position);
+  const { position } = useViewTime();
   if (!lines.length) return null;
   const i = activeIndex(lines, position + (data?.offsetMs ?? 0) / 1000);
   return i >= 0 ? lines[i].text || "♪" : null;
@@ -55,7 +54,7 @@ type Tab = "offset" | "search" | "paste";
 
 /** Synced lyrics: current line bright, others dim; auto-scroll; tap a line to seek there. */
 export function LyricsView({ size = "md", className = "" }: { size?: "md" | "lg"; className?: string }) {
-  const track = usePlayer((s) => s.current?.track);
+  const track = useViewTrack(); // the song on the bar: this device or the one being remote-controlled
   const { data, isLoading, isError, refetch } = useLyrics(track?.id);
   const serverDown = useNet((n) => n.serverDown);
   const offline = serverDown || !navigator.onLine;
@@ -139,7 +138,7 @@ function Center({ children }: { children: React.ReactNode }) {
 
 function Synced({ lrc, offsetMs, size }: { lrc: string; offsetMs: number; size: "md" | "lg" }) {
   const lines = useMemo(() => parseLRC(lrc), [lrc]);
-  const position = usePlayback((s) => s.position);
+  const { position } = useViewTime();
   const box = useRef<HTMLDivElement>(null);
   const userScrollUntil = useRef(0);
   const active = activeIndex(lines, position + offsetMs / 1000);
@@ -167,7 +166,7 @@ function Synced({ lrc, offsetMs, size }: { lrc: string; offsetMs: number; size: 
           data-line={i}
           onClick={() => {
             userScrollUntil.current = 0;
-            engine.seek(Math.max(0, l.t - offsetMs / 1000));
+            ctl.seek(Math.max(0, l.t - offsetMs / 1000));
           }}
           className={`focus-ring block w-full rounded-control py-2 text-left transition-[color,opacity,transform] duration-slow ease-out
             ${size === "lg" ? "text-lyric-lg" : "text-lyric-sm"}
@@ -183,7 +182,7 @@ function Synced({ lrc, offsetMs, size }: { lrc: string; offsetMs: number; size: 
 
 /** Lyrics tools: timing, search with your own words, paste. */
 function LyricsTools({ tab, setTab, lyrics, onClose }: { tab: Tab; setTab: (t: Tab) => void; lyrics?: Lyrics; onClose: () => void }) {
-  const track = usePlayer((s) => s.current?.track);
+  const track = useViewTrack(); // the song on the bar: this device or the one being remote-controlled
   if (!track) return null;
   const tabs: [Tab, string][] = [
     ["offset", t("player.lyrics.tabOffset")],

@@ -47,7 +47,8 @@
     "offlineRemove": "Remove offline copy",
     "downloadFile": "Download file",
     "dislikeTrack": "Don't like this song",
-    "dislikeArtist": "Don't like {name}"
+    "dislikeArtist": "Don't like {name}",
+    "selectMany": "Select several"
   },
   "toast": {
     "playNext": "Playing next",

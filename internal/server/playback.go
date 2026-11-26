@@ -249,7 +249,7 @@ type RemoteCommand struct {
 
 var remoteCmds = map[string]bool{
 	"play": true, "pause": true, "toggle": true, "next": true, "prev": true, "seek": true, "volume": true,
-	"jump": true, "remove": true, "move": true, "playNow": true, "queue": true, "shuffle": true, "repeat": true,
+	"jump": true, "remove": true, "move": true, "playNow": true, "queue": true, "playNext": true, "shuffle": true, "repeat": true,
 	"takeOver": true, // "play here": the target continues the session
 }
 

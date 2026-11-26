@@ -61,6 +61,8 @@
     "onServer": "Có sẵn trên máy chủ",
     "preparing": "Đang tải…",
     "willPlay": "Đang tải “{title}”, xong là phát.",
+    "willQueue": "Sẽ thêm vào hàng chờ khi tải xong",
+    "willPlayNext": "Sẽ phát tiếp theo khi tải xong",
     "downloadPlayAria": "Tải và phát {title}",
     "downloadPlayHint": "Chưa có trên máy chủ: tải về rồi tự phát"
   }
